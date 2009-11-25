@@ -188,18 +188,13 @@ module Puppet::Util::SELinux
     end
 
     def realpath(path)
-        pn   = Pathname.new(path)
-        rest = []
-        while ! pn.exist?
-            rest.unshift pn.basename
-            pn = pn.dirname
-        end
-        File.join( pn.realpath, *rest )
+        path, rest = Pathname.new(path), []
+        path, rest = path.dirname, [path.basename] + rest while ! path.exist?
+        File.join( path.realpath, *rest )
     end
 
     def parent_directory(path)
-        pn = Pathname.new(path)
-        pn.dirname.to_s
+        Pathname.new(path).dirname.to_s
     end
 
     # Internal helper function to return which type of filesystem a
