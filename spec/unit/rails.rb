@@ -71,179 +71,83 @@ describe Puppet::Rails, "when initializing any connection" do
     end
 end
 
+class RailsTesting
+    PARAMETER_MAP = {:adapter => :dbadapter, :log_level => :rails_loglevel, :host => :dbserver, :username => :dbuser, :password => :dbpassword,
+        :database => :dbname, :socket => :dbsocket, :pool => :dbconnections}
+end
+
 describe Puppet::Rails, "when initializing a sqlite3 connection" do
     confine "Cannot test without ActiveRecord" => Puppet.features.rails?
+    before do
+        Puppet[:dbadapter] = "sqlite3"
+    end
 
-    it "should provide the adapter, log_level, and database arguments" do
-        Puppet.settings.expects(:value).with(:dbadapter).returns("sqlite3")
-        Puppet.settings.expects(:value).with(:rails_loglevel).returns("testlevel")
-        Puppet.settings.expects(:value).with(:dblocation).returns("testlocation")
+    [:adapter, :log_level].each do |param|
+        name = RailsTesting::PARAMETER_MAP[param]
+        it "should provide the #{param} as the #{name} setting" do
+            Puppet::Rails.database_arguments[param].should == Puppet[name]
+        end
+    end
 
-        Puppet::Rails.database_arguments.should == {
-            :adapter   => "sqlite3",
-            :log_level => "testlevel",
-            :database  => "testlocation"
-        }
+    it "should provide the dbfile setting as the name for the database" do
+        Puppet::Rails.database_arguments[:database].should == Puppet[:dblocation]
     end
 end
 
 describe Puppet::Rails, "when initializing a mysql connection" do
     confine "Cannot test without ActiveRecord" => Puppet.features.rails?
 
-    it "should provide the adapter, log_level, and host, username, password, database, and reconnect arguments" do
-        Puppet.settings.stubs(:value).with(:dbadapter).returns("mysql")
-        Puppet.settings.stubs(:value).with(:rails_loglevel).returns("testlevel")
-        Puppet.settings.stubs(:value).with(:dbserver).returns("testserver")
-        Puppet.settings.stubs(:value).with(:dbuser).returns("testuser")
-        Puppet.settings.stubs(:value).with(:dbpassword).returns("testpassword")
-        Puppet.settings.stubs(:value).with(:dbname).returns("testname")
-        Puppet.settings.stubs(:value).with(:dbsocket).returns("")
-        Puppet.settings.stubs(:value).with(:dbconnections).returns(1)
-
-        Puppet::Rails.database_arguments.should == {
-            :adapter => "mysql",
-            :log_level => "testlevel",
-            :host => "testserver",
-            :username => "testuser",
-            :password => "testpassword",
-            :database => "testname",
-            :reconnect => true,
-            :pool => 1
-        }
+    before do
+        Puppet[:dbadapter] = "mysql"
     end
 
-    it "should provide the adapter, log_level, and host, username, password, database, socket, connections, and reconnect arguments" do
-        Puppet.settings.stubs(:value).with(:dbadapter).returns("mysql")
-        Puppet.settings.stubs(:value).with(:rails_loglevel).returns("testlevel")
-        Puppet.settings.stubs(:value).with(:dbserver).returns("testserver")
-        Puppet.settings.stubs(:value).with(:dbuser).returns("testuser")
-        Puppet.settings.stubs(:value).with(:dbpassword).returns("testpassword")
-        Puppet.settings.stubs(:value).with(:dbname).returns("testname")
-        Puppet.settings.stubs(:value).with(:dbsocket).returns("testsocket")
-        Puppet.settings.stubs(:value).with(:dbconnections).returns(1)
-
-        Puppet::Rails.database_arguments.should == {
-            :adapter => "mysql",
-            :log_level => "testlevel",
-            :host => "testserver",
-            :username => "testuser",
-            :password => "testpassword",
-            :database => "testname",
-            :socket => "testsocket",
-            :reconnect => true,
-            :pool => 1
-        }
+    [:adapter, :log_level, :host, :username, :password, :database].each do |param|
+        name = RailsTesting::PARAMETER_MAP[param]
+        it "should provide the #{param} from the '#{name}' setting" do
+            Puppet::Rails.database_arguments[param].should == Puppet[name]
+        end
     end
 
-    it "should provide the adapter, log_level, and host, username, password, database, socket, and connections arguments" do
-        Puppet.settings.stubs(:value).with(:dbadapter).returns("mysql")
-        Puppet.settings.stubs(:value).with(:rails_loglevel).returns("testlevel")
-        Puppet.settings.stubs(:value).with(:dbserver).returns("testserver")
-        Puppet.settings.stubs(:value).with(:dbuser).returns("testuser")
-        Puppet.settings.stubs(:value).with(:dbpassword).returns("testpassword")
-        Puppet.settings.stubs(:value).with(:dbname).returns("testname")
-        Puppet.settings.stubs(:value).with(:dbsocket).returns("testsocket")
-        Puppet.settings.stubs(:value).with(:dbconnections).returns(1)
+    it "should set the socket from the 'dbsocket' setting if a value is provided" do
+        Puppet[:dbsocket] = "foo"
+        Puppet::Rails.database_arguments[:socket].should == "foo"
+    end
 
-        Puppet::Rails.database_arguments.should == {
-            :adapter => "mysql",
-            :log_level => "testlevel",
-            :host => "testserver",
-            :username => "testuser",
-            :password => "testpassword",
-            :database => "testname",
-            :socket => "testsocket",
-            :reconnect => true,
-            :pool => 1
-        }
+    it "should set the pool to the 'dbconnections' setting if the connection count is greater than zero" do
+        Puppet[:dbconnections] = "2"
+        Puppet::Rails.database_arguments[:pool].should == 2
     end
 end
 
 describe Puppet::Rails, "when initializing a postgresql connection" do
     confine "Cannot test without ActiveRecord" => Puppet.features.rails?
-
-    it "should provide the adapter, log_level, and host, username, password, connections, and database arguments" do
-        Puppet.settings.stubs(:value).with(:dbadapter).returns("postgresql")
-        Puppet.settings.stubs(:value).with(:rails_loglevel).returns("testlevel")
-        Puppet.settings.stubs(:value).with(:dbserver).returns("testserver")
-        Puppet.settings.stubs(:value).with(:dbuser).returns("testuser")
-        Puppet.settings.stubs(:value).with(:dbpassword).returns("testpassword")
-        Puppet.settings.stubs(:value).with(:dbname).returns("testname")
-        Puppet.settings.stubs(:value).with(:dbsocket).returns("")
-        Puppet.settings.stubs(:value).with(:dbconnections).returns(1) 
-
-        Puppet::Rails.database_arguments.should == {
-            :adapter => "postgresql",
-            :log_level => "testlevel",
-            :host => "testserver",
-            :username => "testuser",
-            :password => "testpassword",
-            :database => "testname",
-            :reconnect => true,
-            :pool => 1
-        }
+    before do
+        Puppet[:dbadapter] = "postgresql"
     end
 
-    it "should provide the adapter, log_level, and host, username, password, database, connections, and socket arguments" do
-        Puppet.settings.stubs(:value).with(:dbadapter).returns("postgresql")
-        Puppet.settings.stubs(:value).with(:rails_loglevel).returns("testlevel")
-        Puppet.settings.stubs(:value).with(:dbserver).returns("testserver")
-        Puppet.settings.stubs(:value).with(:dbuser).returns("testuser")
-        Puppet.settings.stubs(:value).with(:dbpassword).returns("testpassword")
-        Puppet.settings.stubs(:value).with(:dbname).returns("testname")
-        Puppet.settings.stubs(:value).with(:dbsocket).returns("testsocket")
-        Puppet.settings.stubs(:value).with(:dbconnections).returns(1)
+    [:adapter, :log_level, :host, :username, :password, :database].each do |param|
+        name = RailsTesting::PARAMETER_MAP[param]
+        it "should provide the #{param} from the '#{name}' setting" do
+            Puppet::Rails.database_arguments[param].should == Puppet[name]
+        end
+    end
 
-        Puppet::Rails.database_arguments.should == {
-            :adapter => "postgresql",
-            :log_level => "testlevel",
-            :host => "testserver",
-            :username => "testuser",
-            :password => "testpassword",
-            :database => "testname",
-            :socket => "testsocket",
-            :pool => 1,
-            :reconnect => true
-        }
+    it "should set the socket from the 'dbsocket' setting if a value is provided" do
+        Puppet[:dbsocket] = "foo"
+        Puppet::Rails.database_arguments[:socket].should == "foo"
     end
 end
 
 describe Puppet::Rails, "when initializing an Oracle connection" do
     confine "Cannot test without ActiveRecord" => Puppet.features.rails?
-
-    it "should provide the adapter, log_level, and username, password, dbconnections, and database arguments" do
-        Puppet.settings.stubs(:value).with(:dbadapter).returns("oracle_enhanced")
-        Puppet.settings.stubs(:value).with(:rails_loglevel).returns("testlevel")
-        Puppet.settings.stubs(:value).with(:dbuser).returns("testuser")
-        Puppet.settings.stubs(:value).with(:dbpassword).returns("testpassword")
-        Puppet.settings.stubs(:value).with(:dbname).returns("testname")
-        Puppet.settings.stubs(:value).with(:dbconnections).returns(1) 
-
-        Puppet::Rails.database_arguments.should == {
-            :adapter => "oracle_enhanced",
-            :log_level => "testlevel",
-            :username => "testuser",
-            :password => "testpassword",
-            :database => "testname",
-            :pool => 1
-        }
+    before do
+        Puppet[:dbadapter] = "oracle_enhanced"
     end
 
-    it "should provide the adapter, log_level, and host, username, password, database, pool, and socket arguments" do
-        Puppet.settings.stubs(:value).with(:dbadapter).returns("oracle_enhanced")
-        Puppet.settings.stubs(:value).with(:rails_loglevel).returns("testlevel")
-        Puppet.settings.stubs(:value).with(:dbuser).returns("testuser")
-        Puppet.settings.stubs(:value).with(:dbpassword).returns("testpassword")
-        Puppet.settings.stubs(:value).with(:dbname).returns("testname")
-        Puppet.settings.stubs(:value).with(:dbconnections).returns(1)
-
-        Puppet::Rails.database_arguments.should == {
-            :adapter => "oracle_enhanced",
-            :log_level => "testlevel",
-            :username => "testuser",
-            :password => "testpassword",
-            :database => "testname",
-            :pool => 1 
-        }
+    [:adapter, :log_level, :username, :password, :database].each do |param|
+        name = RailsTesting::PARAMETER_MAP[param]
+        it "should provide the #{param} from the '#{name}' setting" do
+            Puppet::Rails.database_arguments[param].should == Puppet[name]
+        end
     end
 end
