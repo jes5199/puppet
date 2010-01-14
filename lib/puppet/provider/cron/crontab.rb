@@ -27,18 +27,13 @@ Puppet::Type.type(:cron).provide(:crontab,
 
     text_line :environment, :match => %r{^\w+=}
 
-    record_line :freebsd_special, :fields => %w{special command},
-        :match => %r{^@(\w+)\s+(.+)$}, :pre_gen => proc { |record|
-            record[:special] = "@" + record[:special]
-        }
-
-    crontab = record_line :crontab, :fields => %w{minute hour monthday month weekday command},
-        :match => %r{^\s*(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$},
-        :optional => %w{minute hour weekday month monthday}, :absent => "*"
+    crontab = record_line :crontab, :fields => %w{special minute hour monthday month weekday command},
+        :match => %r{^\s*(?:@(\w+)|(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+))\s+(.+)$},
+        :optional => %w{special minute hour weekday month monthday}, :absent => "*"
 
     class << crontab
         def numeric_fields
-            fields - [:command]
+            fields - [:command, :special]
         end
         # Do some post-processing of the parsed record.  Basically just
         # split the numeric fields on ','.
@@ -79,6 +74,26 @@ Puppet::Type.type(:cron).provide(:crontab,
             end
             str
         end
+
+        # Overriding the default implementation, which unfortunately wants to output details[:special]
+        def join(details)
+            joinchar = self.joiner
+
+            fields.collect { |field|
+                next if field == :special
+                # If the field is marked absent, use the appropriate replacement
+                if details[field] == :absent or details[field] == [:absent] or details[field].nil?
+                    if self.optional.include?(field)
+                        self.absent
+                    else
+                        raise ArgumentError, "Field '%s' is required" % field
+                    end
+                else
+                    details[field].to_s
+                end
+            }.reject { |c| c.nil?}.join(joinchar)
+        end
+
     end
 
 
