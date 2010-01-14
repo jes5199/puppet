@@ -74,6 +74,26 @@ Puppet::Type.type(:cron).provide(:crontab,
             end
             str
         end
+
+        # Overriding the default implementation, which unfortunately wants to output details[:special]
+        def join(details)
+            joinchar = self.joiner
+
+            fields.collect { |field|
+                next if field == :special
+                # If the field is marked absent, use the appropriate replacement
+                if details[field] == :absent or details[field] == [:absent] or details[field].nil?
+                    if self.optional.include?(field)
+                        self.absent
+                    else
+                        raise ArgumentError, "Field '%s' is required" % field
+                    end
+                else
+                    details[field].to_s
+                end
+            }.reject { |c| c.nil?}.join(joinchar)
+        end
+
     end
 
 
