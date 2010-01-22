@@ -85,7 +85,17 @@ describe "puppetmasterd" do
         FileTest.exist?(@pidfile).should be_true
     end
 
-    it "should be serving status information over REST"
+    it "should be serving status information over REST" do
+        start
+        sleep 6
+
+        Puppet::Status.indirection.terminus_class = :rest
+        status = Puppet::Status.find("https://localhost:#{@@port}/production/status/default")
+
+        status.status["is_alive"].should == true
+
+        Puppet::Status.indirection.terminus_class = :local
+    end
 
     it "should be serving status information over xmlrpc" do
         start
