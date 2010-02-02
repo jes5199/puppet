@@ -4,6 +4,7 @@ require 'puppet/agent'
 require 'puppet/daemon'
 require 'puppet/configurer'
 require 'puppet/network/client'
+require 'puppet/checksum'
 
 Puppet::Application.new(:puppetd) do
 
@@ -210,6 +211,8 @@ Puppet::Application.new(:puppetd) do
         # until the REST cert transfers are working, it needs to
         # be local.
         Puppet::SSL::Host.ca_location = :remote
+
+        Puppet::Checksum.terminus_class = :rest
 
         Puppet::Transaction::Report.terminus_class = :rest
 

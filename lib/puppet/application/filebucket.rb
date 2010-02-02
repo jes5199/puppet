@@ -1,6 +1,6 @@
 require 'puppet'
 require 'puppet/application'
-require 'puppet/network/client'
+require 'puppet/checksum'
 
 Puppet::Application.new(:filebucket) do
 
@@ -32,15 +32,16 @@ Puppet::Application.new(:filebucket) do
                 $stderr.puts "%s: cannot read file" % file
                 next
             end
-            md5 = @client.backup(file)
-            puts "%s: %s" % [file, md5]
+            sum = Puppet::Checksum.new(File.read(file), :path => file)
+            sum.save()
+            puts "%s: %s" % [file, sum.checksum]
         end
     end
 
     command(:restore) do
         file = ARGV.shift
         md5 = ARGV.shift
-        @client.restore(file, md5)
+        Puppet::Checksum.restore(file, md5)
     end
 
     setup do
@@ -67,20 +68,9 @@ Puppet::Application.new(:filebucket) do
                 exit(Puppet.settings.print_configs ? 0 : 1)
         end
 
-        begin
-            if options[:local] or options[:bucket]
-                path = options[:bucket] || Puppet[:bucketdir]
-                @client = Puppet::Network::Client.dipper.new(:Path => path)
-            else
-                require 'puppet/network/handler'
-                @client = Puppet::Network::Client.dipper.new(:Server => Puppet[:server])
-            end
-        rescue => detail
-            $stderr.puts detail
-            if Puppet[:trace]
-                puts detail.backtrace
-            end
-            exit(1)
+        unless options[:local] or options[:bucket]
+            # make sure we send our requests to the server
+            Puppet::Checksum.terminus_class = :rest
         end
     end
 
