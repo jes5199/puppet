@@ -137,10 +137,6 @@ class Puppet::Network::Handler # :nodoc:
             end
         end
 
-        def paths(md5)
-            self.class(@path, md5)
-        end
-
         def to_s
             self.name
         end
