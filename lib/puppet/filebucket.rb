@@ -2,7 +2,7 @@ require 'puppet/indirector'
 
 class Puppet::Filebucket
     extend Puppet::Indirector
-    indirects :filebucket, :terminus_class => :local
+    indirects :filebucket, :terminus_class => :file
 
     attr :contents
     attr :path, true
@@ -87,17 +87,20 @@ class Puppet::Filebucket
         end
     end
 
-    def self.paths(md5)
-        dir = File.join(md5[0..7].split(""))
-        # TODO: is Puppet[:bucketdir] sufficient?
-        basedir = File.join(Puppet[:bucketdir], dir, md5)
+    def self.paths(digest)
+        basedir = self.path_for(digest)
         return [
             basedir,
-            File.join(basedir, "contents"),
-            File.join(basedir, "paths")
+            ::File.join(basedir, "contents"),
+            ::File.join(basedir, "paths")
         ]
     end
     
+    def self.path_for(digest)
+        dir = ::File.join(digest[0..7].split(""))
+        basedir = ::File.join(Puppet[:bucketdir], dir, digest)
+    end
+
     def conflict_check?
         true
     end
@@ -108,7 +111,7 @@ class Puppet::Filebucket
         bpath, bfile, pathpath = self.class.paths(digest)
 
         # If the file already exists, just return the md5 sum.
-        if FileTest.exists?(bfile)
+        if ::FileTest.exists?(bfile)
             # If verification is enabled, then make sure the text matches.
             if conflict_check?
                 verify(contents, digest, bfile)
@@ -118,10 +121,10 @@ class Puppet::Filebucket
         end
 
         # Make the directories if necessary.
-        unless FileTest.directory?(bpath)
+        unless ::FileTest.directory?(bpath)
             p "making dir #{bpath}"
             Puppet::Util.withumask(0007) do
-                FileUtils.mkdir_p(bpath)
+                ::FileUtils.mkdir_p(bpath)
             end
         end
 
@@ -130,7 +133,7 @@ class Puppet::Filebucket
 
         # ...then just create the file
         Puppet::Util.withumask(0007) do
-            File.open(bfile, File::WRONLY|File::CREAT, 0440) { |of|
+            ::File.open(bfile, ::File::WRONLY|::File::CREAT, 0440) { |of|
                 of.print contents
             }
         end
@@ -144,7 +147,7 @@ class Puppet::Filebucket
     # If conflict_check is enabled, verify that the passed text is
     # the same as the text in our file.
     def verify(content, md5, bfile)
-        curfile = File.read(bfile)
+        curfile = ::File.read(bfile)
 
         # If the contents don't match, then we've found a conflict.
         # Unlikely, but quite bad.
