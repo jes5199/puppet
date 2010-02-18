@@ -9,8 +9,6 @@ class Puppet::Filebucket
     attr :hash
 
     def initialize( contents, options = {} )
-        puts "initializing filebucket with #{contents.inspect}"
-
         @contents = contents
         @path    = nil
 
@@ -32,9 +30,16 @@ class Puppet::Filebucket
 
     def self.find_by_hash( hash )
         bpath, bfile = paths( hash_data(hash) )
-        contents = ::File.read bfile
-        print "contents is "
-        p contents
+
+        if ! ::File.exist? bfile
+            return nil
+        end
+
+        begin
+            contents = ::File.read bfile
+        rescue RuntimeError => e
+            raise Puppet::Error, "file could not be read: #{e.message}"
+        end
 
         self.new( contents, :hash => hash )
     end
@@ -81,24 +86,24 @@ class Puppet::Filebucket
     end
 
     def validate_hash(new_hash)
-        puts "new_hash is #{new_hash.inspect}"
         unless hash_data(new_hash) == digest_class(new_hash).hexdigest(contents)
             raise "hash does not match contents"
         end
     end
 
     def self.paths(digest)
-        basedir = self.path_for(digest)
         return [
-            basedir,
-            ::File.join(basedir, "contents"),
-            ::File.join(basedir, "paths")
+            self.path_for(digest),
+            self.path_for(digest, "contents"),
+            self.path_for(digest, "paths"),
         ]
     end
     
-    def self.path_for(digest)
+    def self.path_for(digest, subfile = nil)
         dir = ::File.join(digest[0..7].split(""))
         basedir = ::File.join(Puppet[:bucketdir], dir, digest)
+        return basedir unless subfile
+        return ::File.join(basedir, subfile)
     end
 
     def conflict_check?
@@ -122,7 +127,6 @@ class Puppet::Filebucket
 
         # Make the directories if necessary.
         unless ::FileTest.directory?(bpath)
-            p "making dir #{bpath}"
             Puppet::Util.withumask(0007) do
                 ::FileUtils.mkdir_p(bpath)
             end
@@ -162,7 +166,5 @@ class Puppet::Filebucket
 
     def add_path(*args)
         # TODO
-        print "add_path "
-        p args
     end
 end

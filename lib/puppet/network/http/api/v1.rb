@@ -17,7 +17,6 @@ module Puppet::Network::HTTP::API::V1
     }
 
     def uri2indirection(http_method, uri, params)
-        p [http_method, uri, params]
         environment, indirection, key = uri.split("/", 4)[1..-1] # the first field is always nil because of the leading slash
 
         raise ArgumentError, "The environment must be purely alphanumeric, not '%s'" % environment unless environment =~ /^\w+$/
@@ -31,7 +30,6 @@ module Puppet::Network::HTTP::API::V1
 
         key = URI.unescape(key)
 
-        p [indirection, method, key, params]
         Puppet::Indirector::Request.new(indirection, method, key, params)
     end
 
