@@ -1,8 +1,8 @@
 require 'puppet/indirector'
 
-class Puppet::Filebucket
+class Puppet::BucketFile
     extend Puppet::Indirector
-    indirects :filebucket, :terminus_class => :file
+    indirects :bucket_file, :terminus_class => :file
 
     attr :contents
     attr :path, true

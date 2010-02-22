@@ -2,9 +2,9 @@
 
 require ::File.dirname(__FILE__) + '/../spec_helper'
 
-require 'puppet/filebucket'
+require 'puppet/bucket_file'
 
-describe Puppet::Filebucket do
+describe Puppet::BucketFile do
     before do
         # this is the default from spec_helper, but it keeps getting reset at odd times
         Puppet[:bucketdir] = "/dev/null/bucket"
@@ -18,7 +18,7 @@ describe Puppet::Filebucket do
         ::FileUtils.expects(:mkdir_p).with(@dir)
         ::File.expects(:open).with("#{@dir}/contents",  ::File::WRONLY|::File::CREAT, 0440)
 
-        bucketfile = Puppet::Filebucket.new("the content")
+        bucketfile = Puppet::BucketFile.new("the content")
         bucketfile.save
 
     end
@@ -27,7 +27,7 @@ describe Puppet::Filebucket do
         it "should return nil if a file doesn't exist" do
             ::File.expects(:exists?).with("#{@dir}/contents").returns false
 
-            bucketfile = Puppet::Filebucket.find_by_hash("md5:da619dfbf5572fc749b1496b0fffd76a")
+            bucketfile = Puppet::BucketFile.find_by_hash("md5:da619dfbf5572fc749b1496b0fffd76a")
             bucketfile.should == nil
         end
 
@@ -35,7 +35,7 @@ describe Puppet::Filebucket do
             ::File.expects(:exists?).with("#{@dir}/contents").returns true
             ::File.expects(:read).with("#{@dir}/contents").returns "the content"
 
-            bucketfile = Puppet::Filebucket.find_by_hash("md5:da619dfbf5572fc749b1496b0fffd76a")
+            bucketfile = Puppet::BucketFile.find_by_hash("md5:da619dfbf5572fc749b1496b0fffd76a")
             bucketfile.should_not == nil
         end
 
@@ -45,7 +45,7 @@ describe Puppet::Filebucket do
         it "should return nil if a file doesn't exist" do
             ::File.expects(:exists?).with("#{@dir}/contents").returns false
 
-            bucketfile = Puppet::Filebucket.find("md5:da619dfbf5572fc749b1496b0fffd76a")
+            bucketfile = Puppet::BucketFile.find("md5:da619dfbf5572fc749b1496b0fffd76a")
             bucketfile.should == nil
         end
 
@@ -53,7 +53,7 @@ describe Puppet::Filebucket do
             ::File.expects(:exists?).with("#{@dir}/contents").returns true
             ::File.expects(:read).with("#{@dir}/contents").returns "the content"
 
-            bucketfile = Puppet::Filebucket.find("md5:da619dfbf5572fc749b1496b0fffd76a")
+            bucketfile = Puppet::BucketFile.find("md5:da619dfbf5572fc749b1496b0fffd76a")
             bucketfile.should_not == nil
         end
 
@@ -61,7 +61,7 @@ describe Puppet::Filebucket do
             it "should return nil if a file doesn't exist" do
                 ::File.expects(:exists?).with("#{@dir}/contents").returns false
 
-                bucketfile = Puppet::Filebucket.find("md5/da619dfbf5572fc749b1496b0fffd76a")
+                bucketfile = Puppet::BucketFile.find("md5/da619dfbf5572fc749b1496b0fffd76a")
                 bucketfile.should == nil
             end
 
@@ -69,7 +69,7 @@ describe Puppet::Filebucket do
                 ::File.expects(:exists?).with("#{@dir}/contents").returns true
                 ::File.expects(:read).with("#{@dir}/contents").returns "the content"
 
-                bucketfile = Puppet::Filebucket.find("md5/da619dfbf5572fc749b1496b0fffd76a")
+                bucketfile = Puppet::BucketFile.find("md5/da619dfbf5572fc749b1496b0fffd76a")
                 bucketfile.should_not == nil
             end
 
@@ -79,7 +79,7 @@ end
 
 if false
     raise "TODO" # TODO
-        describe Puppet::Indirector::Filebucket::File, " when determining file paths" do
+        describe Puppet::Indirector::BucketFile::File, " when determining file paths" do
 
             # I was previously passing the object in.
             it "should use the value passed in to path() as the filebucket" do
@@ -111,7 +111,7 @@ if false
 
 
 
-        describe Puppet::Indirector::Filebucket::File, " when saving files" do
+        describe Puppet::Indirector::BucketFile::File, " when saving files" do
 
             # LAK:FIXME I don't know how to include in the spec the fact that we're
             # using the superclass's save() method and thus are acquiring all of

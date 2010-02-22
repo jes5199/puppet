@@ -1,6 +1,6 @@
-require 'puppet/indirector/filebucket'
+require 'puppet/indirector/bucket_file'
 
-class Puppet::Indirector::Filebucket::File < Puppet::Indirector::Code
+class Puppet::Indirector::BucketFile::File < Puppet::Indirector::Code
     desc "Store files in a directory set based on their checksums."
 
     def initialize
