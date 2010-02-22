@@ -53,9 +53,6 @@ class Puppet::Indirector::Request
     end
 
     def initialize(indirection_name, method, key, options = {})
-        require 'pp'
-        pp caller
-        puts "key = #{key.inspect}"
         options ||= {}
         raise ArgumentError, "Request options must be a hash, not %s" % options.class unless options.is_a?(Hash)
 
@@ -72,14 +69,11 @@ class Puppet::Indirector::Request
             # info out in the REST class, but it seemed bad design for the REST
             # class to rewrite the key.
             if key.to_s =~ /^\w+:\/\// # it's a URI
-                p :a
                 set_uri_key(key)
             else
-                p :b
                 @key = key
             end
         else
-            p :c
             @instance = key
             @key = @instance.name
         end

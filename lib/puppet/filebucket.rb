@@ -100,7 +100,6 @@ class Puppet::Filebucket
     
     def self.path_for(digest, subfile = nil)
         dir = ::File.join(digest[0..7].split(""))
-        p Puppet[:bucketdir]
         basedir = ::File.join(Puppet[:bucketdir], dir, digest)
         return basedir unless subfile
         return ::File.join(basedir, subfile)
@@ -113,7 +112,7 @@ class Puppet::Filebucket
     def save_to_disk
         digest = digest_class.hexdigest(contents)
 
-        bpath, bfile, pathpath = self.class.paths(digest).tap{|x| p x}
+        bpath, bfile, pathpath = self.class.paths(digest)
 
         # If the file already exists, just return the md5 sum.
         if ::File.exists?(bfile)
