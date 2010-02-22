@@ -8,12 +8,12 @@ class Puppet::Indirector::Filebucket::File < Puppet::Indirector::Code
     end
 
     def find( request )
-        hash_type, hash, path = request.key.split('/', 3)
+        hash_type, hash, path = request_to_type_hash_and_path( request )
         return model.find_by_hash( hash_type + ":" + hash )
     end
 
     def save( request )
-        hash_type, hash, path = request.key.split('/', 3)
+        hash_type, hash, path = request_to_type_hash_and_path( request )
 
         instance = request.instance
         instance.hash = hash_type + ":" + hash
@@ -21,5 +21,10 @@ class Puppet::Indirector::Filebucket::File < Puppet::Indirector::Code
 
         instance.save_to_disk
         instance.to_s
+    end
+
+    private 
+    def request_to_type_hash_and_path( request )
+        request.key.split(/[:\/]/, 3)
     end
 end

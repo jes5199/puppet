@@ -31,7 +31,7 @@ class Puppet::Filebucket
     def self.find_by_hash( hash )
         bpath, bfile = paths( hash_data(hash) )
 
-        if ! ::File.exist? bfile
+        if ! ::File.exists? bfile
             return nil
         end
 
@@ -45,7 +45,6 @@ class Puppet::Filebucket
     end
 
     def to_s
-        #[@contents, @path, @hash].inspect
         @contents
     end
 
@@ -101,6 +100,7 @@ class Puppet::Filebucket
     
     def self.path_for(digest, subfile = nil)
         dir = ::File.join(digest[0..7].split(""))
+        p Puppet[:bucketdir]
         basedir = ::File.join(Puppet[:bucketdir], dir, digest)
         return basedir unless subfile
         return ::File.join(basedir, subfile)
@@ -113,10 +113,10 @@ class Puppet::Filebucket
     def save_to_disk
         digest = digest_class.hexdigest(contents)
 
-        bpath, bfile, pathpath = self.class.paths(digest)
+        bpath, bfile, pathpath = self.class.paths(digest).tap{|x| p x}
 
         # If the file already exists, just return the md5 sum.
-        if ::FileTest.exists?(bfile)
+        if ::File.exists?(bfile)
             # If verification is enabled, then make sure the text matches.
             if conflict_check?
                 verify(contents, digest, bfile)
@@ -126,7 +126,7 @@ class Puppet::Filebucket
         end
 
         # Make the directories if necessary.
-        unless ::FileTest.directory?(bpath)
+        unless ::File.directory?(bpath)
             Puppet::Util.withumask(0007) do
                 ::FileUtils.mkdir_p(bpath)
             end
