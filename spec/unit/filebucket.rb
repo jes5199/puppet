@@ -8,6 +8,7 @@ describe Puppet::Filebucket do
     before do
         # this is the default from spec_helper, but it keeps getting reset at odd times
         Puppet[:bucketdir] = "/dev/null/bucket"
+
         @dir = '/dev/null/bucket/d/a/6/1/9/d/f/b/da619dfbf5572fc749b1496b0fffd76a'
     end
 
@@ -22,19 +23,57 @@ describe Puppet::Filebucket do
 
     end
 
-    it "should return nil if a file doesn't exist" do
-        ::File.expects(:exists?).with("#{@dir}/contents").returns false
+    describe "the find_by_hash method" do
+        it "should return nil if a file doesn't exist" do
+            ::File.expects(:exists?).with("#{@dir}/contents").returns false
 
-        bucketfile = Puppet::Filebucket.find("md5:da619dfbf5572fc749b1496b0fffd76a")
-        bucketfile.should == nil
+            bucketfile = Puppet::Filebucket.find_by_hash("md5:da619dfbf5572fc749b1496b0fffd76a")
+            bucketfile.should == nil
+        end
+
+        it "should find a filebucket if the file exists" do
+            ::File.expects(:exists?).with("#{@dir}/contents").returns true
+            ::File.expects(:read).with("#{@dir}/contents").returns "the content"
+
+            bucketfile = Puppet::Filebucket.find_by_hash("md5:da619dfbf5572fc749b1496b0fffd76a")
+            bucketfile.should_not == nil
+        end
+
     end
 
-    it "should find a filebucket if the file exists" do
-        ::File.expects(:exists?).with("#{@dir}/contents").returns true
-        ::File.expects(:read).with("#{@dir}/contents").returns "the content"
+    describe "using the indirector's find method" do 
+        it "should return nil if a file doesn't exist" do
+            ::File.expects(:exists?).with("#{@dir}/contents").returns false
 
-        bucketfile = Puppet::Filebucket.find("md5:da619dfbf5572fc749b1496b0fffd76a")
-        bucketfile.should_not == nil
+            bucketfile = Puppet::Filebucket.find("md5:da619dfbf5572fc749b1496b0fffd76a")
+            bucketfile.should == nil
+        end
+
+        it "should find a filebucket if the file exists" do
+            ::File.expects(:exists?).with("#{@dir}/contents").returns true
+            ::File.expects(:read).with("#{@dir}/contents").returns "the content"
+
+            bucketfile = Puppet::Filebucket.find("md5:da619dfbf5572fc749b1496b0fffd76a")
+            bucketfile.should_not == nil
+        end
+
+        describe "using RESTish digest notation" do
+            it "should return nil if a file doesn't exist" do
+                ::File.expects(:exists?).with("#{@dir}/contents").returns false
+
+                bucketfile = Puppet::Filebucket.find("md5/da619dfbf5572fc749b1496b0fffd76a")
+                bucketfile.should == nil
+            end
+
+            it "should find a filebucket if the file exists" do
+                ::File.expects(:exists?).with("#{@dir}/contents").returns true
+                ::File.expects(:read).with("#{@dir}/contents").returns "the content"
+
+                bucketfile = Puppet::Filebucket.find("md5/da619dfbf5572fc749b1496b0fffd76a")
+                bucketfile.should_not == nil
+            end
+
+        end
     end
 end
 
