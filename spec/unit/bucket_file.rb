@@ -78,6 +78,71 @@ describe Puppet::BucketFile do
 end
 
 if false
+    it "should have a to_s method to return the contents"
+
+    it "should have a method that returns the algorithm"
+
+
+    it "should require content" do
+        proc { Puppet::Checksum.new(nil) }.should raise_error(ArgumentError)
+    end
+
+    it "should set the content appropriately" do
+        @sum.content.should == @content
+    end
+
+    it "should calculate the checksum" do
+        require 'digest/md5'
+        Digest::MD5.expects(:hexdigest).with(@content).returns(:mychecksum)
+        @sum.checksum.should == :mychecksum
+    end
+
+    it "should not calculate the checksum until it is asked for" do
+        require 'digest/md5'
+        Digest::MD5.expects(:hexdigest).never
+        sum = Puppet::Checksum.new(@content, :md5)
+    end
+
+    it "should remove the old checksum value if the algorithm is changed" do
+        Digest::MD5.expects(:hexdigest).with(@content).returns(:oldsum)
+        oldsum = @sum.checksum
+        @sum.algorithm = :sha1
+        Digest::SHA1.expects(:hexdigest).with(@content).returns(:newsum)
+        @sum.checksum.should == :newsum
+    end
+
+    it "should default to 'md5' as the checksum algorithm if the algorithm is not in the name" do
+        @sum.algorithm.should == :md5
+    end
+
+    it "should support specifying the algorithm during initialization" do
+        sum = Puppet::Checksum.new(@content, :sha1)
+        sum.algorithm.should == :sha1
+    end
+
+    it "should fail when an unsupported algorithm is used" do
+        proc { Puppet::Checksum.new(@content, :nope) }.should raise_error(ArgumentError)
+    end
+end
+
+describe Puppet::Checksum, " when using back-ends" do
+    it "should redirect using Puppet::Indirector" do
+        Puppet::Indirector::Indirection.instance(:checksum).model.should equal(Puppet::Checksum)
+    end
+
+    it "should have a :save instance method" do
+        Puppet::Checksum.new("mysum").should respond_to(:save)
+    end
+
+    it "should respond to :find" do
+        Puppet::Checksum.should respond_to(:find)
+    end
+
+    it "should respond to :destroy" do
+        Puppet::Checksum.should respond_to(:destroy)
+    end
+end
+
     raise "TODO" # TODO
         describe Puppet::Indirector::BucketFile::File, " when determining file paths" do
 
