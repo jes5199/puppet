@@ -165,7 +165,6 @@ module Puppet::Network::HTTP::Handler
     # LAK:NOTE This has to be here for testing; it's a stub-point so
     # we keep infinite recursion from happening.
     def save_object(ind_request, object)
-        puts "calling save object on #{object.inspect} with #{ind_request.inspect}"
         object.save(ind_request)
     end
 
