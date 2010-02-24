@@ -217,7 +217,16 @@ describe Puppet::BucketFile do
 
     end
     
-    it "should load the paths"
+    it "should load the paths" do
+        paths = ["path1", "path2"]
+        ::File.expects(:exists?).with("#{@dir}/paths").returns true
+
+        mockfile = mock "file"
+        mockfile.expects(:readlines).returns( paths )
+        ::File.expects(:open).with("#{@dir}/paths").yields mockfile
+
+        Puppet::BucketFile.new(@contents).paths.should == paths
+    end
 
     it "should return a url-ish name" do
         Puppet::BucketFile.new(@contents).name.should == "md5/4a8ec4fa5f01b4ab1a0ab8cbccb709f0"

@@ -162,6 +162,20 @@ class Puppet::BucketFile
         end
     end
 
+    def paths
+        return @paths if @paths
+
+        if ::File.exists?(paths_save_path)
+            ::File.open(paths_save_path) do |f|
+                @paths = f.readlines.map { |l| l.chomp }
+            end
+        else
+            @paths = []
+        end
+
+        return @paths
+    end
+
     def self.find_by_checksum( checksum )
         load_from_file = self.contents_save_path( checksum )
 
