@@ -179,7 +179,10 @@ describe Puppet::BucketFile do
 
             ::File.stubs(:directory?).with(::File.dirname(path)).returns(true)
             ::File.expects(:exists?).with("#{@dir}/contents").returns false
-            ::File.expects(:open).with(path, ::File::WRONLY|::File::CREAT, 0440)
+
+            mockfile = mock "file"
+            mockfile.expects(:print).with(@contents)
+            ::File.expects(:open).with(path, ::File::WRONLY|::File::CREAT, 0440).yields(mockfile)
 
             Puppet::BucketFile.new(@contents).save
         end
