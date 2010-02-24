@@ -211,8 +211,10 @@ describe Puppet::BucketFile do
         ::File.expects(:open).with(save_path, ::File::WRONLY|::File::CREAT, 0440)
         ::File.expects(:exists?).with("#{@dir}/contents").returns false
 
+        mockfile = mock "file"
+        mockfile.expects(:puts).with('/path/on/the/remote/box')
         ::File.expects(:exists?).with("#{@dir}/paths").returns false
-        ::File.expects(:open).with("#{@dir}/paths", ::File::WRONLY|::File::CREAT|::File::APPEND).returns false
+        ::File.expects(:open).with("#{@dir}/paths", ::File::WRONLY|::File::CREAT|::File::APPEND).yields mockfile
         Puppet::BucketFile.new(@contents, :path => remote_path).save
 
     end
