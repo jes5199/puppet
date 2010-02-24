@@ -70,13 +70,17 @@ class Puppet::BucketFile
         end
     end
 
-    #XXX
-    def self.paths(digest)
-        return [
-            self.path_for(digest),
-            self.path_for(digest, "contents"),
-            self.path_for(digest, "paths"),
-        ]
+#   #XXX
+#   def self.paths(digest)
+#       return [
+#           self.path_for(digest),
+#           self.path_for(digest, "contents"),
+#           self.path_for(digest, "paths"),
+#       ]
+#   end
+
+    def self.contents_save_path( checksum )
+        self.path_for(checksum_data( checksum ), "contents")
     end
 
     def save_path(subfile = nil)
@@ -113,66 +117,57 @@ class Puppet::BucketFile
     def save_to_disk
         # If the file already exists, just return the md5 sum.
         if ::File.exists?(contents_save_path)
-            # If verification is enabled, then make sure the text matches.
-            if conflict_check?
-                verify(contents, checksum_data, contents_save_path)
+            verify!
+        else
+            # Make the directories if necessary.
+            unless ::File.directory?(save_path)
+                Puppet::Util.withumask(0007) do
+                    ::FileUtils.mkdir_p(save_path)
+                end
             end
-            add_path(path, paths_save_path)
-            return checksum_data
-        end
 
-        # Make the directories if necessary.
-        unless ::File.directory?(save_path)
+            Puppet.info "BucketFile adding #{path} (#{checksum_data})"
+
+            # Write the file to disk.
             Puppet::Util.withumask(0007) do
-                ::FileUtils.mkdir_p(save_path)
+                ::File.open(contents_save_path, ::File::WRONLY|::File::CREAT, 0440) { |of|
+                    of.print contents
+                }
             end
         end
 
-        # Write the file to disk.
-        Puppet.info "Adding #{path} (#{checksum_data}) from REST"
-
-        # ...then just create the file
-        Puppet::Util.withumask(0007) do
-            ::File.open(contents_save_path, ::File::WRONLY|::File::CREAT, 0440) { |of|
-                of.print contents
-            }
-        end
-
-        # Write the path to the paths file.
-        add_path(path, paths_save_path)
-
+        save_path_to_paths_file!
         return checksum_data
     end
 
     # If conflict_check is enabled, verify that the passed text is
     # the same as the text in our file.
-    def verify(content, md5, bfile)
-        curfile = ::File.read(bfile)
+    def verify!
+        return unless content_check?
+        disk_contents = ::File.read(contents_save_path)
 
         # If the contents don't match, then we've found a conflict.
         # Unlikely, but quite bad.
-        if curfile != contents
-            raise(BucketError,
-                "Got passed new contents for sum %s" % md5, caller)
+        if disk_contents != contents
+            raise BucketError, "Got passed new contents for sum #{checksum}", caller
         else
-            msg = "Got duplicate (%s)" % [path, md5]
-            Puppet.info msg
+            Puppet.info "BucketFile got a duplicate file #{path} (#{checksum})"
         end
     end
 
-    def add_path(*args)
-        # TODO
+    def save_path_to_paths_file!
+        # TODO: write self.path to paths_save_path
     end
 
     def self.find_by_checksum( checksum )
-        bpath, bfile = paths( checksum_data(checksum) )
+        load_from_file = self.contents_save_path( checksum )
 
-        if ! ::File.exists? bfile
+        if ! ::File.exists? load_from_file
             return nil
         end
 
         begin
-            contents = ::File.read bfile
+            contents = ::File.read load_from_file
         rescue RuntimeError => e
             raise Puppet::Error, "file could not be read: #{e.message}"
         end
