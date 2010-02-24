@@ -10,6 +10,7 @@ describe Puppet::BucketFile do
         Puppet[:bucketdir] = "/dev/null/bucket"
 
         @digest = "4a8ec4fa5f01b4ab1a0ab8cbccb709f0"
+        @checksum = "md5:4a8ec4fa5f01b4ab1a0ab8cbccb709f0"
         @dir = '/dev/null/bucket/4/a/8/e/c/4/f/a/4a8ec4fa5f01b4ab1a0ab8cbccb709f0'
 
         @contents = "file contents"
@@ -79,9 +80,13 @@ describe Puppet::BucketFile do
         end
     end
 
-    it "should have a to_s method to return the contents"
+    it "should have a to_s method to return the contents" do
+        Puppet::BucketFile.new(@contents).to_s.should == @contents
+    end
 
-    it "should have a method that returns the algorithm"
+    it "should have a method that returns the digest algorithm" do
+        Puppet::BucketFile.new(@contents, :checksum => @checksum).checksum_type.should == :md5
+    end
 
     it "should require content" do
         proc { Puppet::BucketFile.new(nil) }.should raise_error(ArgumentError)
