@@ -197,4 +197,8 @@ describe Puppet::BucketFile do
         end
     end
 
+    it "should accept a path"
+    it "should append the path to the paths file"
+    it "should load the paths"
+
 end
