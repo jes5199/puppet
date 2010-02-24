@@ -219,6 +219,13 @@ describe Puppet::BucketFile do
     
     it "should load the paths"
 
-    it "should return a url-ish name"
+    it "should return a url-ish name" do
+        Puppet::BucketFile.new(@contents).name.should == "md5/4a8ec4fa5f01b4ab1a0ab8cbccb709f0"
+    end
+
+    it "should return a url-ish name with a path" do
+        Puppet::BucketFile.new(@contents, :path => 'my/path').name.should == "md5/4a8ec4fa5f01b4ab1a0ab8cbccb709f0/my/path"
+    end
+
 
 end

@@ -91,7 +91,7 @@ class Puppet::BucketFile
     end
 
     def name
-        @checksum.to_s + "/" + @path.to_s
+        [checksum_type, checksum_data, path].compact.join('/')
     end
 
     def self.path_for(digest, subfile = nil)
