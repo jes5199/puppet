@@ -6,30 +6,43 @@ class Puppet::BucketFile
 
     attr :contents
     attr :path, true
-    attr :hash
+    attr :checksum_type
 
     def initialize( contents, options = {} )
-        @contents = contents
-        @path    = nil
+        raise ArgumentError, 'contents must be a string' unless contents.is_a? String
+        @contents      = contents
+        @path          = nil
+        @checksum_type = options[:checksum_type] || self.class.default_checksum_type
+        digest_class( @checksum_type )
 
-        if options[:hash]
-            self.hash = options[:hash] 
-        else
-            calculate_hash
+        if options[:checksum]
+            self.checksum = options[:checksum] 
         end
     end
 
-    def default_hash
-        "md5"
+    def self.default_checksum_type
+        :md5
     end
 
-    def calculate_hash( hash_type = nil )
-        hash_type ||= default_hash
-        @hash = hash_type + ":" + digest_class(hash_type).hexdigest(contents)
+    def checksum
+        @checksum || calculate_checksum
     end
 
-    def self.find_by_hash( hash )
-        bpath, bfile = paths( hash_data(hash) )
+    def calculate_checksum
+        "#{checksum_type}:" + digest_class(checksum_type).hexdigest(contents)
+    end
+
+    def default_checksum_type
+        @default_checksum_type || self.class.default_checksum_type
+    end
+
+    def checksum_type=( new_checksum_type )
+        @checksum = nil
+        @checksum_type = checksum_type(new_checksum_type)
+    end
+
+    def self.find_by_checksum( checksum )
+        bpath, bfile = paths( checksum_data(checksum) )
 
         if ! ::File.exists? bfile
             return nil
@@ -41,11 +54,11 @@ class Puppet::BucketFile
             raise Puppet::Error, "file could not be read: #{e.message}"
         end
 
-        self.new( contents, :hash => hash )
+        self.new( contents, :checksum => checksum )
     end
 
     def to_s
-        @contents
+        contents
     end
 
     def self.from_s( contents )
@@ -53,40 +66,40 @@ class Puppet::BucketFile
     end
 
     def name
-        @hash.to_s + "/" + @path.to_s
+        @checksum.to_s + "/" + @path.to_s
     end
 
-    def hash=(hash)
-        validate_hash(hash)
-        @hash = hash
+    def checksum=(checksum)
+        validate_checksum(checksum)
+        @checksum = checksum
     end
 
-    def hash_type(new_hash = nil)
-        hash = new_hash || self.hash
-        hash.split(':',2)[0]
+    def checksum_type(new_checksum = nil)
+        checksum = new_checksum || @checksum_type
+        checksum.to_s.split(':',2)[0].to_sym
     end
 
-    def self.hash_data(new_hash = nil)
-        hash = new_hash || self.hash
-        hash.split(':',2)[1]
+    def self.checksum_data(new_checksum = nil)
+        checksum = new_checksum
+        checksum.split(':',2)[1]
     end
 
-    def hash_data(new_hash = nil)
-        self.class.hash_data(new_hash)
+    def checksum_data(new_checksum = nil)
+        self.class.checksum_data(new_checksum || self.checksum)
     end
 
     def digest_class(h = nil)
-        case hash_type(h)
-        when "md5"  : Digest::MD5
-        when "sha1" : Digest::SHA1
+        case checksum_type(h)
+        when :md5  : Digest::MD5
+        when :sha1 : Digest::SHA1
         else
-            raise "not a known hash type: #{hash_type}"
+            raise ArgumentError, "not a known checksum type: #{checksum_type}"
         end
     end
 
-    def validate_hash(new_hash)
-        unless hash_data(new_hash) == digest_class(new_hash).hexdigest(contents)
-            raise "hash does not match contents"
+    def validate_checksum(new_checksum)
+        unless checksum_data(new_checksum) == digest_class(new_checksum).hexdigest(contents)
+            raise "checksum does not match contents"
         end
     end
 
@@ -110,18 +123,16 @@ class Puppet::BucketFile
     end
 
     def save_to_disk
-        digest = digest_class.hexdigest(contents)
-
-        bpath, bfile, pathpath = self.class.paths(digest)
+        bpath, bfile, pathpath = self.class.paths(checksum_data)
 
         # If the file already exists, just return the md5 sum.
         if ::File.exists?(bfile)
             # If verification is enabled, then make sure the text matches.
             if conflict_check?
-                verify(contents, digest, bfile)
+                verify(contents, checksum_data, bfile)
             end
             add_path(path, pathpath)
-            return digest
+            return checksum_data
         end
 
         # Make the directories if necessary.
@@ -132,7 +143,7 @@ class Puppet::BucketFile
         end
 
         # Write the file to disk.
-        Puppet.info "Adding #{path} (#{digest}) from REST"
+        Puppet.info "Adding #{path} (#{checksum_data}) from REST"
 
         # ...then just create the file
         Puppet::Util.withumask(0007) do
@@ -144,7 +155,7 @@ class Puppet::BucketFile
         # Write the path to the paths file.
         add_path(path, pathpath)
 
-        return digest
+        return checksum_data
     end
 
     # If conflict_check is enabled, verify that the passed text is

@@ -8,15 +8,15 @@ class Puppet::Indirector::BucketFile::File < Puppet::Indirector::Code
     end
 
     def find( request )
-        hash_type, hash, path = request_to_type_hash_and_path( request )
-        return model.find_by_hash( hash_type + ":" + hash )
+        checksum, path = request_to_type_checksum_and_path( request )
+        return model.find_by_checksum( checksum )
     end
 
     def save( request )
-        hash_type, hash, path = request_to_type_hash_and_path( request )
+        checksum, path = request_to_type_checksum_and_path( request )
 
         instance = request.instance
-        instance.hash = hash_type + ":" + hash
+        instance.checksum = checksum if checksum
         instance.path = path if path
 
         instance.save_to_disk
@@ -24,7 +24,9 @@ class Puppet::Indirector::BucketFile::File < Puppet::Indirector::Code
     end
 
     private 
-    def request_to_type_hash_and_path( request )
-        request.key.split(/[:\/]/, 3)
+    def request_to_type_checksum_and_path( request )
+        checksum_type, checksum, path = request.key.split(/[:\/]/, 3)
+        return nil if checksum_type.to_s == ""
+        return [ checksum_type + ":" + checksum, path ]
     end
 end

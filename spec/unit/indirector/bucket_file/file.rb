@@ -41,8 +41,8 @@ describe Puppet::Indirector::BucketFile::File do
 
 
     describe Puppet::Indirector::BucketFile::File, " when retrieving files" do
-        it "should call find_by_hash" do
-            Puppet::BucketFile.expects(:find_by_hash).with("md5:#{@digest}").returns(false)
+        it "should call find_by_checksum" do
+            Puppet::BucketFile.expects(:find_by_checksum).with("md5:#{@digest}").returns(false)
             @store.find(@request)
         end
 
