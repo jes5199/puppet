@@ -55,7 +55,7 @@ describe Puppet::Indirector::BucketFile::File do
             content = "my content"
             bucketfile = stub 'bucketfile'
             
-            Puppet::BucketFile.expects(:new).with(content, {:hash => "md5:#{@digest}"}).returns(bucketfile)
+            Puppet::BucketFile.expects(:new).with(content, {:checksum => "md5:#{@digest}"}).returns(bucketfile)
 
             ::File.expects(:exists?).with(@path).returns(true)
             ::File.expects(:read).with(@path).returns(content)
