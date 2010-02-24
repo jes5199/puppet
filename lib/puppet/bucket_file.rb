@@ -70,15 +70,6 @@ class Puppet::BucketFile
         end
     end
 
-#   #XXX
-#   def self.paths(digest)
-#       return [
-#           self.path_for(digest),
-#           self.path_for(digest, "contents"),
-#           self.path_for(digest, "paths"),
-#       ]
-#   end
-
     def self.contents_save_path( checksum )
         self.path_for(checksum_data( checksum ), "contents")
     end
