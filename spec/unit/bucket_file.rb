@@ -21,9 +21,6 @@ describe Puppet::BucketFile do
         ::FileUtils.expects(:mkdir_p).with(@dir)
         ::File.expects(:open).with("#{@dir}/contents",  ::File::WRONLY|::File::CREAT, 0440)
 
-        ::File.expects(:exists?).with("#{@dir}/paths").returns false
-        ::File.expects(:open).with("#{@dir}/paths", ::File::WRONLY|::File::CREAT|::File::APPEND)
-
         bucketfile = Puppet::BucketFile.new(@contents)
         bucketfile.save
 
@@ -176,7 +173,6 @@ describe Puppet::BucketFile do
         end
     end
 
-
     describe "when saving files" do
         it "should save the content to the calculated path" do
             path = Puppet::BucketFile.path_for(@digest, 'contents')
@@ -184,9 +180,6 @@ describe Puppet::BucketFile do
             ::File.stubs(:directory?).with(::File.dirname(path)).returns(true)
             ::File.expects(:exists?).with("#{@dir}/contents").returns false
             ::File.expects(:open).with(path, ::File::WRONLY|::File::CREAT, 0440)
-
-            ::File.expects(:exists?).with("#{@dir}/paths").returns false
-            ::File.expects(:open).with("#{@dir}/paths", ::File::WRONLY|::File::CREAT|::File::APPEND)
 
             Puppet::BucketFile.new(@contents).save
         end
@@ -201,14 +194,15 @@ describe Puppet::BucketFile do
             ::File.expects(:open).with(path, ::File::WRONLY|::File::CREAT, 0440)
             ::File.expects(:exists?).with("#{@dir}/contents").returns false
 
-            ::File.expects(:exists?).with("#{@dir}/paths").returns false
-            ::File.expects(:open).with("#{@dir}/paths", ::File::WRONLY|::File::CREAT|::File::APPEND)
-
             Puppet::BucketFile.new(@contents).save
         end
     end
 
-    it "should accept a path"
+    it "should accept a path" do 
+        remote_path = '/path/on/the/remote/box'
+        Puppet::BucketFile.new(@contents, :path => remote_path).path.should == remote_path
+    end
+
     it "should append the path to the paths file"
     it "should load the paths"
 

@@ -16,7 +16,7 @@ class Puppet::BucketFile
         raise ArgumentError, 'contents must be a string' unless contents.is_a? String
 
         @contents      = contents
-        @path          = nil
+        @path          = options[:path]
 
         @checksum_type = options[:checksum_type] || self.class.default_checksum_type
         digest_class( @checksum_type ) # raises error on bad types
@@ -147,6 +147,8 @@ class Puppet::BucketFile
     end
 
     def save_path_to_paths_file!
+        return unless path
+
         # check for dupes
         if ::File.exists?(paths_save_path)
             ::File.open(paths_save_path) do |f|
