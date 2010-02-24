@@ -203,7 +203,20 @@ describe Puppet::BucketFile do
         Puppet::BucketFile.new(@contents, :path => remote_path).path.should == remote_path
     end
 
-    it "should append the path to the paths file"
+    it "should append the path to the paths file" do
+        remote_path = '/path/on/the/remote/box'
+
+        save_path = Puppet::BucketFile.path_for(@digest, 'contents')
+        ::File.expects(:directory?).with(::File.dirname(save_path)).returns(true)
+        ::File.expects(:open).with(save_path, ::File::WRONLY|::File::CREAT, 0440)
+        ::File.expects(:exists?).with("#{@dir}/contents").returns false
+
+        ::File.expects(:exists?).with("#{@dir}/paths").returns false
+        ::File.expects(:open).with("#{@dir}/paths", ::File::WRONLY|::File::CREAT|::File::APPEND).returns false
+        Puppet::BucketFile.new(@contents, :path => remote_path).save
+
+    end
+    
     it "should load the paths"
 
     it "should return a url-ish name"
