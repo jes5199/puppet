@@ -201,4 +201,6 @@ describe Puppet::BucketFile do
     it "should append the path to the paths file"
     it "should load the paths"
 
+    it "should return a url-ish name"
+
 end
