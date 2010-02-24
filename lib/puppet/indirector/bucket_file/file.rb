@@ -8,12 +8,12 @@ class Puppet::Indirector::BucketFile::File < Puppet::Indirector::Code
     end
 
     def find( request )
-        checksum, path = request_to_type_checksum_and_path( request )
+        checksum, path = request_to_checksum_and_path( request )
         return model.find_by_checksum( checksum )
     end
 
     def save( request )
-        checksum, path = request_to_type_checksum_and_path( request )
+        checksum, path = request_to_checksum_and_path( request )
 
         instance = request.instance
         instance.checksum = checksum if checksum
@@ -24,7 +24,7 @@ class Puppet::Indirector::BucketFile::File < Puppet::Indirector::Code
     end
 
     private 
-    def request_to_type_checksum_and_path( request )
+    def request_to_checksum_and_path( request )
         checksum_type, checksum, path = request.key.split(/[:\/]/, 3)
         return nil if checksum_type.to_s == ""
         return [ checksum_type + ":" + checksum, path ]
