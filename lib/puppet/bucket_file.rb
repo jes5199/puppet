@@ -121,9 +121,9 @@ class Puppet::BucketFile
 
             # Write the file to disk.
             Puppet::Util.withumask(0007) do
-                ::File.open(contents_save_path, ::File::WRONLY|::File::CREAT, 0440) { |of|
+                ::File.open(contents_save_path, ::File::WRONLY|::File::CREAT, 0440) do |of|
                     of.print contents
-                }
+                end
             end
         end
 
@@ -147,7 +147,17 @@ class Puppet::BucketFile
     end
 
     def save_path_to_paths_file!
-        # TODO: write self.path to paths_save_path
+        # check for dupes
+        if ::File.exists?(paths_save_path)
+            ::File.open(paths_save_path) do |f|
+                return if f.readlines.collect { |l| l.chomp }.include?(path)
+            end
+        end
+
+        # if it's a new file, or if our path isn't in the file yet, add it
+        File.open(paths_save_path, ::File::WRONLY|::File::CREAT|::File::APPEND) do |of|
+            of.puts path
+        end
     end
 
     def self.find_by_checksum( checksum )

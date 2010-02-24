@@ -21,6 +21,9 @@ describe Puppet::BucketFile do
         ::FileUtils.expects(:mkdir_p).with(@dir)
         ::File.expects(:open).with("#{@dir}/contents",  ::File::WRONLY|::File::CREAT, 0440)
 
+        ::File.expects(:exists?).with("#{@dir}/paths").returns false
+        ::File.expects(:open).with("#{@dir}/paths", ::File::WRONLY|::File::CREAT|::File::APPEND)
+
         bucketfile = Puppet::BucketFile.new(@contents)
         bucketfile.save
 
@@ -179,7 +182,11 @@ describe Puppet::BucketFile do
             path = Puppet::BucketFile.path_for(@digest, 'contents')
 
             ::File.stubs(:directory?).with(::File.dirname(path)).returns(true)
+            ::File.expects(:exists?).with("#{@dir}/contents").returns false
             ::File.expects(:open).with(path, ::File::WRONLY|::File::CREAT, 0440)
+
+            ::File.expects(:exists?).with("#{@dir}/paths").returns false
+            ::File.expects(:open).with("#{@dir}/paths", ::File::WRONLY|::File::CREAT|::File::APPEND)
 
             Puppet::BucketFile.new(@contents).save
         end
@@ -192,6 +199,10 @@ describe Puppet::BucketFile do
             end
             ::File.expects(:directory?).with(::File.dirname(path)).returns(false)
             ::File.expects(:open).with(path, ::File::WRONLY|::File::CREAT, 0440)
+            ::File.expects(:exists?).with("#{@dir}/contents").returns false
+
+            ::File.expects(:exists?).with("#{@dir}/paths").returns false
+            ::File.expects(:open).with("#{@dir}/paths", ::File::WRONLY|::File::CREAT|::File::APPEND)
 
             Puppet::BucketFile.new(@contents).save
         end
