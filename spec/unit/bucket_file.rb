@@ -3,6 +3,8 @@
 require ::File.dirname(__FILE__) + '/../spec_helper'
 
 require 'puppet/bucket_file'
+require 'digest/md5'
+require 'digest/sha1'
 
 describe Puppet::BucketFile do
     before do
@@ -97,7 +99,6 @@ describe Puppet::BucketFile do
     end
 
     it "should calculate the checksum" do
-        require 'digest/md5'
         Digest::MD5.expects(:hexdigest).with(@contents).returns('mychecksum')
         Puppet::BucketFile.new(@contents).checksum.should == 'md5:mychecksum'
     end

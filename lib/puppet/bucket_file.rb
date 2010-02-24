@@ -63,8 +63,8 @@ class Puppet::BucketFile
 
     def digest_class(type = nil)
         case checksum_type(type)
-        when :md5  : Digest::MD5
-        when :sha1 : Digest::SHA1
+        when :md5  : require 'digest/md5'  ; Digest::MD5
+        when :sha1 : require 'digest/sha1' ; Digest::SHA1
         else
             raise ArgumentError, "not a known checksum type: #{checksum_type(type)}"
         end
