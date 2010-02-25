@@ -290,7 +290,6 @@ class Puppet::Indirector::Indirection
     # Setup a request, pick the appropriate terminus, check the request's authorization, and return it.
     def prepare(request)
         # Pick our terminus.
-        puts self.inspect
         if respond_to?(:select_terminus)
             unless terminus_name = select_terminus(request)
                 raise ArgumentError, "Could not determine appropriate terminus for %s" % request
