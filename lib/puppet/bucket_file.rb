@@ -140,6 +140,10 @@ class Puppet::BucketFile
         return checksum_data
     end
 
+    def content_check?
+        true
+    end
+
     # If conflict_check is enabled, verify that the passed text is
     # the same as the text in our file.
     def verify!
