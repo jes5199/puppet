@@ -32,9 +32,9 @@ describe Puppet::Indirector::BucketFile::File do
 
             Puppet.stubs(:[]).with(:bucketdir).returns(@dir)
 
-            @path = Puppet::BucketFile.path_for(@digest, "contents")
+            @path = Puppet::BucketFile.path_for(nil, @digest, "contents")
 
-            @request = stub 'request', :key => "md5/#{@digest}"
+            @request = stub 'request', :key => "md5/#{@digest}/remote/path"
         end
 
         it "should call find_by_checksum" do
@@ -69,5 +69,6 @@ describe Puppet::Indirector::BucketFile::File do
             ::File.expects(:read).with(@path).raises(RuntimeError)
             proc { @store.find(@request) }.should raise_error(Puppet::Error)
         end
+
     end
 end

@@ -1,19 +1,26 @@
 # The client class for filebuckets.
-class Puppet::Network::Client::Dipper < Puppet::Network::Client
-    @handler = Puppet::Network::Handler.handler(:filebucket)
-    @drivername = :Bucket
+class Puppet::Network::Client::Dipper #XXX < Puppet::Network::Client
+    # This is a transitional implementation that uses REST
+    # to access remote filebucket files.
+
+    # XXX @handler = Puppet::Network::Handler.handler(:filebucket)
+    # XXX @drivername = :Bucket
 
     attr_accessor :name
 
     # Create our bucket client
     def initialize(hash = {})
-        if hash.include?(:Path)
-            bucket = self.class.handler.new(:Path => hash[:Path])
-            hash.delete(:Path)
-            hash[:Bucket] = bucket
-        end
+        # Emulate the XMLRPC client
+        server      = hash[:Server]
+        port        = hash[:Port] || Puppet[:masterport]
+        environment = Puppet[:environment]
 
-        super(hash)
+        if hash.include?(:Path)
+            @local_path = hash[:Path]
+        else
+            Puppet::Status.indirection.terminus_class = :rest
+            @rest_path = "https://#{server}:#{port}/#{environment}/bucket_file/"
+        end
     end
 
     # Back up a file to our bucket

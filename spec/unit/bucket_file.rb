@@ -147,41 +147,41 @@ describe Puppet::BucketFile do
     describe "when determining file paths" do
         it "should use the value of the :bucketdir setting as the root directory" do
             Puppet.stubs(:[]).with(:bucketdir).returns('/dev/null/bucketdir')
-            Puppet::BucketFile.path_for('DEADBEEF').should =~ %r{^/dev/null/bucketdir}
+            Puppet::BucketFile.path_for(nil, 'DEADBEEF').should =~ %r{^/dev/null/bucketdir}
         end
 
         it "should choose a path 8 directories deep with each directory name being the respective character in the filebucket" do
             Puppet.stubs(:[]).with(:bucketdir).returns('/dev/null/bucketdir')
             value = 'DEADBEEFC0FFEE'
 
-            path = Puppet::BucketFile.path_for(value)
+            path = Puppet::BucketFile.path_for(nil, value)
             dirs = value[0..7].split("").join(File::SEPARATOR)
             path.should be_include(dirs)
         end
 
         it "should use the full filebucket as the final directory name" do
             value = 'DEADBEEFC0FFEE'
-            path = Puppet::BucketFile.path_for(value, 'contents')
+            path = Puppet::BucketFile.path_for(nil, value, 'contents')
             ::File.basename(::File.dirname(path)).should == value
         end
 
         it "should use 'contents' as the actual file name" do
             value = 'DEADBEEFC0FFEE'
-            path = Puppet::BucketFile.path_for(value, 'contents')
+            path = Puppet::BucketFile.path_for(nil, value, 'contents')
             ::File.basename(path).should == "contents"
         end
 
         it "should use the bucketdir, the 8 sum character directories, the full filebucket, and 'contents' as the full file name" do
             Puppet.stubs(:[]).with(:bucketdir).returns('/dev/null/bucketdir')
             value = 'DEADBEEFC0FFEE'
-            path = Puppet::BucketFile.path_for(value, 'contents')
+            path = Puppet::BucketFile.path_for(nil, value, 'contents')
             path.should == ['/dev/null/bucketdir', value[0..7].split(""), value, "contents"].flatten.join(::File::SEPARATOR)
         end
     end
 
     describe "when saving files" do
         it "should save the content to the calculated path" do
-            path = Puppet::BucketFile.path_for(@digest, 'contents')
+            path = Puppet::BucketFile.path_for(nil, @digest, 'contents')
 
             ::File.stubs(:directory?).with(::File.dirname(path)).returns(true)
             ::File.expects(:exists?).with("#{@dir}/contents").returns false
@@ -194,7 +194,7 @@ describe Puppet::BucketFile do
         end
 
         it "should make any directories necessary for storage" do
-            path = Puppet::BucketFile.path_for(@digest, 'contents')
+            path = Puppet::BucketFile.path_for(nil, @digest, 'contents')
 
             FileUtils.expects(:mkdir_p).with do |arg|
                 ::File.umask == 0007 and arg == ::File.dirname(path)
@@ -215,7 +215,7 @@ describe Puppet::BucketFile do
     it "should append the path to the paths file" do
         remote_path = '/path/on/the/remote/box'
 
-        save_path = Puppet::BucketFile.path_for(@digest, 'contents')
+        save_path = Puppet::BucketFile.path_for(nil, @digest, 'contents')
         ::File.expects(:directory?).with(::File.dirname(save_path)).returns(true)
         ::File.expects(:open).with(save_path, ::File::WRONLY|::File::CREAT, 0440)
         ::File.expects(:exists?).with("#{@dir}/contents").returns false

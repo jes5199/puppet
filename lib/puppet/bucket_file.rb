@@ -1,6 +1,10 @@
 require 'puppet/indirector'
 
 class Puppet::BucketFile
+    # This class handles the abstract notion of a file in a filebucket,
+    # and it currently also has the logic for loading and saving disk files
+    # on the server-side.
+    # The client-side equivalent to that is in Puppet::Network::Client::Dipper
     extend Puppet::Indirector
     indirects :bucket_file, :terminus_class => :file
 
@@ -15,12 +19,14 @@ class Puppet::BucketFile
     def initialize( contents, options = {} )
         raise ArgumentError, 'contents must be a string' unless contents.is_a? String
 
-        @contents      = contents
-        @path          = options[:path]
+        @contents    = contents
+        @path        = options[:path]
+        @bucket_path = options[:bucket_path]
 
         @checksum_type = options[:checksum_type] || self.class.default_checksum_type
         digest_class( @checksum_type ) # raises error on bad types
 
+        @checksum = nil # lazily calculated
         if options[:checksum]
             self.checksum = options[:checksum] 
         end
@@ -70,12 +76,22 @@ class Puppet::BucketFile
         end
     end
 
-    def self.contents_save_path( checksum )
-        self.path_for(checksum_data( checksum ), "contents")
+    def self.path_for(bucket_path, digest, subfile = nil)
+        bucket_path ||= Puppet[:bucketdir] 
+
+        dir     = ::File.join(digest[0..7].split(""))
+        basedir = ::File.join(bucket_path, dir, digest)
+
+        return basedir unless subfile
+        return ::File.join(basedir, subfile)
+    end
+
+    def self.contents_save_path( bucket_path, checksum )
+        self.path_for( bucket_path, checksum_data( checksum ), "contents")
     end
 
     def save_path(subfile = nil)
-        self.class.path_for(checksum_data, subfile)
+        self.class.path_for(@bucket_path, checksum_data, subfile)
     end
 
     def contents_save_path
@@ -92,13 +108,6 @@ class Puppet::BucketFile
 
     def name
         [checksum_type, checksum_data, path].compact.join('/')
-    end
-
-    def self.path_for(digest, subfile = nil)
-        dir = ::File.join(digest[0..7].split(""))
-        basedir = ::File.join(Puppet[:bucketdir], dir, digest)
-        return basedir unless subfile
-        return ::File.join(basedir, subfile)
     end
 
     def conflict_check?
@@ -176,8 +185,8 @@ class Puppet::BucketFile
         return @paths
     end
 
-    def self.find_by_checksum( checksum )
-        load_from_file = self.contents_save_path( checksum )
+    def self.find_by_checksum( checksum, bucket_path = nil )
+        load_from_file = self.contents_save_path( bucket_path, checksum )
 
         if ! ::File.exists? load_from_file
             return nil
