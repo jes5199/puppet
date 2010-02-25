@@ -1,5 +1,6 @@
 module Puppet
     require 'puppet/network/client'
+    require 'puppet/network/client/dipper'
 
     newtype(:filebucket) do
         @doc = "A repository for backing up files.  If no filebucket is
