@@ -30,7 +30,7 @@ class Puppet::Network::Client::Dipper
         contents = ::File.read(file)
         begin
             #FIXME use select_terminus
-            Puppet::BucketFile.indirection.terminus_class = @rest_path ? :rest : :file
+            #Puppet::BucketFile.indirection.terminus_class = @rest_path ? :rest : :file
 
             bucket_file = Puppet::BucketFile.new(contents, :bucket_dir => @local_path, :path => file)
             

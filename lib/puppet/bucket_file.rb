@@ -6,7 +6,8 @@ class Puppet::BucketFile
     # on the server-side.
     # The client-side equivalent to that is in Puppet::Network::Client::Dipper
     extend Puppet::Indirector
-    indirects :bucket_file, :terminus_class => :file
+    require 'puppet/bucket_file/indirection_hooks'
+    indirects :bucket_file, :terminus_class => :file, :extend => Puppet::BucketFile::IndirectionHooks
 
     attr :contents
     attr :path, true
