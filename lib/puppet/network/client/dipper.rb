@@ -56,7 +56,7 @@ class Puppet::Network::Client::Dipper #XXX < Puppet::Network::Client
         #FIXME use select_terminus
         Puppet::BucketFile.indirection.terminus_class = @rest_path ? :rest : :file
 
-        source_path = "#{@rest_path}#{sum}"
+        source_path = "#{@rest_path}md5/#{sum}"
         bucket_file = Puppet::BucketFile.find(source_path)
 
         return bucket_file.to_s
