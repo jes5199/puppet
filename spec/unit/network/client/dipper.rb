@@ -5,7 +5,7 @@ require File.dirname(__FILE__) + '/../../../spec_helper'
 require 'puppet/network/client/dipper'
 describe Puppet::Network::Client::Dipper do
     it "should fail in an informative way when there are failures backing up to the server" do
-        FileTest.stubs(:exists?).returns true
+        File.stubs(:exists?).returns true
         File.stubs(:read).returns "content"
 
         @dipper = Puppet::Network::Client::Dipper.new(:Path => "/my/bucket")

@@ -24,7 +24,7 @@ class Puppet::Network::Client::Dipper
 
     # Back up a file to our bucket
     def backup(file)
-        unless FileTest.exists?(file)
+        unless ::File.exists?(file)
             raise(ArgumentError, "File %s does not exist" % file)
         end
         contents = ::File.read(file)
