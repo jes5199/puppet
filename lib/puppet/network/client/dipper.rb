@@ -1,3 +1,4 @@
+require 'puppet/network/client'
 # The client class for filebuckets.
 class Puppet::Network::Client::Dipper #XXX < Puppet::Network::Client
     # This is a transitional implementation that uses REST
@@ -32,9 +33,9 @@ class Puppet::Network::Client::Dipper #XXX < Puppet::Network::Client
         contents = ::File.read(file)
         begin
             #FIXME use select_terminus
-            BucketFile.indirection.terminus_class = @rest_path ? :rest : :file
+            Puppet::BucketFile.indirection.terminus_class = @rest_path ? :rest : :file
 
-            bucket_file = BucketFile.new(contents, :bucket_dir => @local_path)
+            bucket_file = Puppet::BucketFile.new(contents, :bucket_dir => @local_path, :path => file)
             
             dest_path = "#{@rest_path}#{bucket_file.name}"
 
@@ -46,19 +47,19 @@ class Puppet::Network::Client::Dipper #XXX < Puppet::Network::Client
             puts detail.backtrace if Puppet[:trace]
             raise Puppet::Error, "Could not back up %s: %s" % [file, detail]
         ensure
-            BucketFile.indirection.terminus_class = :file
+            Puppet::BucketFile.indirection.terminus_class = :file
         end
     end
 
     # Retrieve a file by sum.
     def getfile(sum)
-        if newcontents = @driver.getfile(sum)
-            unless local?
-                newcontents = Base64.decode64(newcontents)
-            end
-            return newcontents
-        end
-        return nil
+        #FIXME use select_terminus
+        Puppet::BucketFile.indirection.terminus_class = @rest_path ? :rest : :file
+
+        source_path = "#{@rest_path}#{sum}"
+        bucket_file = Puppet::BucketFile.find(source_path)
+
+        return bucket_file.to_s
     end
 
     # Restore the file
