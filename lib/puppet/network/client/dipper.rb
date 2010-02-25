@@ -29,9 +29,6 @@ class Puppet::Network::Client::Dipper
         end
         contents = ::File.read(file)
         begin
-            #FIXME use select_terminus
-            #Puppet::BucketFile.indirection.terminus_class = @rest_path ? :rest : :file
-
             bucket_file = Puppet::BucketFile.new(contents, :bucket_dir => @local_path, :path => file)
             
             dest_path = "#{@rest_path}#{bucket_file.name}"
@@ -43,16 +40,11 @@ class Puppet::Network::Client::Dipper
         rescue => detail
             puts detail.backtrace if Puppet[:trace]
             raise Puppet::Error, "Could not back up %s: %s" % [file, detail]
-        ensure
-            Puppet::BucketFile.indirection.terminus_class = :file
         end
     end
 
     # Retrieve a file by sum.
     def getfile(sum)
-        #FIXME use select_terminus
-        Puppet::BucketFile.indirection.terminus_class = @rest_path ? :rest : :file
-
         source_path = "#{@rest_path}md5/#{sum}"
         bucket_file = Puppet::BucketFile.find(source_path)
 
