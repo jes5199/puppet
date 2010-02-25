@@ -1,11 +1,8 @@
 require 'puppet/network/client'
 # The client class for filebuckets.
-class Puppet::Network::Client::Dipper #XXX < Puppet::Network::Client
+class Puppet::Network::Client::Dipper
     # This is a transitional implementation that uses REST
     # to access remote filebucket files.
-
-    # XXX @handler = Puppet::Network::Handler.handler(:filebucket)
-    # XXX @drivername = :Bucket
 
     attr_accessor :name
 
