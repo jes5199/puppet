@@ -5,6 +5,6 @@ require 'puppet/bucket_file'
 module Puppet::BucketFile::IndirectionHooks
     def select_terminus(request)
         return :rest if request.protocol == 'https'
-        return :file
+        return Puppet::BucketFile.indirection.terminus_class
     end
 end
