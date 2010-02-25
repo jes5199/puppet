@@ -83,6 +83,7 @@ class Puppet::Indirector::REST < Puppet::Indirector::Terminus
 
     def save(request)
         raise ArgumentError, "PUT does not accept options" unless request.options.empty?
+
         deserialize network(request).put(indirection2uri(request), request.instance.render, headers.merge({ "Content-Type" => request.instance.mime }))
     end
 

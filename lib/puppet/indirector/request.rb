@@ -180,6 +180,7 @@ class Puppet::Indirector::Request
         end
 
         @protocol = uri.scheme
-        @key = URI.unescape(uri.path.sub(/^\//, ''))
+        env, indirector, @key = URI.unescape(uri.path.sub(/^\//, '')).split('/',3)
+        self.environment = env unless env == ''
     end
 end

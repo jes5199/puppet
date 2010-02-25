@@ -37,6 +37,7 @@ class Puppet::Network::Client::Dipper #XXX < Puppet::Network::Client
             bucket_file = BucketFile.new(contents, :bucket_dir => @local_path)
             
             dest_path = "#{@rest_path}#{bucket_file.name}"
+
             request = Puppet::Indirector::Request.new(:bucket_file, :save, dest_path)
 
             bucket_file.save(request)
