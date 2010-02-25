@@ -62,8 +62,7 @@ module Puppet
         end
 
         def bucket
-            mkbucket() unless defined? @bucket
-            return @bucket
+            @bucket || mkbucket()
         end
 
         private
@@ -83,7 +82,7 @@ module Puppet
             end
 
             begin
-                @bucket = Puppet::Network::Client.client(:Dipper).new(args)
+                @bucket = Puppet::Network::Client::Dipper.new(args)
             rescue => detail
                 puts detail.backtrace if Puppet[:trace]
                 self.fail("Could not create %s filebucket: %s" % [type, detail])
