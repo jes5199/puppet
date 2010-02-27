@@ -39,7 +39,6 @@ class Rights
     end
 
     def fail_on_deny(name, args = {})
-        return # Oh man don't commit this
         res = :nomatch
         right = @rights.find do |acl|
             found = false
