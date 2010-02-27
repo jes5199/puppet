@@ -63,7 +63,8 @@ module Puppet
         end
 
         def bucket
-            @bucket || mkbucket()
+            mkbucket() unless defined? @bucket
+            return @bucket
         end
 
         private

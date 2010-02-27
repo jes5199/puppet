@@ -22,6 +22,10 @@ class Puppet::Network::Client::Dipper
         end
     end
 
+    def local?
+        !! @local_path
+    end
+
     # Back up a file to our bucket
     def backup(file)
         unless ::File.exists?(file)
