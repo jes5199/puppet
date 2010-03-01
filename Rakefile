@@ -48,7 +48,7 @@ task :spec do
     end
 
     Spec::Rake::SpecTask.new do |t|
-        t.spec_opts = ['--format','s', '--loadby','mtime']
+        t.spec_opts = ['--format','s', '--loadby','mtime','-b']
         t.spec_files = FileList['spec/**/*.rb']
         t.fail_on_error = false
         if defined?(Rcov)

@@ -199,7 +199,7 @@ describe Puppet::Indirector::Indirection do
             end
 
             it "should default to the arguments being nil" do
-                Puppet::Indirector::Request.expects(:new).with { |name, method, key, args| args.nil? }
+                Puppet::Indirector::Request.expects(:new).with { |name, method, key, args| args == {} }
                 @indirection.request(:funtest, "yayness")
             end
 
