@@ -1,32 +1,45 @@
+require 'puppet/network/client'
 # The client class for filebuckets.
-class Puppet::Network::Client::Dipper < Puppet::Network::Client
-    @handler = Puppet::Network::Handler.handler(:filebucket)
-    @drivername = :Bucket
+class Puppet::Network::Client::Dipper
+    # This is a transitional implementation that uses REST
+    # to access remote filebucket files.
 
     attr_accessor :name
 
     # Create our bucket client
     def initialize(hash = {})
-        if hash.include?(:Path)
-            bucket = self.class.handler.new(:Path => hash[:Path])
-            hash.delete(:Path)
-            hash[:Bucket] = bucket
-        end
+        # Emulate the XMLRPC client
+        server      = hash[:Server]
+        port        = hash[:Port] || Puppet[:masterport]
+        environment = Puppet[:environment]
 
-        super(hash)
+        if hash.include?(:Path)
+            @local_path = hash[:Path]
+            @rest_path  = nil
+        else
+            @local_path = nil
+            @rest_path = "https://#{server}:#{port}/#{environment}/bucket_file/"
+        end
+    end
+
+    def local?
+        !! @local_path
     end
 
     # Back up a file to our bucket
     def backup(file)
-        unless FileTest.exists?(file)
+        unless ::File.exists?(file)
             raise(ArgumentError, "File %s does not exist" % file)
         end
         contents = ::File.read(file)
-        unless local?
-            contents = Base64.encode64(contents)
-        end
         begin
-            return @driver.addfile(contents,file)
+            bucket_file = Puppet::BucketFile.new(contents, :bucket_dir => @local_path, :path => file)
+            dest_path = "#{@rest_path}#{bucket_file.name}"
+
+            request = Puppet::Indirector::Request.new(:bucket_file, :save, dest_path)
+
+            bucket_file.save(request)
+            return bucket_file.checksum_data
         rescue => detail
             puts detail.backtrace if Puppet[:trace]
             raise Puppet::Error, "Could not back up %s: %s" % [file, detail]
@@ -35,13 +48,10 @@ class Puppet::Network::Client::Dipper < Puppet::Network::Client
 
     # Retrieve a file by sum.
     def getfile(sum)
-        if newcontents = @driver.getfile(sum)
-            unless local?
-                newcontents = Base64.decode64(newcontents)
-            end
-            return newcontents
-        end
-        return nil
+        source_path = "#{@rest_path}md5/#{sum}"
+        bucket_file = Puppet::BucketFile.find(source_path)
+
+        return bucket_file.to_s
     end
 
     # Restore the file

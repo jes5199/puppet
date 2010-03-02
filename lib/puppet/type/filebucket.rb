@@ -1,5 +1,6 @@
 module Puppet
     require 'puppet/network/client'
+    require 'puppet/network/client/dipper'
 
     newtype(:filebucket) do
         @doc = "A repository for backing up files.  If no filebucket is
@@ -83,7 +84,7 @@ module Puppet
             end
 
             begin
-                @bucket = Puppet::Network::Client.client(:Dipper).new(args)
+                @bucket = Puppet::Network::Client::Dipper.new(args)
             rescue => detail
                 puts detail.backtrace if Puppet[:trace]
                 self.fail("Could not create %s filebucket: %s" % [type, detail])
