@@ -32,41 +32,46 @@ describe Puppet::FileBucketFile::File do
 
             Puppet.stubs(:[]).with(:bucketdir).returns(@dir)
 
-            @path = Puppet::FileBucket::File.path_for(nil, @digest, "contents")
+            @contents_path = '/what/ever/7/0/9/2/4/d/6/f/70924d6fa4b2d745185fa4660703a5c0/contents'
+            @paths_path    = '/what/ever/7/0/9/2/4/d/6/f/70924d6fa4b2d745185fa4660703a5c0/paths'
 
             @request = stub 'request', :key => "md5/#{@digest}/remote/path"
         end
 
         it "should call find_by_checksum" do
-            Puppet::FileBucket::File.expects(:find_by_checksum).with("md5:#{@digest}").returns(false)
+            @store.expects(:find_by_checksum).with("md5:#{@digest}").returns(false)
             @store.find(@request)
         end
 
         it "should look for the calculated path" do
-            ::File.expects(:exists?).with(@path).returns(false)
+            ::File.expects(:exists?).with(@contents_path).returns(false)
             @store.find(@request)
         end
 
         it "should return an instance of Puppet::FileBucket::File created with the content if the file exists" do
             content = "my content"
             bucketfile = stub 'bucketfile'
+            bucketfile.stubs(:bucket_path)
+            bucketfile.stubs(:checksum_data).returns(@digest)
 
-            Puppet::FileBucket::File.expects(:new).with(content, {:checksum => "md5:#{@digest}"}).returns(bucketfile)
+            bucketfile.expects(:contents=).with(content)
+            Puppet::FileBucket::File.expects(:new).with(nil, {:checksum => "md5:#{@digest}"}).returns(bucketfile)
 
-            ::File.expects(:exists?).with(@path).returns(true)
-            ::File.expects(:read).with(@path).returns(content)
+            ::File.expects(:exists?).with(@contents_path).returns(true)
+            ::File.expects(:exists?).with(@paths_path).returns(false)
+            ::File.expects(:read).with(@contents_path).returns(content)
 
             @store.find(@request).should equal(bucketfile)
         end
 
         it "should return nil if no file is found" do
-            ::File.expects(:exists?).with(@path).returns(false)
+            ::File.expects(:exists?).with(@contents_path).returns(false)
             @store.find(@request).should be_nil
         end
 
         it "should fail intelligently if a found file cannot be read" do
-            ::File.expects(:exists?).with(@path).returns(true)
-            ::File.expects(:read).with(@path).raises(RuntimeError)
+            ::File.expects(:exists?).with(@contents_path).returns(true)
+            ::File.expects(:read).with(@contents_path).raises(RuntimeError)
             proc { @store.find(@request) }.should raise_error(Puppet::Error)
         end
 

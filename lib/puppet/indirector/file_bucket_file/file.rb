@@ -114,10 +114,10 @@ module Puppet::FileBucketFile
 
             # If the contents don't match, then we've found a conflict.
             # Unlikely, but quite bad.
-            if disk_contents != contents
-                raise BucketError, "Got passed new contents for sum #{checksum}", caller
+            if disk_contents != bucket_file.contents
+                raise BucketError, "Got passed new contents for sum #{bucket_file.checksum}", caller
             else
-                Puppet.info "FileBucket got a duplicate file #{path} (#{checksum})"
+                Puppet.info "FileBucket got a duplicate file #{bucket_file.path} (#{bucket_file.checksum})"
             end
         end
 
@@ -127,7 +127,7 @@ module Puppet::FileBucketFile
             # check for dupes
             if ::File.exists?(paths_path_for bucket_file)
                 ::File.open(paths_path_for bucket_file) do |f|
-                    return if f.readlines.collect { |l| l.chomp }.include?(path)
+                    return if f.readlines.collect { |l| l.chomp }.include?(bucket_file.path)
                 end
             end
 
