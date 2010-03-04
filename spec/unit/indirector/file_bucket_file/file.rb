@@ -36,7 +36,7 @@ describe Puppet::FileBucketFile::File do
         it "should return nil if a file doesn't exist" do
             ::File.expects(:exists?).with("#{@dir}/contents").returns false
 
-            bucketfile = Puppet::FileBucketFile::File.new.find_by_checksum("md5:#{@digest}")
+            bucketfile = Puppet::FileBucketFile::File.new.send(:find_by_checksum, "md5:#{@digest}")
             bucketfile.should == nil
         end
 
@@ -45,7 +45,7 @@ describe Puppet::FileBucketFile::File do
             ::File.expects(:exists?).with("#{@dir}/paths").returns false
             ::File.expects(:read).with("#{@dir}/contents").returns @contents
 
-            bucketfile = Puppet::FileBucketFile::File.new.find_by_checksum("md5:#{@digest}")
+            bucketfile = Puppet::FileBucketFile::File.new.send(:find_by_checksum, "md5:#{@digest}")
             bucketfile.should_not == nil
         end
 
@@ -59,7 +59,7 @@ describe Puppet::FileBucketFile::File do
             mockfile.expects(:readlines).returns( paths )
             ::File.expects(:open).with("#{@dir}/paths").yields mockfile
 
-            Puppet::FileBucketFile::File.new.find_by_checksum("md5:#{@digest}").paths.should == paths
+            Puppet::FileBucketFile::File.new.send(:find_by_checksum, "md5:#{@digest}").paths.should == paths
         end
 
     end
@@ -154,6 +154,134 @@ describe Puppet::FileBucketFile::File do
             path = Puppet::FileBucketFile::File.new.send(:contents_path_for, @bucket)
             path.should == ['/dev/null/bucketdir', @digest[0..7].split(""), @digest, "contents"].flatten.join(::File::SEPARATOR)
          end
+    end
+
+    describe "when saving files" do
+        before do
+            # this is the default from spec_helper, but it keeps getting reset at odd times
+            Puppet[:bucketdir] = "/dev/null/bucket"
+
+            @digest = "4a8ec4fa5f01b4ab1a0ab8cbccb709f0"
+            @checksum = "md5:4a8ec4fa5f01b4ab1a0ab8cbccb709f0"
+            @dir = '/dev/null/bucket/4/a/8/e/c/4/f/a/4a8ec4fa5f01b4ab1a0ab8cbccb709f0'
+
+            @contents = "file contents"
+
+            @bucket = stub "bucket file"
+            @bucket.stubs(:bucket_path)
+            @bucket.stubs(:checksum_data).returns(@digest)
+            @bucket.stubs(:path).returns(nil)
+            @bucket.stubs(:contents).returns("file contents")
+        end
+
+        it "should save the contents to the calculated path" do
+            ::File.stubs(:directory?).with(@dir).returns(true)
+            ::File.expects(:exists?).with("#{@dir}/contents").returns false
+
+            mockfile = mock "file"
+            mockfile.expects(:print).with(@contents)
+            ::File.expects(:open).with("#{@dir}/contents", ::File::WRONLY|::File::CREAT, 0440).yields(mockfile)
+
+            Puppet::FileBucketFile::File.new.send(:save_to_disk, @bucket)
+        end
+
+        it "should make any directories necessary for storage" do
+            FileUtils.expects(:mkdir_p).with do |arg|
+                ::File.umask == 0007 and arg == @dir
+            end
+            ::File.expects(:directory?).with(@dir).returns(false)
+            ::File.expects(:open).with("#{@dir}/contents", ::File::WRONLY|::File::CREAT, 0440)
+            ::File.expects(:exists?).with("#{@dir}/contents").returns false
+
+            Puppet::FileBucketFile::File.new.send(:save_to_disk, @bucket)
+        end
+    end
+
+
+    describe "when verifying identical files" do
+        before do
+            # this is the default from spec_helper, but it keeps getting reset at odd times
+            Puppet[:bucketdir] = "/dev/null/bucket"
+
+            @digest = "4a8ec4fa5f01b4ab1a0ab8cbccb709f0"
+            @checksum = "md5:4a8ec4fa5f01b4ab1a0ab8cbccb709f0"
+            @dir = '/dev/null/bucket/4/a/8/e/c/4/f/a/4a8ec4fa5f01b4ab1a0ab8cbccb709f0'
+
+            @contents = "file contents"
+
+            @bucket = stub "bucket file"
+            @bucket.stubs(:bucket_path)
+            @bucket.stubs(:checksum).returns(@checksum)
+            @bucket.stubs(:checksum_data).returns(@digest)
+            @bucket.stubs(:path).returns(nil)
+            @bucket.stubs(:contents).returns("file contents")
+        end
+
+        it "should raise an error if the files don't match" do
+            File.expects(:read).with("#{@dir}/contents").returns("corrupt contents")
+            lambda{ Puppet::FileBucketFile::File.new.send(:verify_identical_file!, @bucket) }.should raise_error(Puppet::FileBucket::BucketError)
+        end
+
+        it "should do nothing if the files match" do
+            File.expects(:read).with("#{@dir}/contents").returns("file contents")
+            Puppet::FileBucketFile::File.new.send(:verify_identical_file!, @bucket)
+        end
+
+    end
+
+
+    describe "when writing to the paths file" do
+        before do
+            Puppet[:bucketdir] = '/dev/null/bucketdir'
+            @digest = '70924d6fa4b2d745185fa4660703a5c0'
+            @bucket = stub_everything "bucket"
+
+            @paths_path    = '/dev/null/bucketdir/7/0/9/2/4/d/6/f/70924d6fa4b2d745185fa4660703a5c0/paths'
+
+            @paths = []
+            @bucket.stubs(:paths).returns(@paths)
+            @bucket.stubs(:checksum_data).returns(@digest)
+        end
+        
+        it "should create a file if it doesn't exist" do
+            @bucket.expects(:path).returns('path/to/save').at_least_once
+            File.expects(:exists?).with(@paths_path).returns(false)
+            file = stub "file"
+            file.expects(:puts).with('path/to/save')
+            File.expects(:open).with(@paths_path, ::File::WRONLY|::File::CREAT|::File::APPEND).yields(file)
+
+            Puppet::FileBucketFile::File.new.send(:save_path_to_paths_file, @bucket)
+        end
+        
+        it "should append to a file if it exists" do
+            @bucket.expects(:path).returns('path/to/save').at_least_once
+            File.expects(:exists?).with(@paths_path).returns(true)
+            old_file = stub "file"
+            old_file.stubs(:readlines).returns []
+            File.expects(:open).with(@paths_path).yields(old_file)
+
+            file = stub "file"
+            file.expects(:puts).with('path/to/save')
+            File.expects(:open).with(@paths_path, ::File::WRONLY|::File::CREAT|::File::APPEND).yields(file)
+
+            Puppet::FileBucketFile::File.new.send(:save_path_to_paths_file, @bucket)
+        end
+        
+        it "should not alter a file if it already contains the path" do
+            @bucket.expects(:path).returns('path/to/save').at_least_once
+            File.expects(:exists?).with(@paths_path).returns(true)
+            old_file = stub "file"
+            old_file.stubs(:readlines).returns ["path/to/save\n"]
+            File.expects(:open).with(@paths_path).yields(old_file)
+
+            Puppet::FileBucketFile::File.new.send(:save_path_to_paths_file, @bucket)
+        end
+
+        it "should do nothing if there is no path" do 
+            @bucket.expects(:path).returns(nil).at_least_once
+
+            Puppet::FileBucketFile::File.new.send(:save_path_to_paths_file, @bucket)
+        end
     end
 
 end

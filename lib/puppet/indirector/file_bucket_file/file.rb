@@ -25,6 +25,8 @@ module Puppet::FileBucketFile
             instance.to_s
         end
 
+        private
+
         def find_by_checksum( checksum )
             bucket_file = model.new( nil, :checksum => checksum )
             filename = contents_path_for bucket_file
@@ -75,8 +77,6 @@ module Puppet::FileBucketFile
             return bucket_file.checksum_data
         end
 
-        private
-
         def request_to_checksum_and_path( request )
             checksum_type, checksum, path = request.key.split(/[:\/]/, 3)
             return nil if checksum_type.to_s == ""
@@ -115,7 +115,7 @@ module Puppet::FileBucketFile
             # If the contents don't match, then we've found a conflict.
             # Unlikely, but quite bad.
             if disk_contents != bucket_file.contents
-                raise BucketError, "Got passed new contents for sum #{bucket_file.checksum}", caller
+                raise Puppet::FileBucket::BucketError, "Got passed new contents for sum #{bucket_file.checksum}", caller
             else
                 Puppet.info "FileBucket got a duplicate file #{bucket_file.path} (#{bucket_file.checksum})"
             end

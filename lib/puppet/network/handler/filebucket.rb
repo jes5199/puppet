@@ -3,7 +3,6 @@ require 'digest/md5'
 require 'puppet/external/base64'
 
 class Puppet::Network::Handler # :nodoc:
-    class BucketError < RuntimeError; end
     # Accept files and store them by md5 sum, returning the md5 sum back
     # to the client.  Alternatively, accept an md5 sum and return the
     # associated content.
