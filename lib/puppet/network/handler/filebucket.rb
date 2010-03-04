@@ -31,12 +31,12 @@ class Puppet::Network::Handler # :nodoc:
                 contents = Base64.decode64(contents)
             end
             bucket = Puppet::FileBucket::File.new(contents)
-            return bucket.save_to_disk
+            return bucket.save
         end
 
         # Return the contents associated with a given md5 sum.
         def getfile(md5, client = nil, clientip = nil)
-            bucket = Puppet::FileBucket::File.find_by_checksum("md5:#{md5}")
+            bucket = Puppet::FileBucket::File.find("md5:#{md5}")
             contents = bucket.contents
 
             if client
