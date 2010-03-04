@@ -1,13 +1,14 @@
+require 'puppet/file_bucket'
 require 'puppet/indirector'
 
-class Puppet::BucketFile
+class Puppet::FileBucket::File
     # This class handles the abstract notion of a file in a filebucket,
     # and it currently also has the logic for loading and saving disk files
     # on the server-side.
     # The client-side equivalent to that is in Puppet::Network::Client::Dipper
     extend Puppet::Indirector
-    require 'puppet/bucket_file/indirection_hooks'
-    indirects :bucket_file, :terminus_class => :file, :extend => Puppet::BucketFile::IndirectionHooks
+    require 'puppet/file_bucket/file/indirection_hooks'
+    indirects :file_bucket_file, :terminus_class => :file, :extend => Puppet::FileBucket::File::IndirectionHooks
 
     attr :contents
     attr :path, true
@@ -127,7 +128,7 @@ class Puppet::BucketFile
                 end
             end
 
-            Puppet.info "BucketFile adding #{path} (#{checksum_data})"
+            Puppet.info "FileBucket::File adding #{path} (#{checksum_data})"
 
             # Write the file to disk.
             Puppet::Util.withumask(0007) do
@@ -156,7 +157,7 @@ class Puppet::BucketFile
         if disk_contents != contents
             raise BucketError, "Got passed new contents for sum #{checksum}", caller
         else
-            Puppet.info "BucketFile got a duplicate file #{path} (#{checksum})"
+            Puppet.info "FileBucket::File got a duplicate file #{path} (#{checksum})"
         end
     end
 

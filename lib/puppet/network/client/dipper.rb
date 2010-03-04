@@ -18,7 +18,7 @@ class Puppet::Network::Client::Dipper
             @rest_path  = nil
         else
             @local_path = nil
-            @rest_path = "https://#{server}:#{port}/#{environment}/bucket_file/"
+            @rest_path = "https://#{server}:#{port}/#{environment}/file_bucket_file/"
         end
     end
 
@@ -33,13 +33,13 @@ class Puppet::Network::Client::Dipper
         end
         contents = ::File.read(file)
         begin
-            bucket_file = Puppet::BucketFile.new(contents, :bucket_dir => @local_path, :path => file)
-            dest_path = "#{@rest_path}#{bucket_file.name}"
+            file_bucket_file = Puppet::FileBucket::File.new(contents, :bucket_dir => @local_path, :path => file)
+            dest_path = "#{@rest_path}#{file_bucket_file.name}"
 
-            request = Puppet::Indirector::Request.new(:bucket_file, :save, dest_path)
+            request = Puppet::Indirector::Request.new(:file_bucket_file, :save, dest_path)
 
-            bucket_file.save(request)
-            return bucket_file.checksum_data
+            file_bucket_file.save(request)
+            return file_bucket_file.checksum_data
         rescue => detail
             puts detail.backtrace if Puppet[:trace]
             raise Puppet::Error, "Could not back up %s: %s" % [file, detail]
@@ -49,9 +49,9 @@ class Puppet::Network::Client::Dipper
     # Retrieve a file by sum.
     def getfile(sum)
         source_path = "#{@rest_path}md5/#{sum}"
-        bucket_file = Puppet::BucketFile.find(source_path)
+        file_bucket_file = Puppet::FileBucket::File.find(source_path)
 
-        return bucket_file.to_s
+        return file_bucket_file.to_s
     end
 
     # Restore the file

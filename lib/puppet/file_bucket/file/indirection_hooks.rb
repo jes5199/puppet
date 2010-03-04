@@ -1,10 +1,10 @@
-require 'puppet/bucket_file'
+require 'puppet/file_bucket/file'
 
 # This module is used to pick the appropriate terminus
 # in filebucket indirections.
-module Puppet::BucketFile::IndirectionHooks
+module Puppet::FileBucket::File::IndirectionHooks
     def select_terminus(request)
         return :rest if request.protocol == 'https'
-        return Puppet::BucketFile.indirection.terminus_class
+        return Puppet::FileBucket::File.indirection.terminus_class
     end
 end

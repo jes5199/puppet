@@ -11,7 +11,7 @@ describe Puppet::Network::Client::Dipper do
         @dipper = Puppet::Network::Client::Dipper.new(:Path => "/my/bucket")
 
         filemock = stub "bucketfile"
-        Puppet::BucketFile.stubs(:new).returns(filemock)
+        Puppet::FileBucket::File.stubs(:new).returns(filemock)
         filemock.expects(:name).returns "name"
         filemock.expects(:save).raises ArgumentError
 

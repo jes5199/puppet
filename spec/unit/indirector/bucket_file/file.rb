@@ -2,28 +2,28 @@
 
 require ::File.dirname(__FILE__) + '/../../../spec_helper'
 
-require 'puppet/indirector/bucket_file/file'
+require 'puppet/indirector/file_bucket_file/file'
 
-describe Puppet::Indirector::BucketFile::File do
+describe Puppet::FileBucketFile::File do
     it "should be a subclass of the File terminus class" do
-        Puppet::Indirector::BucketFile::File.superclass.should equal(Puppet::Indirector::Code)
+        Puppet::FileBucketFile::File.superclass.should equal(Puppet::Indirector::Code)
     end
 
     it "should have documentation" do
-        Puppet::Indirector::BucketFile::File.doc.should be_instance_of(String)
+        Puppet::FileBucketFile::File.doc.should be_instance_of(String)
     end
 
     describe "when initializing" do
         it "should use the filebucket settings section" do
             Puppet.settings.expects(:use).with(:filebucket)
-            Puppet::Indirector::BucketFile::File.new
+            Puppet::FileBucketFile::File.new
         end
     end
 
     describe "when retrieving files" do
         before :each do
             Puppet.settings.stubs(:use)
-            @store = Puppet::Indirector::BucketFile::File.new
+            @store = Puppet::FileBucketFile::File.new
 
             @digest = "70924d6fa4b2d745185fa4660703a5c0"
             @sum = stub 'sum', :name => @digest
@@ -32,13 +32,13 @@ describe Puppet::Indirector::BucketFile::File do
 
             Puppet.stubs(:[]).with(:bucketdir).returns(@dir)
 
-            @path = Puppet::BucketFile.path_for(nil, @digest, "contents")
+            @path = Puppet::FileBucket::File.path_for(nil, @digest, "contents")
 
             @request = stub 'request', :key => "md5/#{@digest}/remote/path"
         end
 
         it "should call find_by_checksum" do
-            Puppet::BucketFile.expects(:find_by_checksum).with("md5:#{@digest}").returns(false)
+            Puppet::FileBucket::File.expects(:find_by_checksum).with("md5:#{@digest}").returns(false)
             @store.find(@request)
         end
 
@@ -47,11 +47,11 @@ describe Puppet::Indirector::BucketFile::File do
             @store.find(@request)
         end
 
-        it "should return an instance of Puppet::BucketFile created with the content if the file exists" do
+        it "should return an instance of Puppet::FileBucket::File created with the content if the file exists" do
             content = "my content"
             bucketfile = stub 'bucketfile'
 
-            Puppet::BucketFile.expects(:new).with(content, {:checksum => "md5:#{@digest}"}).returns(bucketfile)
+            Puppet::FileBucket::File.expects(:new).with(content, {:checksum => "md5:#{@digest}"}).returns(bucketfile)
 
             ::File.expects(:exists?).with(@path).returns(true)
             ::File.expects(:read).with(@path).returns(content)
