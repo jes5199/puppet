@@ -29,25 +29,6 @@ describe Puppet::FileBucket::File do
 
     end
 
-    describe "the find_by_checksum method" do
-        it "should return nil if a file doesn't exist" do
-            ::File.expects(:exists?).with("#{@dir}/contents").returns false
-
-            bucketfile = Puppet::FileBucketFile::File.new.find_by_checksum("md5:#{@digest}")
-            bucketfile.should == nil
-        end
-
-        it "should find a filebucket if the file exists" do
-            ::File.expects(:exists?).with("#{@dir}/contents").returns true
-            ::File.expects(:exists?).with("#{@dir}/paths").returns false
-            ::File.expects(:read).with("#{@dir}/contents").returns @contents
-
-            bucketfile = Puppet::FileBucketFile::File.new.find_by_checksum("md5:#{@digest}")
-            bucketfile.should_not == nil
-        end
-
-    end
-
     describe "using the indirector's find method" do
         it "should return nil if a file doesn't exist" do
             ::File.expects(:exists?).with("#{@dir}/contents").returns false
@@ -162,41 +143,6 @@ describe Puppet::FileBucket::File do
         end
     end
 
-    describe "when determining file paths" do
-        before do
-            Puppet[:bucketdir] = '/dev/null/bucketdir'
-            @digest = 'DEADBEEFC0FFEE'
-            @bucket = stub_everything "bucket"
-            @bucket.expects(:checksum_data).returns(@digest)
-        end
-
-        it "should use the value of the :bucketdir setting as the root directory" do
-            path = Puppet::FileBucketFile::File.new.send(:contents_path_for,@bucket)
-            path.should =~ %r{^/dev/null/bucketdir}
-        end
-
-        it "should choose a path 8 directories deep with each directory name being the respective character in the filebucket" do
-            path = Puppet::FileBucketFile::File.new.send(:contents_path_for,@bucket)
-            dirs = @digest[0..7].split("").join(File::SEPARATOR)
-            path.should be_include(dirs)
-        end
-
-        it "should use the full filebucket as the final directory name" do
-            path = Puppet::FileBucketFile::File.new.send(:contents_path_for,@bucket)
-            ::File.basename(::File.dirname(path)).should == @digest
-        end
-
-        it "should use 'contents' as the actual file name" do
-            path = Puppet::FileBucketFile::File.new.send(:contents_path_for,@bucket)
-            ::File.basename(path).should == "contents"
-        end
-
-        it "should use the bucketdir, the 8 sum character directories, the full filebucket, and 'contents' as the full file name" do
-            path = Puppet::FileBucketFile::File.new.send(:contents_path_for,@bucket)
-            path.should == ['/dev/null/bucketdir', @digest[0..7].split(""), @digest, "contents"].flatten.join(::File::SEPARATOR)
-         end
-    end
-
     describe "when saving files" do
         it "should save the contents to the calculated path" do
             ::File.stubs(:directory?).with(@dir).returns(true)
@@ -239,19 +185,6 @@ describe Puppet::FileBucket::File do
         ::File.expects(:open).with("#{@dir}/paths", ::File::WRONLY|::File::CREAT|::File::APPEND).yields mockfile
         Puppet::FileBucket::File.new(@contents, :path => remote_path).save
 
-    end
-
-    it "should load the paths" do
-        paths = ["path1", "path2"]
-        ::File.expects(:exists?).with("#{@dir}/contents").returns true
-        ::File.expects(:exists?).with("#{@dir}/paths").returns true
-        ::File.expects(:read).with("#{@dir}/contents").returns @contents
-
-        mockfile = mock "file"
-        mockfile.expects(:readlines).returns( paths )
-        ::File.expects(:open).with("#{@dir}/paths").yields mockfile
-
-        Puppet::FileBucketFile::File.new.find_by_checksum("md5:#{@digest}").paths.should == paths
     end
 
     it "should return a url-ish name" do
