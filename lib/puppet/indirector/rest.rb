@@ -2,12 +2,9 @@ require 'net/http'
 require 'uri'
 
 require 'puppet/network/http_pool'
-require 'puppet/network/http/api/v1'
 
 # Access objects via REST
 class Puppet::Indirector::REST < Puppet::Indirector::Terminus
-    include Puppet::Network::HTTP::API::V1
-
     class << self
         attr_reader :server_setting, :port_setting
     end
@@ -93,4 +90,19 @@ class Puppet::Indirector::REST < Puppet::Indirector::Terminus
     def environment
         Puppet::Node::Environment.new
     end
+
+    def indirection2uri(request)
+        indirection_name = pluralized_indirection_name(request)
+        '/' + [request.environment, indirection_name, request.escaped_key, request.query_string].join('/')
+    end
+
+    def pluralized_indirection_name(request)
+        return request.indirection_name unless request.method == :search
+
+        indirection_name = request.indirection_name
+
+        return "statuses" if indirection_name == "status"
+        return indirection_name + "s"
+    end
+
 end
