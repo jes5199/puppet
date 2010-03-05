@@ -17,57 +17,78 @@ module Puppet::Network::HTTP::API::V1
     }
 
     def uri2indirection(http_method, uri, params)
-        environment, indirection, key = uri.split("/", 4)[1..-1] # the first field is always nil because of the leading slash
+        uri = URI.parse(uri)
+        indirection_name = indirection_from(uri)
+        environment = environment_from(uri)
+        key = key_from(uri)
 
         raise ArgumentError, "The environment must be purely alphanumeric, not '%s'" % environment unless environment =~ /^\w+$/
-        raise ArgumentError, "The indirection name must be purely alphanumeric, not '%s'" % indirection unless indirection =~ /^\w+$/
-
-        method = indirection_method(http_method, indirection)
-
-        params[:environment] = environment
-
+        raise ArgumentError, "The indirection name must be purely alphanumeric, not '%s'" % indirection_name unless indirection_name =~ /^\w+$/
         raise ArgumentError, "No request key specified in %s" % uri if key == "" or key.nil?
 
-        key = URI.unescape(key)
+        method = indirection_method(http_method, indirection_name)
+        params[:environment] = environment
 
-        Puppet::Indirector::Request.new(indirection, method, key, params)
+        Puppet::Indirector::Request.new(indirection_name, method, key, params)
     end
 
     def indirection2uri(request)
-        indirection = request.method == :search ? pluralize(request.indirection_name.to_s) : request.indirection_name.to_s
-        "/#{request.environment.to_s}/#{indirection}/#{request.escaped_key}#{request.query_string}"
+        indirection_name = pluralized_indirection_name(request)
+        '/' + [request.environment, indirection_name, request.escaped_key, request.query_string].join('/')
     end
 
-    def indirection_method(http_method, indirection)
+    def indirection_method(http_method, indirection_name)
         unless METHOD_MAP[http_method]
             raise ArgumentError, "No support for http method %s" % http_method
         end
 
-        unless method = METHOD_MAP[http_method][plurality(indirection)]
+        unless method = METHOD_MAP[http_method][plurality(indirection_name)]
             raise ArgumentError, "No support for plural %s operations" % http_method
         end
 
         return method
     end
 
-    def pluralize(indirection)
-        return "statuses" if indirection == "status"
-        return indirection + "s"
+    def pluralized_indirection_name(request)
+        return request.indirection_name unless request.method == :search
+
+        indirection_name = request.indirection_name
+
+        return "statuses" if indirection_name == "status"
+        return indirection_name + "s"
     end
 
-    def plurality(indirection)
+    def plurality(indirection_name)
         # NOTE This specific hook for facts is ridiculous, but it's a *many*-line
         # fix to not need this, and our goal is to move away from the complication
         # that leads to the fix being too long.
-        return :singular if indirection == "facts"
+        return :singular if indirection_name == "facts"
 
         # "status" really is singular
-        return :singular if indirection == "status"
+        return :singular if indirection_name == "status"
 
-        result = (indirection =~ /s$/) ? :plural : :singular
+        result = (indirection_name =~ /s$/) ? :plural : :singular
 
-        indirection.sub!(/s$/, '') if result
+        indirection_name.sub!(/s$/, '') if result
 
         result
     end
+
+
+    # Parse the key as a URI, setting attributes appropriately.
+    def key_from(uri)
+        return URI.unescape(uri.path) if uri.scheme == "file"
+        return URI.unescape(uri.path.sub(/^\//, '')) if uri.scheme == 'puppet'
+
+        URI.unescape(uri.path.sub(/^\//, '')).split('/',3)[2] || ''
+    end
+
+    def environment_from(uri)
+        URI.unescape(uri.path.sub(/^\//, '')).split('/').first
+    end
+
+    def indirection_from(uri)
+        URI.unescape(uri.path.sub(/^\//, '')).split('/',3)[1]
+    end
+
 end

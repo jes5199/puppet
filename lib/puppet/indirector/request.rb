@@ -52,31 +52,28 @@ class Puppet::Indirector::Request
         ignore_terminus
     end
 
+    def options=(options)
+        set_attributes(options) # this will be changed because it is stupid.
+        # Symbolize keys, bitches.
+        @options = options.inject({}) { |hash, ary| hash[ary[0].to_sym] = ary[1]; hash }
+    end
+
+    def key=(key)
+        if key.respond_to?(:name)
+            self.instance = key
+            @key = key.name
+        else
+            @key = key
+        end
+    end
+
     def initialize(indirection_name, method, key, options = {})
-        options ||= {}
         raise ArgumentError, "Request options must be a hash, not %s" % options.class unless options.is_a?(Hash)
 
         self.indirection_name = indirection_name
         self.method = method
-
-        set_attributes(options)
-
-        @options = options.inject({}) { |hash, ary| hash[ary[0].to_sym] = ary[1]; hash }
-
-        if key.is_a?(String) or key.is_a?(Symbol)
-            # If the request key is a URI, then we need to treat it specially,
-            # because it rewrites the key.  We could otherwise strip server/port/etc
-            # info out in the REST class, but it seemed bad design for the REST
-            # class to rewrite the key.
-            if key.to_s =~ /^\w+:\/\// # it's a URI
-                set_uri_key(key)
-            else
-                @key = key
-            end
-        else
-            @instance = key
-            @key = @instance.name
-        end
+        self.options = options
+        self.key = key
     end
 
     # Look up the indirection based on the name provided.
@@ -154,40 +151,4 @@ class Puppet::Indirector::Request
         end
     end
 
-    # Parse the key as a URI, setting attributes appropriately.
-    def set_uri_key(key)
-        @uri = key
-        begin
-            uri = URI.parse(URI.escape(key))
-        rescue => detail
-            raise ArgumentError, "Could not understand URL %s: %s" % [key, detail.to_s]
-        end
-
-        # Just short-circuit these to full paths
-        if uri.scheme == "file"
-            @key = URI.unescape(uri.path)
-            return
-        end
-
-        @server = uri.host if uri.host
-
-        # If the URI class can look up the scheme, it will provide a port,
-        # otherwise it will default to '0'.
-        if uri.port.to_i == 0 and uri.scheme == "puppet"
-            @port = Puppet.settings[:masterport].to_i
-        else
-            @port = uri.port.to_i
-        end
-
-        @protocol = uri.scheme
-
-        if uri.scheme == 'puppet'
-            @key = URI.unescape(uri.path.sub(/^\//, ''))
-            return
-        end
-
-        env, indirector, @key = URI.unescape(uri.path.sub(/^\//, '')).split('/',3)
-        @key ||= ''
-        self.environment = env unless env == ''
-    end
 end
