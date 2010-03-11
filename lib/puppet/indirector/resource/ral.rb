@@ -9,11 +9,13 @@ class Puppet::Resource::Ral < Puppet::Indirector::Code
 
     def search( request )
         type(request).instances.collect do |obj|
+            # TODO: filter by parameters
             obj.to_resource
         end
     end
 
     def save( request )
+        # In RAL-land, to "save" means to actually try to change machine state
         obj = find(request)
 
         unless params.empty?
@@ -32,9 +34,7 @@ class Puppet::Resource::Ral < Puppet::Indirector::Code
 
         end
 
-        #TODO: return
-        [format.call(obj.to_trans(true))]
-        return model.new
+        return obj.to_resource
     end
 
     private
