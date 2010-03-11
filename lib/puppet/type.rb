@@ -562,6 +562,14 @@ class Type
         end
     end
 
+    def to_pson_data_hash
+        rethash = {}
+        @parameters.each do |name, obj|
+            rethash[name] = value(obj.name)
+        end
+        rethash
+    end
+
     # For any parameters or properties that have defaults and have not yet been
     # set, set them now.  This method can be handed a list of attributes,
     # and if so it will only set defaults for those attributes.
@@ -2077,6 +2085,11 @@ class Type
         # FIXME I'm currently ignoring 'parent' and 'path'
 
         return trans
+    end
+
+    def to_resource
+        # this 'type' versus 'resource' distinction seems artificial
+        self.to_trans.to_resource
     end
 
     %w{exported virtual}.each do |m|

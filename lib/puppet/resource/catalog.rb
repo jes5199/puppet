@@ -1,3 +1,4 @@
+require 'puppet/resource'
 require 'puppet/node'
 require 'puppet/indirector'
 require 'puppet/simple_graph'

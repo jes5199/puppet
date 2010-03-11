@@ -1,6 +1,6 @@
 require 'puppet'
 require 'puppet/util/tagging'
-require 'puppet/resource/reference'
+#require 'puppet/resource/reference'
 require 'puppet/util/pson'
 
 # The simplest resource class.  Eventually it will function as the
@@ -11,6 +11,10 @@ class Puppet::Resource
     include Enumerable
     attr_accessor :file, :line, :catalog, :exported, :virtual
     attr_writer :type, :title
+
+    require 'puppet/indirector'
+    extend Puppet::Indirector
+    indirects :resource, :terminus_class => :ral
 
     ATTRIBUTES = [:file, :line, :exported]
 
