@@ -74,14 +74,16 @@ describe Puppet::FileBucket::File do
         Puppet::FileBucket::File.new(@contents, :checksum => @checksum).checksum_type.should == :md5
     end
 
-    it "should allow nil content" do
-        proc { Puppet::FileBucket::File.new(nil) }.should_not raise_error(ArgumentError)
+    it "should allow contents to be specified in a block" do
+        bucket = Puppet::FileBucket::File.new(nil) do |fb|
+            fb.contents = "content"
+        end
+        bucket.contents.should == "content"
     end
 
     it "should raise an error if changing content" do
-        x = Puppet::FileBucket::File.new(nil)
-        x.contents = "first"
-        proc { x.contents = "new" }.should raise_error(RuntimeError)
+        x = Puppet::FileBucket::File.new("first")
+        proc { x.contents = "new" }.should raise_error(NoMethodError)
     end
 
     it "should require contents to be a string" do
@@ -89,8 +91,11 @@ describe Puppet::FileBucket::File do
     end
 
     it "should raise an error if setting contents to a non-string" do
-        x = Puppet::FileBucket::File.new(nil)
-        proc { x.contents = 5 }.should raise_error(ArgumentError)
+        proc do
+            Puppet::FileBucket::File.new(nil) do |x|
+                x.contents = 5
+            end
+        end.should raise_error(ArgumentError)
     end
 
     it "should set the contents appropriately" do

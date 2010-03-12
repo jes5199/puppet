@@ -100,7 +100,7 @@ describe Puppet::FileBucketFile::File do
             bucketfile.stubs(:checksum).returns(@checksum)
 
             bucketfile.expects(:contents=).with(content)
-            Puppet::FileBucket::File.expects(:new).with(nil, {:checksum => "md5:#{@digest}"}).returns(bucketfile)
+            Puppet::FileBucket::File.expects(:new).with(nil, {:checksum => "md5:#{@digest}"}).yields(bucketfile).returns(bucketfile)
 
             ::File.expects(:exists?).with(@contents_path).returns(true)
             ::File.expects(:exists?).with(@paths_path).returns(false)

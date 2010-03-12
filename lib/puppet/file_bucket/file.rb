@@ -11,6 +11,7 @@ class Puppet::FileBucket::File
 
     attr :path, true
     attr :paths, true
+    attr :contents, true
     attr :checksum_type
     attr :bucket_path
 
@@ -19,17 +20,22 @@ class Puppet::FileBucket::File
     end
 
     def initialize( contents, options = {} )
-        self.contents= contents
-        @bucket_path = options[:bucket_path]
-        @path        = options[:path]
-        @paths       = options[:paths] || []
-
+        @contents      = contents
+        @bucket_path   = options[:bucket_path]
+        @path          = options[:path]
+        @paths         = options[:paths] || []
+        @checksum      = options[:checksum]
         @checksum_type = options[:checksum_type] || self.class.default_checksum_type
-        digest_class( @checksum_type ) # raises error on bad types
 
-        @checksum = nil # lazily calculated
-        if options[:checksum]
-            self.checksum = options[:checksum]
+        yield(self) if block_given?
+
+    ensure # prevent the block from cheating by calling "return"
+        digest_class( @checksum_type ) # raises error on bad types
+        raise ArgumentError, 'contents must be a string' unless @contents.is_a?(String)
+        validate_checksum(@checksum) if @checksum
+
+        class << self
+            private :contents=
         end
     end
 
@@ -39,27 +45,19 @@ class Puppet::FileBucket::File
         @checksum = checksum
     end
 
-    def validate_checksum(new_checksum, contents = @contents)
-        return unless contents
-        unless checksum_data(new_checksum) == digest_class(new_checksum).hexdigest(contents)
+    def validate_checksum(new_checksum)
+        unless new_checksum == checksum_of_type(new_checksum)
             raise Puppet::Error, "checksum does not match contents"
         end
     end
 
-    def contents
-        @contents or raise "#{self.inspect} has no contents"
-    end
-
-    def contents=(contents)
-        raise "can't alter contents of #{self.inspect}" if @contents
-        raise ArgumentError, 'contents must be a string or nil' unless contents.nil? || contents.is_a?(String)
-
-        validate_checksum(@checksum, contents) if @checksum
-        @contents = contents
-    end
-
     def checksum
-        @checksum ||= "#{checksum_type}:" + digest_class(checksum_type).hexdigest(contents)
+        @checksum ||= checksum_of_type(checksum_type)
+    end
+
+    def checksum_of_type( type )
+        type = checksum_type( type ) # strip out data segment if there is one
+        type.to_s + ":" + digest_class(type).hexdigest(@contents)
     end
 
     def checksum_type=( new_checksum_type )

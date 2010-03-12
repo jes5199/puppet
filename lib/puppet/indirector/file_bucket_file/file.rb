@@ -28,28 +28,28 @@ module Puppet::FileBucketFile
         private
 
         def find_by_checksum( checksum )
-            bucket_file = model.new( nil, :checksum => checksum )
-            filename = contents_path_for bucket_file
+            model.new( nil, :checksum => checksum ) do |bucket_file|
+                filename = contents_path_for bucket_file
 
-            if ! ::File.exists? filename
-                return nil
-            end
-
-            begin
-                contents = ::File.read filename
-                Puppet.info "FileBucket read #{bucket_file.checksum}"
-            rescue RuntimeError => e
-                raise Puppet::Error, "file could not be read: #{e.message}"
-            end
-
-            if ::File.exists?(paths_path_for bucket_file)
-                ::File.open(paths_path_for bucket_file) do |f|
-                    bucket_file.paths = f.readlines.map { |l| l.chomp }
+                if ! ::File.exists? filename
+                    return nil
                 end
-            end
 
-            bucket_file.contents = contents
-            return bucket_file
+                begin
+                    contents = ::File.read filename
+                    Puppet.info "FileBucket read #{bucket_file.checksum}"
+                rescue RuntimeError => e
+                    raise Puppet::Error, "file could not be read: #{e.message}"
+                end
+
+                if ::File.exists?(paths_path_for bucket_file)
+                    ::File.open(paths_path_for bucket_file) do |f|
+                        bucket_file.paths = f.readlines.map { |l| l.chomp }
+                    end
+                end
+
+                bucket_file.contents = contents
+            end
         end
 
         def save_to_disk( bucket_file )
