@@ -31,7 +31,7 @@ module Puppet::FileBucketFile
             model.new( nil, :checksum => checksum ) do |bucket_file|
                 filename = contents_path_for bucket_file
 
-                if ! ::File.exists? filename
+                if ! ::File.exist? filename
                     return nil
                 end
 
@@ -42,7 +42,7 @@ module Puppet::FileBucketFile
                     raise Puppet::Error, "file could not be read: #{e.message}"
                 end
 
-                if ::File.exists?(paths_path_for bucket_file)
+                if ::File.exist?(paths_path_for bucket_file)
                     ::File.open(paths_path_for bucket_file) do |f|
                         bucket_file.paths = f.readlines.map { |l| l.chomp }
                     end
@@ -54,7 +54,7 @@ module Puppet::FileBucketFile
 
         def save_to_disk( bucket_file )
             # If the file already exists, just return the md5 sum.
-            if ::File.exists?(contents_path_for bucket_file)
+            if ::File.exist?(contents_path_for bucket_file)
                 verify_identical_file!(bucket_file)
             else
                 # Make the directories if necessary.
@@ -126,7 +126,7 @@ module Puppet::FileBucketFile
             return unless bucket_file.path
 
             # check for dupes
-            if ::File.exists?(paths_path_for bucket_file)
+            if ::File.exist?(paths_path_for bucket_file)
                 ::File.open(paths_path_for bucket_file) do |f|
                     return if f.readlines.collect { |l| l.chomp }.include?(bucket_file.path)
                 end

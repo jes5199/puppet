@@ -30,7 +30,7 @@ class Puppet::FileBucket::Dipper
 
     # Back up a file to our bucket
     def backup(file)
-        unless ::File.exists?(file)
+        unless ::File.exist?(file)
             raise(ArgumentError, "File %s does not exist" % file)
         end
         contents = ::File.read(file)

@@ -19,7 +19,7 @@ describe Puppet::FileBucket::File do
     end
 
     it "should save a file" do
-        ::File.expects(:exists?).with("#{@dir}/contents").returns false
+        ::File.expects(:exist?).with("#{@dir}/contents").returns false
         ::File.expects(:directory?).with(@dir).returns false
         ::FileUtils.expects(:mkdir_p).with(@dir)
         ::File.expects(:open).with("#{@dir}/contents",  ::File::WRONLY|::File::CREAT, 0440)
@@ -31,15 +31,15 @@ describe Puppet::FileBucket::File do
 
     describe "using the indirector's find method" do
         it "should return nil if a file doesn't exist" do
-            ::File.expects(:exists?).with("#{@dir}/contents").returns false
+            ::File.expects(:exist?).with("#{@dir}/contents").returns false
 
             bucketfile = Puppet::FileBucket::File.find("md5:#{@digest}")
             bucketfile.should == nil
         end
 
         it "should find a filebucket if the file exists" do
-            ::File.expects(:exists?).with("#{@dir}/contents").returns true
-            ::File.expects(:exists?).with("#{@dir}/paths").returns false
+            ::File.expects(:exist?).with("#{@dir}/contents").returns true
+            ::File.expects(:exist?).with("#{@dir}/paths").returns false
             ::File.expects(:read).with("#{@dir}/contents").returns @contents
 
             bucketfile = Puppet::FileBucket::File.find("md5:#{@digest}")
@@ -48,15 +48,15 @@ describe Puppet::FileBucket::File do
 
         describe "using RESTish digest notation" do
             it "should return nil if a file doesn't exist" do
-                ::File.expects(:exists?).with("#{@dir}/contents").returns false
+                ::File.expects(:exist?).with("#{@dir}/contents").returns false
 
                 bucketfile = Puppet::FileBucket::File.find("md5/#{@digest}")
                 bucketfile.should == nil
             end
 
             it "should find a filebucket if the file exists" do
-                ::File.expects(:exists?).with("#{@dir}/contents").returns true
-                ::File.expects(:exists?).with("#{@dir}/paths").returns false
+                ::File.expects(:exist?).with("#{@dir}/contents").returns true
+                ::File.expects(:exist?).with("#{@dir}/paths").returns false
                 ::File.expects(:read).with("#{@dir}/contents").returns @contents
 
                 bucketfile = Puppet::FileBucket::File.find("md5/#{@digest}")
@@ -166,7 +166,7 @@ describe Puppet::FileBucket::File do
     describe "when saving files" do
         it "should save the contents to the calculated path" do
             ::File.stubs(:directory?).with(@dir).returns(true)
-            ::File.expects(:exists?).with("#{@dir}/contents").returns false
+            ::File.expects(:exist?).with("#{@dir}/contents").returns false
 
             mockfile = mock "file"
             mockfile.expects(:print).with(@contents)
@@ -181,7 +181,7 @@ describe Puppet::FileBucket::File do
             end
             ::File.expects(:directory?).with(@dir).returns(false)
             ::File.expects(:open).with("#{@dir}/contents", ::File::WRONLY|::File::CREAT, 0440)
-            ::File.expects(:exists?).with("#{@dir}/contents").returns false
+            ::File.expects(:exist?).with("#{@dir}/contents").returns false
 
             Puppet::FileBucket::File.new(@contents).save
         end
@@ -197,11 +197,11 @@ describe Puppet::FileBucket::File do
 
         ::File.expects(:directory?).with(@dir).returns(true)
         ::File.expects(:open).with("#{@dir}/contents", ::File::WRONLY|::File::CREAT, 0440)
-        ::File.expects(:exists?).with("#{@dir}/contents").returns false
+        ::File.expects(:exist?).with("#{@dir}/contents").returns false
 
         mockfile = mock "file"
         mockfile.expects(:puts).with('/path/on/the/remote/box')
-        ::File.expects(:exists?).with("#{@dir}/paths").returns false
+        ::File.expects(:exist?).with("#{@dir}/paths").returns false
         ::File.expects(:open).with("#{@dir}/paths", ::File::WRONLY|::File::CREAT|::File::APPEND).yields mockfile
         Puppet::FileBucket::File.new(@contents, :path => remote_path).save
 

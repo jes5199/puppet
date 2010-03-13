@@ -34,15 +34,15 @@ describe Puppet::FileBucketFile::File do
         end
 
         it "should return nil if a file doesn't exist" do
-            ::File.expects(:exists?).with("#{@dir}/contents").returns false
+            ::File.expects(:exist?).with("#{@dir}/contents").returns false
 
             bucketfile = Puppet::FileBucketFile::File.new.send(:find_by_checksum, "md5:#{@digest}")
             bucketfile.should == nil
         end
 
         it "should find a filebucket if the file exists" do
-            ::File.expects(:exists?).with("#{@dir}/contents").returns true
-            ::File.expects(:exists?).with("#{@dir}/paths").returns false
+            ::File.expects(:exist?).with("#{@dir}/contents").returns true
+            ::File.expects(:exist?).with("#{@dir}/paths").returns false
             ::File.expects(:read).with("#{@dir}/contents").returns @contents
 
             bucketfile = Puppet::FileBucketFile::File.new.send(:find_by_checksum, "md5:#{@digest}")
@@ -51,8 +51,8 @@ describe Puppet::FileBucketFile::File do
 
         it "should load the paths" do
             paths = ["path1", "path2"]
-            ::File.expects(:exists?).with("#{@dir}/contents").returns true
-            ::File.expects(:exists?).with("#{@dir}/paths").returns true
+            ::File.expects(:exist?).with("#{@dir}/contents").returns true
+            ::File.expects(:exist?).with("#{@dir}/paths").returns true
             ::File.expects(:read).with("#{@dir}/contents").returns @contents
 
             mockfile = mock "file"
@@ -88,7 +88,7 @@ describe Puppet::FileBucketFile::File do
         end
 
         it "should look for the calculated path" do
-            ::File.expects(:exists?).with(@contents_path).returns(false)
+            ::File.expects(:exist?).with(@contents_path).returns(false)
             @store.find(@request)
         end
 
@@ -102,20 +102,20 @@ describe Puppet::FileBucketFile::File do
             bucketfile.expects(:contents=).with(content)
             Puppet::FileBucket::File.expects(:new).with(nil, {:checksum => "md5:#{@digest}"}).yields(bucketfile).returns(bucketfile)
 
-            ::File.expects(:exists?).with(@contents_path).returns(true)
-            ::File.expects(:exists?).with(@paths_path).returns(false)
+            ::File.expects(:exist?).with(@contents_path).returns(true)
+            ::File.expects(:exist?).with(@paths_path).returns(false)
             ::File.expects(:read).with(@contents_path).returns(content)
 
             @store.find(@request).should equal(bucketfile)
         end
 
         it "should return nil if no file is found" do
-            ::File.expects(:exists?).with(@contents_path).returns(false)
+            ::File.expects(:exist?).with(@contents_path).returns(false)
             @store.find(@request).should be_nil
         end
 
         it "should fail intelligently if a found file cannot be read" do
-            ::File.expects(:exists?).with(@contents_path).returns(true)
+            ::File.expects(:exist?).with(@contents_path).returns(true)
             ::File.expects(:read).with(@contents_path).raises(RuntimeError)
             proc { @store.find(@request) }.should raise_error(Puppet::Error)
         end
@@ -177,7 +177,7 @@ describe Puppet::FileBucketFile::File do
 
         it "should save the contents to the calculated path" do
             ::File.stubs(:directory?).with(@dir).returns(true)
-            ::File.expects(:exists?).with("#{@dir}/contents").returns false
+            ::File.expects(:exist?).with("#{@dir}/contents").returns false
 
             mockfile = mock "file"
             mockfile.expects(:print).with(@contents)
@@ -192,7 +192,7 @@ describe Puppet::FileBucketFile::File do
             end
             ::File.expects(:directory?).with(@dir).returns(false)
             ::File.expects(:open).with("#{@dir}/contents", ::File::WRONLY|::File::CREAT, 0440)
-            ::File.expects(:exists?).with("#{@dir}/contents").returns false
+            ::File.expects(:exist?).with("#{@dir}/contents").returns false
 
             Puppet::FileBucketFile::File.new.send(:save_to_disk, @bucket)
         end
@@ -246,7 +246,7 @@ describe Puppet::FileBucketFile::File do
 
         it "should create a file if it doesn't exist" do
             @bucket.expects(:path).returns('path/to/save').at_least_once
-            File.expects(:exists?).with(@paths_path).returns(false)
+            File.expects(:exist?).with(@paths_path).returns(false)
             file = stub "file"
             file.expects(:puts).with('path/to/save')
             File.expects(:open).with(@paths_path, ::File::WRONLY|::File::CREAT|::File::APPEND).yields(file)
@@ -256,7 +256,7 @@ describe Puppet::FileBucketFile::File do
 
         it "should append to a file if it exists" do
             @bucket.expects(:path).returns('path/to/save').at_least_once
-            File.expects(:exists?).with(@paths_path).returns(true)
+            File.expects(:exist?).with(@paths_path).returns(true)
             old_file = stub "file"
             old_file.stubs(:readlines).returns []
             File.expects(:open).with(@paths_path).yields(old_file)
@@ -270,7 +270,7 @@ describe Puppet::FileBucketFile::File do
 
         it "should not alter a file if it already contains the path" do
             @bucket.expects(:path).returns('path/to/save').at_least_once
-            File.expects(:exists?).with(@paths_path).returns(true)
+            File.expects(:exist?).with(@paths_path).returns(true)
             old_file = stub "file"
             old_file.stubs(:readlines).returns ["path/to/save\n"]
             File.expects(:open).with(@paths_path).yields(old_file)

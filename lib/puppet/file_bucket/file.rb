@@ -29,7 +29,6 @@ class Puppet::FileBucket::File
 
         yield(self) if block_given?
 
-    ensure # prevent the block from cheating by calling "return"
         digest_class( @checksum_type ) # raises error on bad types
         raise ArgumentError, 'contents must be a string' unless @contents.is_a?(String)
         validate_checksum(@checksum) if @checksum
