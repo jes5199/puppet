@@ -172,6 +172,7 @@ require 'puppet/module'
 require 'puppet/util/storage'
 require 'puppet/parser/interpreter'
 require 'puppet/status'
+require 'puppet/file_bucket/file'
 
 if Puppet[:storeconfigs]
     require 'puppet/rails'
