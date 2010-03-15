@@ -30,7 +30,7 @@ class Puppet::FileBucket::File
         yield(self) if block_given?
 
         digest_class( @checksum_type ) # raises error on bad types
-        raise ArgumentError, 'contents must be a string' unless @contents.is_a?(String)
+        raise ArgumentError, 'contents must be a String or IO' unless @contents.is_a?(String) || @contents.is_a?(IO)
         validate_checksum(@checksum) if @checksum
 
         class << self
@@ -56,7 +56,18 @@ class Puppet::FileBucket::File
 
     def checksum_of_type( type )
         type = checksum_type( type ) # strip out data segment if there is one
-        type.to_s + ":" + digest_class(type).hexdigest(@contents)
+
+        hash = if @contents.is_a? IO
+            digest = digest_class(type).new
+            while data = @contents.read(1024)
+                digest << x
+            end
+            @contents.rewind
+            digest.digest!
+        else
+            digest_class(type).hexdigest(@contents)
+        end
+        type.to_s + ":" + hash
     end
 
     def checksum_type=( new_checksum_type )
@@ -85,10 +96,6 @@ class Puppet::FileBucket::File
         end
     end
 
-    def to_s
-        contents
-    end
-
     def name
         [checksum_type, checksum_data, path].compact.join('/')
     end
@@ -101,12 +108,22 @@ class Puppet::FileBucket::File
         true
     end
 
+    def to_s
+        if @contents.is_a? IO
+            r = @contents.read
+            @contents.rewind
+            r
+        else
+            @contents
+        end
+    end
+
     def self.from_s( contents )
         self.new( contents )
     end
 
     def to_pson
-        { "contents" => contents }.to_pson
+        { "contents" => to_s }.to_pson
     end
 
     def self.from_pson( contents )

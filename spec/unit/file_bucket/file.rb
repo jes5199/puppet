@@ -70,6 +70,11 @@ describe Puppet::FileBucket::File do
         Puppet::FileBucket::File.new(@contents).to_s.should == @contents
     end
 
+    it "should return string contents even if contents is a File" do
+        tmp = Tempfile.new
+        Puppet::FileBucket::File.new(@contents).to_s.should == @contents
+    end
+
     it "should have a method that returns the digest algorithm" do
         Puppet::FileBucket::File.new(@contents, :checksum => @checksum).checksum_type.should == :md5
     end
