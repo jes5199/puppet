@@ -1,20 +1,20 @@
 class Puppet::Resource::Ral < Puppet::Indirector::Code
     def find( request )
         # find by name
-        obj   = type(request).instances.find { |o| o.name == resource_name(request) } 
-        obj ||= type(request).new(:name => resource_name(request), :check => type(request).properties.collect { |s| s.name })
+        res   = type(request).instances.find { |o| o.name == resource_name(request) }
+        res ||= type(request).new(:name => resource_name(request), :check => type(request).properties.collect { |s| s.name })
 
-        return obj.to_resource
+        return res.to_resource
     end
 
     def search( request )
         conditions = request.options.dup
         conditions[:name] = resource_name(request) if resource_name(request)
 
-        type(request).instances.map do |obj|
-            obj.to_resource
-        end.find_all do |obj|
-            conditions.all? {|property, value| obj.to_resource[property].to_s == value.to_s}
+        type(request).instances.map do |res|
+            res.to_resource
+        end.find_all do |res|
+            conditions.all? {|property, value| res.to_resource[property].to_s == value.to_s}
         end.sort do |a,b|
             a.title <=> b.title
         end
@@ -22,13 +22,14 @@ class Puppet::Resource::Ral < Puppet::Indirector::Code
 
     def save( request )
         # In RAL-land, to "save" means to actually try to change machine state
-        obj = request.instance
+        res = request.instance
+        ral_res = res.to_ral
 
         catalog = Puppet::Resource::Catalog.new
-        catalog.add_resource obj.to_ral
+        catalog.add_resource ral_res
         catalog.apply
 
-        return obj.to_resource
+        return ral_res.to_resource
     end
 
     private

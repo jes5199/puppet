@@ -73,9 +73,11 @@ Puppet::Application.new(:ralsh) do
 
         if @host
             Puppet::Resource.indirection.terminus_class = :rest
+            key = ["https://#{host}:8139", "production", "resources", type, name].join('/')
+        else
+            key = [type, name].join('/')
         end
 
-        key = [type, name].join('/')
         text = if name
             if params.empty?
                 [ Puppet::Resource.find( key ) ]
