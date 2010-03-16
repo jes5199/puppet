@@ -83,7 +83,7 @@ Puppet::Application.new(:ralsh) do
                 [ Puppet::Resource.new( type, name, params ).save( ) ]
             end
         else
-            Puppet::Resource.search( key )
+            Puppet::Resource.search( key, {:ensure => "present"} )
         end.map(&format).join("\n")
 
         if options[:edit]

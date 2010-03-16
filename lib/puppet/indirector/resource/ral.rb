@@ -11,12 +11,12 @@ class Puppet::Resource::Ral < Puppet::Indirector::Code
         conditions = request.options.dup
         conditions[:name] = resource_name(request) if resource_name(request)
 
-        type(request).instances.select do |obj|
-            conditions.all? {|property, value| obj[property] == value}
-        end.sort do |a,b|
-            a.name <=> b.name
-        end.collect do |obj|
+        type(request).instances.map do |obj|
             obj.to_resource
+        end.find_all do |obj|
+            conditions.all? {|property, value| obj.to_resource[property] == value.to_sym}
+        end.sort do |a,b|
+            a.title <=> b.title
         end
     end
 

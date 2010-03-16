@@ -226,6 +226,9 @@ class Puppet::Resource
     end
 
     def name
+        # this is potential namespace conflict
+        # between the notion of an "indirector name"
+        # and a "resource name"
         [ type, title ].join('/')
     end
 
