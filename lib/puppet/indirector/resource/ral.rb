@@ -14,7 +14,7 @@ class Puppet::Resource::Ral < Puppet::Indirector::Code
         type(request).instances.map do |obj|
             obj.to_resource
         end.find_all do |obj|
-            conditions.all? {|property, value| obj.to_resource[property] == value.to_sym}
+            conditions.all? {|property, value| obj.to_resource[property].to_s == value.to_s}
         end.sort do |a,b|
             a.title <=> b.title
         end

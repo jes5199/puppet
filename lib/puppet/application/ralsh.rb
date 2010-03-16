@@ -83,7 +83,7 @@ Puppet::Application.new(:ralsh) do
                 [ Puppet::Resource.new( type, name, params ).save( ) ]
             end
         else
-            Puppet::Resource.search( key, {:uid => 10} )
+            Puppet::Resource.search( key, {} )
         end.map(&format).join("\n")
 
         if options[:edit]
