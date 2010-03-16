@@ -8,11 +8,13 @@ class Puppet::Resource::Ral < Puppet::Indirector::Code
     end
 
     def search( request )
-        conditions = request.params.dup
+        conditions = request.options.dup
         conditions[:name] = resource_name(request) if resource_name(request)
 
         type(request).instances.select do |obj|
             conditions.all? {|property, value| obj[property] == value}
+        end.sort do |a,b|
+            a.name <=> b.name
         end.collect do |obj|
             obj.to_resource
         end

@@ -71,51 +71,32 @@ Puppet::Application.new(:ralsh) do
             trans.to_manifest
         }
 
-        text = if @host
-            client = Puppet::Network::Client.resource.new(:Server => @host, :Port => Puppet[:puppetport])
-            unless client.read_cert
-                raise "client.read_cert failed"
-            end
-            begin
-                # They asked for a single resource.
-                if name
-                    transbucket = [client.describe(type, name)]
-                else
-                    # Else, list the whole thing out.
-                    transbucket = client.instances(type)
-                end
-            rescue Puppet::Network::XMLRPCClientError => exc
-                raise "client.list(#{type}) failed: #{exc.message}"
-            end
-            transbucket.sort { |a,b| a.name <=> b.name }.collect(&format)
-        else
-            if name
-                obj = typeobj.instances.find { |o| o.name == name } || typeobj.new(:name => name, :check => properties)
-                vals = obj.retrieve
+        if @host
+            Puppet::Resource.indirection.terminus_class = :rest
+        end
 
-                unless params.empty?
-                    params.each do |param, value|
-                        obj[param] = value
-                    end
-                    catalog = Puppet::Resource::Catalog.new
-                    catalog.add_resource obj
-                    begin
-                        catalog.apply
-                    rescue => detail
-                        if Puppet[:trace]
-                            puts detail.backtrace
-                        end
-                    end
-
-                end
-                [format.call(obj.to_trans(true))]
+        text = if name
+            if params.empty?
+                [ Puppet::Resource.find( [type, name].join('/') ) ].map(&format)
             else
-                typeobj.instances.collect do |obj|
-                    next if ARGV.length > 0 and ! ARGV.include? obj.name
-                    trans = obj.to_trans(true)
-                    format.call(trans)
+                raise "FIXME save"
+                params.each do |param, value|
+                    obj[param] = value
                 end
+                catalog = Puppet::Resource::Catalog.new
+                catalog.add_resource obj
+                begin
+                    catalog.apply
+                rescue => detail
+                    if Puppet[:trace]
+                        puts detail.backtrace
+                    end
+                end
+
+                [format.call(obj.to_trans(true))]
             end
+        else
+            Puppet::Resource.search( [type, name].join('/') ).map(&format)
         end.compact.join("\n")
 
         if options[:edit]
