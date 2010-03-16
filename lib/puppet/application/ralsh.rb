@@ -82,7 +82,8 @@ Puppet::Application.new(:ralsh) do
             if params.empty?
                 [ Puppet::Resource.find( key ) ]
             else
-                [ Puppet::Resource.new( type, name, params ).save( ) ]
+                request = Puppet::Indirector::Request.new(:resource, :save, key) # Yuck.
+                [ Puppet::Resource.new( type, name, params ).save( request ) ]
             end
         else
             Puppet::Resource.search( key, {} )
