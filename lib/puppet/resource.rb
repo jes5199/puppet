@@ -225,6 +225,14 @@ class Puppet::Resource
         return result
     end
 
+    def name
+        [ type, title ].join('/')
+    end
+
+    def to_resource
+        self
+    end
+
     private
 
     # Produce a canonical method name.

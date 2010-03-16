@@ -22,16 +22,11 @@ class Puppet::Resource::Ral < Puppet::Indirector::Code
 
     def save( request )
         # In RAL-land, to "save" means to actually try to change machine state
-        obj = find(request)
+        obj = request.instance
 
-        unless params.empty?
-            params.each do |param, value|
-                obj[param] = value
-            end
-            catalog = Puppet::Resource::Catalog.new
-            catalog.add_resource obj
-            catalog.apply
-        end
+        catalog = Puppet::Resource::Catalog.new
+        catalog.add_resource obj.to_ral
+        catalog.apply
 
         return obj.to_resource
     end

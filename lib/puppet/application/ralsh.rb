@@ -75,29 +75,16 @@ Puppet::Application.new(:ralsh) do
             Puppet::Resource.indirection.terminus_class = :rest
         end
 
+        key = [type, name].join('/')
         text = if name
             if params.empty?
-                [ Puppet::Resource.find( [type, name].join('/') ) ].map(&format)
+                [ Puppet::Resource.find( key ) ]
             else
-                raise "FIXME save"
-                params.each do |param, value|
-                    obj[param] = value
-                end
-                catalog = Puppet::Resource::Catalog.new
-                catalog.add_resource obj
-                begin
-                    catalog.apply
-                rescue => detail
-                    if Puppet[:trace]
-                        puts detail.backtrace
-                    end
-                end
-
-                [format.call(obj.to_trans(true))]
+                [ Puppet::Resource.new( type, name, params ).save( ) ]
             end
         else
-            Puppet::Resource.search( [type, name].join('/') ).map(&format)
-        end.compact.join("\n")
+            Puppet::Resource.search( key )
+        end.map(&format).join("\n")
 
         if options[:edit]
             file = "/tmp/x2puppet-#{Process.pid}.pp"
