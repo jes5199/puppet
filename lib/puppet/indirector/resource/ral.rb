@@ -28,14 +28,7 @@ class Puppet::Resource::Ral < Puppet::Indirector::Code
             end
             catalog = Puppet::Resource::Catalog.new
             catalog.add_resource obj
-            begin
-                catalog.apply
-            rescue => detail
-                if Puppet[:trace]
-                    puts detail.backtrace
-                end
-            end
-
+            catalog.apply
         end
 
         return obj.to_resource
