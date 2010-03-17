@@ -19,7 +19,13 @@ describe "Puppet::Resource::Ral" do
             Puppet::Resource::Ral.new.find(@request).should == my_resource
         end
 
-        it "if there is no instance, it should create one"
+        it "if there is no instance, it should create one" do
+            wrong_instance = stub "wrong user", :name => "bob"
+
+            require 'puppet/type/user'
+            Puppet::Type::User.expects(:instances).returns([ wrong_instance, wrong_instance ])
+            Puppet::Resource::Ral.new.find(@request).should == 1
+        end
     end
 
     describe "search" do
