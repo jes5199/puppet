@@ -24,12 +24,17 @@ describe "Puppet::Resource::Ral" do
 
             require 'puppet/type/user'
             Puppet::Type::User.expects(:instances).returns([ wrong_instance, wrong_instance ])
-            Puppet::Resource::Ral.new.find(@request).should == 1
+            result = Puppet::Resource::Ral.new.find(@request)
+            result.should be_is_a Puppet::Resource
+            result.title.should == "root"
         end
     end
 
     describe "search" do
-        it
+        it "should convert ral resources into regular resources"
+        it "should filter results by name if there's a name in the key"
+        it "should filter results by query parameters"
+        it "should return sorted results"
     end
 
     describe "save" do
