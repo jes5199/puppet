@@ -22,7 +22,6 @@ class Puppet::Resource::Ral < Puppet::Indirector::Code
 
     def save( request )
         # In RAL-land, to "save" means to actually try to change machine state
-        raise request.inspect
         res = request.instance
         ral_res = res.to_ral
 
