@@ -492,4 +492,11 @@ describe Puppet::Resource do
             resource['foo'].should == %w{one}
         end
     end
+
+    describe "it should implement to_resource"
+
+    describe "because it is an indirector model" do
+        it "should have a default terminus"
+        it "should have a name"
+    end
 end
