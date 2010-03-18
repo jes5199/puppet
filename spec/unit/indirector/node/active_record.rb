@@ -19,6 +19,7 @@ describe "Puppet::Node::ActiveRecord" do
     end
 
     it "should call fact_merge when a node is found" do
+        pending
         db_instance = stub 'db_instance'
         Puppet::Node::ActiveRecord.ar_model.expects(:find_by_name).returns db_instance
 
