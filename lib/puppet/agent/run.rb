@@ -4,9 +4,9 @@ require 'puppet/indirector'
 
 # A basic class for running the agent.  Used by
 # puppetrun to kick off agents remotely.
-class Puppet::Agent::Runner
+class Puppet::Agent::Run
     extend Puppet::Indirector
-    indirects :runner, :terminus_class => :local
+    indirects :run, :terminus_class => :local
 
     attr_reader :status, :background, :options
 
@@ -26,7 +26,7 @@ class Puppet::Agent::Runner
 
         valid_options = [:tags, :ignoreschedules]
         options.each do |key, value|
-            raise ArgumentError, "Runner does not accept %s" % key unless valid_options.include?(key)
+            raise ArgumentError, "Run does not accept %s" % key unless valid_options.include?(key)
         end
 
         @options = options
