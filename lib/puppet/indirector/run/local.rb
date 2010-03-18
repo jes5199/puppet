@@ -1,8 +1,8 @@
 require 'puppet/agent'
-require 'puppet/agent/runner'
+require 'puppet/agent/run'
 require 'puppet/indirector/code'
 
-class Puppet::Agent::Runner::Local < Puppet::Indirector::Code
+class Puppet::Agent::Run::Local < Puppet::Indirector::Code
     def save( request )
         request.instance.run
     end
