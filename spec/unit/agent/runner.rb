@@ -115,4 +115,20 @@ describe Puppet::Agent::Runner do
             @runner.run
         end
     end
+
+    describe ".from_pson" do
+        it "should accept a hash of options, and pass them with symbolified keys to new" do
+            options = {
+                "tags" => "whatever",
+                "background" => true,
+            }
+            
+            Puppet::Agent::Runner.expects(:new).with({
+                :tags => "whatever",
+                :background => true,
+            })
+
+            Puppet::Agent::Runner.from_pson(options)
+        end
+    end
 end

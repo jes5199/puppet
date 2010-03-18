@@ -6,7 +6,7 @@ require 'puppet/indirector'
 # puppetrun to kick off agents remotely.
 class Puppet::Agent::Runner
     extend Puppet::Indirector
-    indirects :runner, :terminus_class => :rest
+    indirects :runner, :terminus_class => :local
 
     attr_reader :status, :background, :options
 
@@ -49,7 +49,7 @@ class Puppet::Agent::Runner
     def run
         if agent.running?
             @status = "running"
-            return
+            return self
         end
 
         log_run()
@@ -61,5 +61,16 @@ class Puppet::Agent::Runner
         end
 
         @status = "success"
+
+        self
+    end
+
+    def self.from_pson( pson )
+        options = {}
+        pson.each do |key, value|
+            options[key.to_sym] = value
+        end
+
+        new(options)
     end
 end
