@@ -36,7 +36,7 @@ class Puppet::Agent::Run
         msg = ""
         msg += "triggered run" %
         if options[:tags]
-            msg += " with tags %s" % options[:tags]
+            msg += " with tags #{options[:tags].inspect}"
         end
 
         if options[:ignoreschedules]
@@ -72,5 +72,9 @@ class Puppet::Agent::Run
         end
 
         new(options)
+    end
+
+    def to_pson
+        @options.merge(:background => @background).to_pson
     end
 end
