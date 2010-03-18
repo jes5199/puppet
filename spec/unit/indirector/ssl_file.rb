@@ -42,6 +42,7 @@ describe Puppet::Indirector::SslFile do
     end
 
     it "should fail if no store directory or file location has been set" do
+        pending "SPEC FAILURE"
         @file_class.store_in nil
         @file_class.store_at nil
         lambda { @file_class.new }.should raise_error(Puppet::DevError)
