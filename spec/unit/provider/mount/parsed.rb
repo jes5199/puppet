@@ -149,6 +149,7 @@ describe provider_class do
         end
 
         it "should write the mount to disk when :flush is called" do
+            pending
             old_text = @provider_class.target_object(@provider_class.default_target).read
             
             @mount.flush
