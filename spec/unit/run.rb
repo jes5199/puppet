@@ -9,8 +9,8 @@ describe Puppet::Run do
         @runner = Puppet::Run.new
     end
 
-    it "should indirect :runner" do
-        Puppet::Run.indirection.name.should == :runner
+    it "should indirect :run" do
+        Puppet::Run.indirection.name.should == :run
     end
 
     it "should use a configurer agent as its agent" do
