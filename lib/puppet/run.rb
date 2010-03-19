@@ -4,7 +4,7 @@ require 'puppet/indirector'
 
 # A basic class for running the agent.  Used by
 # puppetrun to kick off agents remotely.
-class Puppet::Agent::Run
+class Puppet::Run
     extend Puppet::Indirector
     indirects :run, :terminus_class => :local
 
