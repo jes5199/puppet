@@ -128,10 +128,10 @@ Puppet::Application.new(:puppetrun) do
             }
             run = Puppet::Run.new( run_options ).save( request )
             result = run.status
-        rescue => detail
-            puts detail.backtrace if Puppet[:trace]
-            $stderr.puts "Host %s failed: %s\n" % [host, detail]
-            exit(2)
+        #rescue => detail
+        #    puts detail.backtrace if Puppet[:trace]
+        #    $stderr.puts "Host %s failed: %s\n" % [host, detail]
+        #    exit(2)
         end
 
         case result
