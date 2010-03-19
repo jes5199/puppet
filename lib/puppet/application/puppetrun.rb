@@ -113,8 +113,8 @@ Puppet::Application.new(:puppetrun) do
             end
         end
 
-        require 'puppet/agent/run'
-        Puppet::Agent::Run.indirection.terminus_class = :rest
+        require 'puppet/run'
+        Puppet::Run.indirection.terminus_class = :rest
         port = Puppet[:puppetport]
         url = ["https://#{host}:#{port}", "production", "run", host].join('/')
 
@@ -126,7 +126,7 @@ Puppet::Application.new(:puppetrun) do
                 :background => ! options[:foreground],
                 :ignoreschedules => options[:ignoreschedules]
             }
-            run = Puppet::Agent::Run.new( run_options ).save( request )
+            run = Puppet::Run.new( run_options ).save( request )
             result = run.status
         rescue => detail
             puts detail.backtrace if Puppet[:trace]
