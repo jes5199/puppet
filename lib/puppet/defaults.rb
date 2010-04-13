@@ -4,7 +4,21 @@ module Puppet
     # use basedirs that are in the user's home directory.
     conf = nil
     var = nil
-    name = $0.gsub(/.+#{File::SEPARATOR}/,'').sub(/\.rb$/, '')
+
+    LegacyCommandMapping = {
+        'agent'      => 'puppetd',
+        'ca'         => 'puppetca',
+        'doc'        => 'puppetdoc',
+        'filebucket' => 'filebucket',
+        'main'       => 'puppet',
+        'pi'         => 'pi',
+        'queue'      => 'puppetqd',
+        'resource'   => 'ralsh',
+        'run'        => 'puppetrun',
+        'server'     => 'puppetmasterd',
+    }
+
+    name = LegacyCommandMapping[$command_name] || $0.gsub(/.+#{File::SEPARATOR}/,'').sub(/\.rb$/, '')
 
     # Make File.expand_path happy
     require 'etc'
