@@ -2,7 +2,7 @@ module PuppetTest::FileParsing
     # Run an isomorphism test on our parsing process.
     def fakedataparse(*files)
         files.each do |file|
-            @provider.stubs(:default_target).returns(file)
+            @provider.default_target = file
 
             @provider.prefetch
 
