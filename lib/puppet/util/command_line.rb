@@ -3,9 +3,9 @@ module Puppet
         module CommandLine
             def self.shift_subcommand_from_argv( argv = ARGV, stdin = STDIN )
                 if ! argv.first
-                    "main" unless stdin.tty? # ttys get usage info
+                    "apply" unless stdin.tty? # ttys get usage info
                 elsif argv.first =~ /^-|\.pp$|\.rb$/
-                    "main"
+                    "apply"
                 else
                     argv.shift
                 end
