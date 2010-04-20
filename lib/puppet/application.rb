@@ -388,6 +388,10 @@ class Puppet::Application
         exit
     end
 
+    def to_s
+        self.class.to_s + "[#{@name.inspect}]"
+    end
+
     private
 
     def exit_on_fail(message, code = 1)
