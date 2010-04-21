@@ -8,8 +8,9 @@ require 'getoptlong'
 
 describe Puppet::Application do
 
-    before :each do
-        @app = Puppet::Application.new(:test)
+    before :all do
+        # Workaround due to rspec bug #819: This code is being called multiple times
+        @app = Puppet::Application[:test] || Puppet::Application.new(:test)
     end
 
     it "should have a run entry-point" do
@@ -34,6 +35,10 @@ describe Puppet::Application do
 
     it "should return :main as default get_command" do
         @app.get_command.should == :main
+    end
+
+    it "should not allow you to create another application of the same name" do
+        lambda{ Puppet::Application.new(:test) }.should raise_error(Puppet::DevError)
     end
 
     describe 'when invoking clear!' do
@@ -170,7 +175,6 @@ describe Puppet::Application do
             ARGV.clear
 
             Puppet.settings.stubs(:optparse_addargs).returns([])
-            @app = Puppet::Application.new(:test)
         end
 
         after :each do
@@ -288,7 +292,6 @@ describe Puppet::Application do
     describe "when calling default setup" do
 
         before :each do
-            @app = Puppet::Application.new(:test)
             @app.stubs(:should_parse_config?).returns(false)
             @app.options.stubs(:[])
         end
@@ -317,7 +320,6 @@ describe Puppet::Application do
     describe "when running" do
 
         before :each do
-            @app = Puppet::Application.new(:test)
             @app.stubs(:run_preinit)
             @app.stubs(:run_setup)
             @app.stubs(:parse_options)
@@ -410,10 +412,6 @@ describe Puppet::Application do
     end
 
     describe "when metaprogramming" do
-
-        before :each do
-            @app = Puppet::Application.new(:test)
-        end
 
         it "should create a new method with command" do
             @app.command(:test) do

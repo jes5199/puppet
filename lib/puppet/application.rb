@@ -255,6 +255,10 @@ class Puppet::Application
 
         @name = symbolize(name)
 
+        if @@applications[name]
+            raise Puppet::DevError, "There is already an application named #{name.inspect}"
+        end
+
         init_default
 
         @options = {}
