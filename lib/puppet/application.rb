@@ -25,7 +25,7 @@ require 'optparse'
 #
 #     # run_command is called to actually run the specified command
 #     def run_command
-#         send Puppet::Util::CommandLine.args.shift
+#         send Puppet::Util::CommandLine.new.args.shift
 #     end
 #
 #     # option uses metaprogramming to create a method
@@ -312,7 +312,7 @@ class Puppet::Application
             self.option_parser.parse!
         rescue OptionParser::ParseError => detail
             $stderr.puts detail
-            $stderr.puts "Try '#{$0} --help'"
+            $stderr.puts "Try 'puppet #{command_line.subcommand_name} --help'"
             exit(1)
         end
     end
