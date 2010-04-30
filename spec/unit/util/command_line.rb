@@ -12,67 +12,75 @@ describe Puppet::Util::CommandLine do
     end
 
     it "should pull off the first argument if it looks like a subcommand" do
-        args    = %w( client --help whatever.pp )
-        command = Puppet::Util::CommandLine.shift_subcommand_from_argv( args, @tty )
+        command_line = Puppet::Util::CommandLine.new("puppet", %w( client --help whatever.pp ), @tty )
 
-        command.should == "client"
-        args.should    == %w( --help whatever.pp )
+        command_line.subcommand_name.should == "client"
+        command_line.args.should            == %w( --help whatever.pp )
     end
 
     it "should use 'apply' if the first argument looks like a .pp file" do
-        args    = %w( whatever.pp )
-        command = Puppet::Util::CommandLine.shift_subcommand_from_argv( args, @tty )
+        command_line = Puppet::Util::CommandLine.new("puppet", %w( whatever.pp ), @tty )
 
-        command.should == "apply"
-        args.should    == %w( whatever.pp )
+        command_line.subcommand_name.should == "apply"
+        command_line.args.should            == %w( whatever.pp )
     end
 
     it "should use 'apply' if the first argument looks like a .rb file" do
-        args    = %w( whatever.rb )
-        command = Puppet::Util::CommandLine.shift_subcommand_from_argv( args, @tty )
+        command_line = Puppet::Util::CommandLine.new("puppet", %w( whatever.rb ), @tty )
 
-        command.should == "apply"
-        args.should    == %w( whatever.rb )
+        command_line.subcommand_name.should == "apply"
+        command_line.args.should            == %w( whatever.rb )
     end
 
     it "should use 'apply' if the first argument looks like a flag" do
-        args    = %w( --debug )
-        command = Puppet::Util::CommandLine.shift_subcommand_from_argv( args, @tty )
+        command_line = Puppet::Util::CommandLine.new("puppet", %w( --debug ), @tty )
 
-        command.should == "apply"
-        args.should    == %w( --debug )
+        command_line.subcommand_name.should == "apply"
+        command_line.args.should            == %w( --debug )
     end
 
     it "should use 'apply' if the first argument is -" do
-        args    = %w( - )
-        command = Puppet::Util::CommandLine.shift_subcommand_from_argv( args, @tty )
+        command_line = Puppet::Util::CommandLine.new("puppet", %w( - ), @tty )
 
-        command.should == "apply"
-        args.should    == %w( - )
+        command_line.subcommand_name.should == "apply"
+        command_line.args.should            == %w( - )
     end
 
     it "should return nil if the first argument is --help" do
-        args    = %w( --help )
-        command = Puppet::Util::CommandLine.shift_subcommand_from_argv( args, @tty )
+        command_line = Puppet::Util::CommandLine.new("puppet", %w( --help ), @tty )
 
-        command.should == nil
+        command_line.subcommand_name.should == nil
     end
 
 
     it "should return nil if there are no arguments on a tty" do
-        args    = []
-        command = Puppet::Util::CommandLine.shift_subcommand_from_argv( args, @tty )
+        command_line = Puppet::Util::CommandLine.new("puppet", [], @tty )
 
-        command.should == nil
-        args.should    == []
+        command_line.subcommand_name.should == nil
+        command_line.args.should            == []
     end
 
     it "should use 'apply' if there are no arguments on a pipe" do
-        args    = []
-        command = Puppet::Util::CommandLine.shift_subcommand_from_argv( args, @pipe )
+        command_line = Puppet::Util::CommandLine.new("puppet", [], @pipe )
 
-        command.should == "apply"
-        args.should    == []
+        command_line.subcommand_name.should == "apply"
+        command_line.args.should            == []
+    end
+
+    it "should return the executable name if it is not puppet" do
+        command_line = Puppet::Util::CommandLine.new("puppetmasterd", [], @tty )
+
+        command_line.subcommand_name.should == "puppetmasterd"
+    end
+
+    it "should translate subcommand names into their legacy equivalent" do
+        command_line = Puppet::Util::CommandLine.new("puppet", ["master"], @tty)
+        command_line.legacy_executable_name.should == "puppetmasterd"
+    end
+
+    it "should leave legacy command names alone" do
+        command_line = Puppet::Util::CommandLine.new("puppetmasterd", [], @tty)
+        command_line.legacy_executable_name.should == "puppetmasterd"
     end
 
 end
