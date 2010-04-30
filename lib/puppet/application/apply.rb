@@ -4,7 +4,7 @@ require 'puppet/configurer'
 require 'puppet/network/handler'
 require 'puppet/network/client'
 
-Puppet::Application.new(:apply) do
+class Puppet::Application::Apply < Puppet::Application
 
     should_parse_config
 
@@ -30,17 +30,17 @@ Puppet::Application.new(:apply) do
         end
     end
 
-    dispatch do
+    def run_command
         if options[:catalog]
-            :apply
+            apply
         elsif Puppet[:parseonly]
-            :parseonly
+            parseonly
         else
-            :main
+            main
         end
     end
 
-    command(:apply) do
+    def apply
         require 'puppet/configurer'
 
         if options[:catalog] == "-"
@@ -64,12 +64,12 @@ Puppet::Application.new(:apply) do
         configurer.run :catalog => catalog
     end
 
-    command(:parseonly) do
+    def parseonly
         # Set our code or file to use.
-        if options[:code] or Puppet::Util::CommandLine.args.length == 0
+        if options[:code] or command_line.args.length == 0
             Puppet[:code] = options[:code] || STDIN.read
         else
-            Puppet[:manifest] = Puppet::Util::CommandLine.args.shift
+            Puppet[:manifest] = command_line.args.shift
         end
         begin
             Puppet::Resource::TypeCollection.new(Puppet[:environment]).perform_initial_import
@@ -80,12 +80,12 @@ Puppet::Application.new(:apply) do
         exit 0
     end
 
-    command(:main) do
+    def main
         # Set our code or file to use.
-        if options[:code] or Puppet::Util::CommandLine.args.length == 0
+        if options[:code] or command_line.args.length == 0
             Puppet[:code] = options[:code] || STDIN.read
         else
-            Puppet[:manifest] = Puppet::Util::CommandLine.args.shift
+            Puppet[:manifest] = command_line.args.shift
         end
 
         # Collect our facts.
@@ -153,7 +153,7 @@ Puppet::Application.new(:apply) do
         end
     end
 
-    setup do
+    def setup
         if Puppet.settings.print_configs?
             exit(Puppet.settings.print_configs ? 0 : 1)
         end
