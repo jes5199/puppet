@@ -349,7 +349,7 @@ module Puppet
     )
 
     # Define the config default.
-    self.setdefaults(self.settings[:name],
+    setdefaults(Puppet.settings[:name],
         :config => ["$confdir/puppet.conf",
             "The configuration file for #{Puppet[:name]}."],
         :pidfile => ["$rundir/$name.pid", "The pid file"],
@@ -364,7 +364,7 @@ module Puppet
         }
     )
 
-    self.setdefaults(:master,
+    setdefaults(:master,
         :user => ["puppet", "The user puppet master should run as."],
         :group => ["puppet", "The group puppet master should run as."],
         :manifestdir => ["$confdir/manifests",
@@ -580,7 +580,7 @@ module Puppet
     )
 
     # Plugin information.
-    self.setdefaults(:main,
+    setdefaults(:main,
         :plugindest => ["$libdir",
             "Where Puppet should store plugins that it pulls down from the central
             server."],
@@ -595,7 +595,7 @@ module Puppet
     )
 
     # Central fact information.
-    self.setdefaults(:main,
+    setdefaults(:main,
         :factpath => {:default => "$vardir/facts/",
             :desc => "Where Puppet should look for facts.  Multiple directories should
                 be colon-separated, like normal PATH variables.",
@@ -615,7 +615,7 @@ module Puppet
             "What files to ignore when pulling down facts."]
     )
 
-    self.setdefaults(:tagmail,
+    setdefaults(:tagmail,
         :tagmap => ["$confdir/tagmail.conf",
             "The mapping between reporting tags and email addresses."],
         :sendmail => [%x{which sendmail 2>/dev/null}.chomp,
@@ -626,7 +626,7 @@ module Puppet
             "The server through which to send email reports."]
     )
 
-    self.setdefaults(:rails,
+    setdefaults(:rails,
         :dblocation => { :default => "$statedir/clientconfigs.sqlite3",
             :mode => 0660,
             :owner => "service",
