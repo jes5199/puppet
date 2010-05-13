@@ -878,9 +878,6 @@ Generated on #{Time.now}.
     end
 
     # This is an abstract method that just turns a file in to a hash of hashes.
-    # We mostly need this for backward compatibility -- as of May 2007 we need to
-    # support parsing old files with any section, or new files with just two
-    # valid sections.
     def parse_file(file)
         text = read_file(file)
 
