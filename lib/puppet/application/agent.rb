@@ -233,7 +233,7 @@ class Puppet::Application::Agent < Puppet::Application
             Puppet::Util::Log.newdestination(logdest)
         end
 
-        Puppet.settings.use :main, :puppetd, :ssl
+        Puppet.settings.use :main, :agent, :ssl
 
         # We need to specify a ca location for things to work
         # in fingerprint mode we just need access to the local files and
