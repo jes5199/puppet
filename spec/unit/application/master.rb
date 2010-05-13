@@ -388,7 +388,7 @@ describe Puppet::Application::Master do
             end
 
             it "should drop privileges if running as root" do
-                Process.stubs(:uid).returns(0)
+                Puppet.features.stubs(:root?).returns true
 
                 Puppet::Util.expects(:chuser)
 
