@@ -49,7 +49,7 @@ module Puppet
             used during testing with TextMate), and ``false``, which produces
             no color."],
         :mkusers => [false,
-            "Whether to create the necessary user and group that puppetd will
+            "Whether to create the necessary user and group that puppet agent will
             run as."],
         :manage_internal_file_permissions => [true,
             "Whether Puppet should manage the owner, group, and mode of files 
@@ -92,12 +92,12 @@ module Puppet
         :authconfig => [ "$confdir/namespaceauth.conf",
             "The configuration file that defines the rights to the different
             namespaces and methods.  This can be used as a coarse-grained
-            authorization system for both ``puppetd`` and ``puppetmasterd``."
+            authorization system for both ``puppet agent`` and ``puppet master``."
         ],
         :environment => {:default => "production", :desc => "The environment Puppet is running in.  For clients
-            (e.g., ``puppetd``) this determines the environment itself, which
+            (e.g., ``puppet agent``) this determines the environment itself, which
             is used to find modules and much more.  For servers (i.e.,
-            ``puppetmasterd``) this provides the default environment for nodes
+            ``puppet master``) this provides the default environment for nodes
             we know nothing about."
         },
         :diff_args => ["-u", "Which arguments to pass to the diff command when printing differences between files."],
@@ -117,7 +117,7 @@ module Puppet
         :httplog => { :default => "$logdir/http.log",
             :owner => "root",
             :mode => 0640,
-            :desc => "Where the puppetd web server logs."
+            :desc => "Where the puppet agent web server logs."
         },
         :http_proxy_host => ["none",
             "The HTTP proxy host to use for outgoing connections.  Note: You
@@ -221,7 +221,7 @@ module Puppet
         :passfile => { :default => "$privatedir/password",
             :mode => 0640,
             :owner => "service",
-            :desc => "Where puppetd stores the password for its private key.
+            :desc => "Where puppet agent stores the password for its private key.
                 Generally unused."
         },
         :hostcsr => { :default => "$ssldir/csr_$certname.pem",
@@ -365,12 +365,12 @@ module Puppet
     )
 
     self.setdefaults(:master,
-        :user => ["puppet", "The user puppetmasterd should run as."],
-        :group => ["puppet", "The group puppetmasterd should run as."],
+        :user => ["puppet", "The user puppet master should run as."],
+        :group => ["puppet", "The group puppet master should run as."],
         :manifestdir => ["$confdir/manifests",
-            "Where puppetmasterd looks for its manifests."],
+            "Where puppet master looks for its manifests."],
         :manifest => ["$manifestdir/site.pp",
-            "The entry-point manifest for puppetmasterd."],
+            "The entry-point manifest for puppet master."],
         :code => ["", "Code to parse directly.  This is essentially only used
             by ``puppet``, and should only be set if you're writing your own Puppet
             executable"],
@@ -378,7 +378,7 @@ module Puppet
             :owner => "service",
             :group => "service",
             :mode => 0660,
-            :desc => "Where puppetmasterd logs.  This is generally not used,
+            :desc => "Where puppet master logs.  This is generally not used,
                 since syslog is the default log destination."
         },
         :masterhttplog => { :default => "$logdir/masterhttp.log",
@@ -386,9 +386,9 @@ module Puppet
             :group => "service",
             :mode => 0660,
             :create => true,
-            :desc => "Where the puppetmasterd web server logs."
+            :desc => "Where the puppet master web server logs."
         },
-        :masterport => [8140, "Which port puppetmasterd listens on."],
+        :masterport => [8140, "Which port puppet master listens on."],
         :parseonly => [false, "Just check the syntax of the manifests."],
         :node_name => ["cert", "How the puppetmaster determines the client's identity
            and sets the 'hostname', 'fqdn' and 'domain' facts for use in the manifest,
@@ -406,7 +406,7 @@ module Puppet
         :rest_authconfig => [ "$confdir/auth.conf",
             "The configuration file that defines the rights to the different
             rest indirections.  This can be used as a fine-grained
-            authorization system for ``puppetmasterd``."
+            authorization system for ``puppet master``."
         ],
         :ca => [true, "Wether the master should function as a certificate authority."],
         :modulepath => {:default => "$confdir/modules:/usr/share/puppet/modules",
@@ -458,12 +458,12 @@ module Puppet
         :localconfig => { :default => "$statedir/localconfig",
             :owner => "root",
             :mode => 0660,
-            :desc => "Where puppetd caches the local configuration.  An
+            :desc => "Where puppet agent caches the local configuration.  An
                 extension indicating the cache format is added automatically."},
         :statefile => { :default => "$statedir/state.yaml",
             :mode => 0660,
-            :desc => "Where puppetd and puppetmasterd store state associated
-                with the running configuration.  In the case of puppetmasterd,
+            :desc => "Where puppet agent and puppet master store state associated
+                with the running configuration.  In the case of puppet master,
                 this file reflects the state discovered through interacting
                 with clients."
             },
@@ -474,28 +474,28 @@ module Puppet
         :classfile => { :default => "$statedir/classes.txt",
             :owner => "root",
             :mode => 0644,
-            :desc => "The file in which puppetd stores a list of the classes
+            :desc => "The file in which puppet agent stores a list of the classes
                 associated with the retrieved configuration.  Can be loaded in
                 the separate ``puppet`` executable using the ``--loadclasses``
                 option."},
         :puppetdlog => { :default => "$logdir/puppetd.log",
             :owner => "root",
             :mode => 0640,
-            :desc => "The log file for puppetd.  This is generally not used."
+            :desc => "The log file for puppet agent.  This is generally not used."
         },
         :server => ["puppet",
-            "The server to which server puppetd should connect"],
+            "The server to which server puppet agent should connect"],
         :ignoreschedules => [false,
-            "Boolean; whether puppetd should ignore schedules.  This is useful
-            for initial puppetd runs."],
-        :puppetport => [8139, "Which port puppetd listens on."],
-        :noop => [false, "Whether puppetd should be run in noop mode."],
+            "Boolean; whether puppet agent should ignore schedules.  This is useful
+            for initial puppet agent runs."],
+        :puppetport => [8139, "Which port puppet agent listens on."],
+        :noop => [false, "Whether puppet agent should be run in noop mode."],
         :runinterval => [1800, # 30 minutes
-            "How often puppetd applies the client configuration; in seconds."],
-        :listen => [false, "Whether puppetd should listen for
+            "How often puppet agent applies the client configuration; in seconds."],
+        :listen => [false, "Whether puppet agent should listen for
             connections.  If this is true, then by default only the
             ``runner`` server is started, which allows remote authorized
-            and authenticated nodes to connect and trigger ``puppetd``
+            and authenticated nodes to connect and trigger ``puppet agent``
             runs."],
         :ca_server => ["$server", "The server to use for certificate
             authority requests.  It's a separate server because it cannot
@@ -519,7 +519,7 @@ module Puppet
             can be guaranteed to support this format, but it will be used for all
             classes that support it."],
         :puppetdlockfile => [ "$statedir/puppetdlock",
-            "A lock file to temporarily stop puppetd from doing anything."],
+            "A lock file to temporarily stop puppet agent from doing anything."],
         :usecacheonfailure => [true,
             "Whether to use the cached configuration when the remote
             configuration will not compile.  This option is useful for testing
