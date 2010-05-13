@@ -480,9 +480,21 @@ class Puppet::Util::Settings
         if setting.respond_to?(:handle)
             setting.handle(value)
         end
-        # Reset the name, so it's looked up again.
-        if param == :name
-            @name = nil
+        if param == :mode || param == :name
+            raise ArgumentError,
+                "You're attempting to set configuration parameter $#{param}, which is read-only."
+        end
+        require 'puppet/util/command_line'
+        command_line = Puppet::Util::CommandLine.new
+        legacy_to_mode = Puppet::Util::CommandLine::LegacyName.inject({}) do |hash, pair|
+            app, legacy = pair
+            command_line.require_application app
+            hash[legacy.to_sym] = Puppet::Application.find(app).mode.name
+            hash
+        end
+        if new_type = legacy_to_mode[type]
+            Puppet.warning "You have configuration parameter $#{param} specified in [#{type}], which is a deprecated section. I'm assuming you meant [#{new_type}]"
+            type = new_type
         end
         @sync.synchronize do # yay, thread-safe
             @values[type][param] = value
@@ -500,8 +512,6 @@ class Puppet::Util::Settings
 
         return value
     end
-
-    private :set_value
 
     # Set a bunch of defaults in a given section.  The sections are actually pretty
     # pointless, but they help break things up a bit, anyway.
