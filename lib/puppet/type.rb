@@ -1694,7 +1694,7 @@ class Type
 
         @defaults = {}
 
-        @parameters = [] unless defined?(@parameters)
+        @parameters ||= []
 
         @validproperties = {}
         @properties = []
@@ -1712,7 +1712,7 @@ class Type
             end
         }
 
-        @doc = "" unless defined?(@doc)
+        @doc ||= ""
 
     end
 

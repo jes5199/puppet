@@ -27,7 +27,7 @@ class Puppet::Parser::Resource < Puppet::Resource
 
     # Determine whether the provided parameter name is a relationship parameter.
     def self.relationship_parameter?(name)
-        @relationship_names = Puppet::Type.relationship_params.collect { |p| p.name } unless defined?(@relationship_names)
+        @relationship_names ||= Puppet::Type.relationship_params.collect { |p| p.name }
         @relationship_names.include?(name)
     end
 
@@ -143,7 +143,7 @@ class Puppet::Parser::Resource < Puppet::Resource
     # Return the resource name, or the title if no name
     # was specified.
     def name
-        @name = self[:name] || self.title unless defined?(@name)
+        @name ||= self[:name] || self.title
         @name
     end
 
