@@ -99,9 +99,7 @@ module Puppet
 
             result = super
 
-            if ! result and Puppet[:show_diff]
-                string_file_diff(@resource[:path], actual_content)
-            end
+            string_file_diff(@resource[:path], actual_content) if ! result and Puppet[:show_diff]
             return result
         end
 

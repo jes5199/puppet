@@ -46,9 +46,7 @@ class Type
         namevar = self.namevar
 
         order = [namevar]
-        if self.parameters.include?(:provider)
-            order << :provider
-        end
+        order << :provider if self.parameters.include?(:provider)
         order << [self.properties.collect { |property| property.name },
             self.parameters - [:provider],
             self.metaparams].flatten.reject { |param|
@@ -111,15 +109,11 @@ class Type
     def self.copyparam(klass, name)
         param = klass.attrclass(name)
 
-        unless param
-            raise Puppet::DevError, "Class #{klass} has no param #{name}"
-        end
+        raise Puppet::DevError, "Class #{klass} has no param #{name}" unless param
         @parameters << param
         @parameters.each { |p| @paramhash[name] = p }
 
-        if param.isnamevar?
-            @namevar = param.name
-        end
+        @namevar = param.name if param.isnamevar?
     end
 
     def self.eachmetaparam
@@ -200,9 +194,7 @@ class Type
         )
 
         # Grr.
-        if options[:required_features]
-            param.required_features = options[:required_features]
-        end
+        param.required_features = options[:required_features] if options[:required_features]
 
         handle_param_options(name, options)
 
@@ -255,15 +247,11 @@ class Type
         handle_param_options(name, options)
 
         # Grr.
-        if options[:required_features]
-            param.required_features = options[:required_features]
-        end
+        param.required_features = options[:required_features] if options[:required_features]
 
         param.isnamevar if options[:namevar]
 
-        if param.isnamevar?
-            @namevar = param.name
-        end
+        @namevar = param.name if param.isnamevar?
 
         return param
     end
@@ -289,9 +277,7 @@ class Type
                 "Options must be a hash, not #{options.inspect}"
         end
 
-        if @validproperties.include?(name)
-            raise Puppet::DevError, "Class #{self.name} already has a property named #{name}"
-        end
+        raise Puppet::DevError, "Class #{self.name} already has a property named #{name}" if @validproperties.include?(name)
 
         if parent = options[:parent]
             options.delete(:parent)
@@ -311,9 +297,7 @@ class Type
                 end
             end
 
-            if block
-                class_eval(&block)
-            end
+            class_eval(&block) if block
         end
 
         # If it's the 'ensure' property, always put it first.
@@ -381,9 +365,7 @@ class Type
 
     # does the name reflect a valid parameter?
     def self.validparameter?(name)
-        unless defined?(@parameters)
-            raise Puppet::DevError, "Class #{self} has not defined parameters"
-        end
+        raise Puppet::DevError, "Class #{self} has not defined parameters" unless defined?(@parameters)
         if @paramhash.include?(name) or @@metaparamhash.include?(name)
             return true
         else
@@ -429,9 +411,7 @@ class Type
     def [](name)
         name = attr_alias(name)
 
-        unless self.class.validattr?(name)
-            fail("Invalid parameter #{name}(#{name.inspect})")
-        end
+        fail("Invalid parameter #{name}(#{name.inspect})") unless self.class.validattr?(name)
 
         if name == :name
             name = self.class.namevar
@@ -452,16 +432,12 @@ class Type
     def []=(name,value)
         name = attr_alias(name)
 
-        unless self.class.validattr?(name)
-            fail("Invalid parameter #{name}")
-        end
+        fail("Invalid parameter #{name}") unless self.class.validattr?(name)
 
         if name == :name
             name = self.class.namevar
         end
-        if value.nil?
-            raise Puppet::Error.new("Got nil value for #{name}")
-        end
+        raise Puppet::Error.new("Got nil value for #{name}") if value.nil?
 
         if obj = @parameters[name]
             obj.value = value
@@ -527,9 +503,7 @@ class Type
             raise Puppet::Error, "Resource type #{self.class.name} does not support parameter #{name}"
         end
 
-        if @parameters.include?(name)
-            raise Puppet::Error, "Parameter '#{name}' is already defined in #{self.ref}"
-        end
+        raise Puppet::Error, "Parameter '#{name}' is already defined in #{self.ref}" if @parameters.include?(name)
 
         if provider and ! provider.class.supports_parameter?(klass)
             missing = klass.required_features.find_all { |f| ! provider.class.feature?(f) }
@@ -561,9 +535,7 @@ class Type
 
     # Is the named property defined?
     def propertydefined?(name)
-        unless name.is_a? Symbol
-            name = name.intern
-        end
+        name = name.intern unless name.is_a? Symbol
         return @parameters.include?(name)
     end
 
@@ -712,9 +684,7 @@ class Type
     # Flush the provider, if it supports it.  This is called by the
     # transaction.
     def flush
-        if self.provider and self.provider.respond_to?(:flush)
-            self.provider.flush
-        end
+        self.provider.flush if self.provider and self.provider.respond_to?(:flush)
     end
 
     # if all contained objects are in sync, then we're in sync
@@ -755,9 +725,7 @@ class Type
 
     # retrieve the current value of all contained properties
     def retrieve
-        if self.provider.is_a?(Puppet::Provider) and ! provider.class.suitable?
-            fail "Provider #{provider.class.name} is not functional on this host"
-        end
+        fail "Provider #{provider.class.name} is not functional on this host" if self.provider.is_a?(Puppet::Provider) and ! provider.class.suitable?
 
         result = Puppet::Resource.new(type, title)
 
@@ -842,12 +810,8 @@ class Type
         if exobj = @objects[name] and self.isomorphic?
             msg = "Object '#{newobj.class.name}[#{name}]' already exists"
 
-            if exobj.file and exobj.line
-                msg += ("in file #{object.file} at line #{object.line}")
-            end
-            if object.file and object.line
-                msg += ("and cannot be redefined in file #{object.file} at line #{object.line}")
-            end
+            msg += ("in file #{object.file} at line #{object.line}") if exobj.file and exobj.line
+            msg += ("and cannot be redefined in file #{object.file} at line #{object.line}") if object.file and object.line
             error = Puppet::Error.new(msg)
             raise error
         else
@@ -889,9 +853,7 @@ class Type
             end
             @objects.clear
         end
-        if defined?(@aliases)
-            @aliases.clear
-        end
+        @aliases.clear if defined?(@aliases)
     end
 
     # Force users to call this, so that we can merge objects if
@@ -906,12 +868,8 @@ class Type
     def self.delete(resource)
         raise "Global resource removal is deprecated"
         return unless defined?(@objects)
-        if @objects.include?(resource.title)
-            @objects.delete(resource.title)
-        end
-        if @aliases.include?(resource.title)
-            @aliases.delete(resource.title)
-        end
+        @objects.delete(resource.title) if @objects.include?(resource.title)
+        @aliases.delete(resource.title) if @aliases.include?(resource.title)
         if @aliases.has_value?(resource)
             names = []
             @aliases.each do |name, otherres|
@@ -940,9 +898,7 @@ class Type
 
     # Retrieve all known instances.  Either requires providers or must be overridden.
     def self.instances
-        if provider_hash.empty?
-            raise Puppet::DevError, "#{self.name} has no providers and has not overridden 'instances'"
-        end
+        raise Puppet::DevError, "#{self.name} has no providers and has not overridden 'instances'" if provider_hash.empty?
 
         # Put the default provider first, then the rest of the suitable providers.
         provider_instances = {}
@@ -994,9 +950,7 @@ class Type
                 end
             end
 
-            unless title ||= hash[:name]
-                raise Puppet::Error, "You must specify a name or title for resources"
-            end
+            raise Puppet::Error, "You must specify a name or title for resources" unless title ||= hash[:name]
         end
 
 
@@ -1080,18 +1034,12 @@ class Type
                 end
             end
 
-            unless args.is_a?(Array)
-                args = [args]
-            end
+            args = [args] unless args.is_a?(Array)
 
-            unless defined?(@resource)
-                self.devfail "No parent for #{self.class}, #{self.name}?"
-            end
+            self.devfail "No parent for #{self.class}, #{self.name}?" unless defined?(@resource)
 
             args.each { |property|
-                unless property.is_a?(Symbol)
-                    property = property.intern
-                end
+                property = property.intern unless property.is_a?(Symbol)
                 next if @resource.propertydefined?(property)
 
                 unless propertyklass = @resource.class.validproperty?(property)
@@ -1165,9 +1113,7 @@ class Type
             "
 
         munge do |aliases|
-            unless aliases.is_a?(Array)
-                aliases = [aliases]
-            end
+            aliases = [aliases] unless aliases.is_a?(Array)
 
             raise(ArgumentError, "Cannot add aliases without a catalog") unless @resource.catalog
 
@@ -1484,9 +1430,7 @@ class Type
         name = Puppet::Util.symbolize(name)
 
         # If we don't have it yet, try loading it.
-        unless provider_hash.has_key?(name)
-            @providerloader.load(name)
-        end
+        @providerloader.load(name) unless provider_hash.has_key?(name)
         return provider_hash[name]
     end
 
@@ -1578,9 +1522,7 @@ class Type
 
             validate do |provider_class|
                 provider_class = provider_class[0] if provider_class.is_a? Array
-                if provider_class.is_a?(Puppet::Provider)
-                    provider_class = provider_class.class.name
-                end
+                provider_class = provider_class.class.name if provider_class.is_a?(Puppet::Provider)
 
                 unless provider = @resource.class.provider(provider_class)
                     raise ArgumentError, "Invalid #{@resource.class.name} provider '#{provider_class}'"
@@ -1589,9 +1531,7 @@ class Type
 
             munge do |provider|
                 provider = provider[0] if provider.is_a? Array
-                if provider.is_a? String
-                    provider = provider.intern
-                end
+                provider = provider.intern if provider.is_a? String
                 @resource.provider = provider
 
                 if provider.is_a?(Puppet::Provider)
@@ -1620,9 +1560,7 @@ class Type
 
     # Return an array of all of the suitable providers.
     def self.suitableprovider
-        if provider_hash.empty?
-            providerloader.loadall
-        end
+        providerloader.loadall if provider_hash.empty?
         provider_hash.find_all { |name, provider|
             provider.suitable?
         }.collect { |name, provider|
@@ -1673,9 +1611,7 @@ class Type
 
             # Retrieve the list of names from the block.
             next unless list = self.instance_eval(&block)
-            unless list.is_a?(Array)
-                list = [list]
-            end
+            list = [list] unless list.is_a?(Array)
 
             # Collect the current prereqs
             list.each { |dep|
@@ -1786,9 +1722,7 @@ class Type
 
         @defaults = {}
 
-        unless defined?(@parameters)
-            @parameters = []
-        end
+        @parameters = [] unless defined?(@parameters)
 
         @validproperties = {}
         @properties = []
@@ -1798,9 +1732,7 @@ class Type
         @attr_aliases = {}
 
         @paramdoc = Hash.new { |hash,key|
-            if key.is_a?(String)
-                key = key.intern
-            end
+            key = key.intern if key.is_a?(String)
             if hash.include?(key)
                 hash[key]
             else
@@ -1808,9 +1740,7 @@ class Type
             end
         }
 
-        unless defined?(@doc)
-            @doc = ""
-        end
+        @doc = "" unless defined?(@doc)
 
     end
 

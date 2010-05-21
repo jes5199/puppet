@@ -64,9 +64,7 @@ module Puppet
                 ENV["PATH"] = value unless value == "none"
                 paths = ENV["PATH"].split(File::PATH_SEPARATOR)
                 %w{/usr/sbin /sbin}.each do |path|
-                    unless paths.include?(path)
-                        ENV["PATH"] += File::PATH_SEPARATOR + path
-                    end
+                    ENV["PATH"] += File::PATH_SEPARATOR + path unless paths.include?(path)
                 end
                 value
             end
@@ -79,9 +77,7 @@ module Puppet
                 is in Ruby's search path",
             :call_on_define => true, # Call our hook with the default value, so we always get the libdir set.
             :hook => proc do |value|
-                if defined?(@oldlibdir) and $LOAD_PATH.include?(@oldlibdir)
-                    $LOAD_PATH.delete(@oldlibdir)
-                end
+                $LOAD_PATH.delete(@oldlibdir) if defined?(@oldlibdir) and $LOAD_PATH.include?(@oldlibdir)
                 @oldlibdir = value
                 $LOAD_PATH << value
             end
@@ -568,9 +564,7 @@ module Puppet
             :call_on_define => false,
             :desc => "(Deprecated for 'report_server') The server to which to send transaction reports.",
             :hook => proc do |value|
-                if value
-                    Puppet.settings[:report_server] = value
-                end
+                Puppet.settings[:report_server] = value if value
             end
         },
         :report_server => ["$server",
