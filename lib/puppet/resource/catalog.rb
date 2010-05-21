@@ -120,7 +120,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
 
         # Expire all of the resource data -- this ensures that all
         # data we're operating against is entirely current.
-        expire()
+        expire
 
         Puppet::Util::Storage.load if host_config?
         transaction = Puppet::Transaction.new(self)
@@ -150,7 +150,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
         return transaction
     ensure
         @applying = false
-        cleanup()
+        cleanup
     end
 
     # Are we in the middle of applying the catalog?
@@ -272,7 +272,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
 
         if block_given?
             yield(self)
-            finalize()
+            finalize
         end
     end
 
@@ -481,7 +481,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
 
     def cleanup
         # Expire any cached data the resources are keeping.
-        expire()
+        expire
     end
 
     # Verify that the given resource isn't defined elsewhere.

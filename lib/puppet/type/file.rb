@@ -371,7 +371,7 @@ Puppet::Type.newtype(:file) do
     # there is one.
     def finish
         # Look up our bucket, if there is one
-        bucket()
+        bucket
         super
     end
 

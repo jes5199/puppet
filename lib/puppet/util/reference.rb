@@ -170,7 +170,7 @@ class Puppet::Util::Reference
 
         text += @header
 
-        text += generate()
+        text += generate
 
         text += self.class.footer if withcontents
 
