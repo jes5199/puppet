@@ -6,7 +6,6 @@ module Puppet::Util::RDoc
     # launch a rdoc documenation process
     # with the files/dir passed in +files+
     def rdoc(outputdir, files)
-        begin
             Puppet[:ignoreimport] = true
 
             # then rdoc
@@ -33,9 +32,8 @@ module Puppet::Util::RDoc
 
             # launch the documentation process
             r.document(options)
-        rescue RDoc::RDocError => e
+    rescue RDoc::RDocError => e
             raise Puppet::ParseError.new("RDoc error #{e}")
-        end
     end
 
     # launch a output to console manifest doc
