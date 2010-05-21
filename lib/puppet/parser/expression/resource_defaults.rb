@@ -10,11 +10,11 @@ class Puppet::Parser::Expression
 
     # As opposed to ResourceDef, this stores each default for the given
     # object type.
-    def compute_denotation(scope)
+    def compute_denotation
       # Use a resource reference to canonize the type
       ref = Puppet::Resource.new(@type, "whatever")
       type = ref.type
-      params = @parameters.denotation(scope)
+      params = @parameters.denotation
 
       parsewrap do
         scope.setdefaults(type, params)

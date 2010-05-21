@@ -48,7 +48,7 @@ describe Puppet::Parser::Expression::Relationship do
     it "should create a relationship with the evaluated source and target and add it to the scope" do
       source = stub 'source', :denotation => :left
       target = stub 'target', :denotation => :right
-      @class.new(source, target, '->').compute_denotation(@scope)
+      @class.new(source, target, '->').compute_denotation
       @compiler.relationships[0].source.should == :left
       @compiler.relationships[0].target.should == :right
     end
@@ -63,13 +63,13 @@ describe Puppet::Parser::Expression::Relationship do
       end
 
       it "should evaluate the relationship to the left" do
-        @first.expects(:compute_denotation).with(@scope).returns Puppet::Parser::Relationship.new(:left, :right, :relationship)
+        @first.expects(:compute_denotation).returns Puppet::Parser::Relationship.new(:left, :right, :relationship)
 
-        @second.compute_denotation(@scope)
+        @second.compute_denotation
       end
 
       it "should use the right side of the left relationship as its source" do
-        @second.compute_denotation(@scope)
+        @second.compute_denotation
 
         @compiler.relationships[0].source.should == :left
         @compiler.relationships[0].target.should == :middle
@@ -81,7 +81,7 @@ describe Puppet::Parser::Expression::Relationship do
         @left.expects(:denotation).once.returns :left
         @middle.expects(:denotation).once.returns :middle
         @right.expects(:denotation).once.returns :right
-        @second.compute_denotation(@scope)
+        @second.compute_denotation
       end
     end
   end

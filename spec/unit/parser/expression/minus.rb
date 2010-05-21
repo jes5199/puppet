@@ -9,28 +9,28 @@ describe Puppet::Parser::Expression::Minus do
 
   it "should evaluate its argument" do
     value = stub "value"
-    value.expects(:denotation).with(@scope).returns(123)
+    value.expects(:denotation).returns(123)
 
-    operator = Puppet::Parser::Expression::Minus.new :value => value
-    operator.compute_denotation(@scope)
+    operator = Puppet::Parser::Expression::Minus.new :scope => ((@scope)), :value => value
+    operator.compute_denotation
   end
 
   it "should fail if argument is not a string or integer" do
     array_ast = stub 'array_ast', :denotation => [2]
-    operator = Puppet::Parser::Expression::Minus.new :value => array_ast
-    lambda { operator.compute_denotation(@scope) }.should raise_error
+    operator = Puppet::Parser::Expression::Minus.new :scope => ((@scope)), :value => array_ast
+    lambda { operator.compute_denotation }.should raise_error
   end
 
   it "should work with integer as string" do
     string = stub 'string', :denotation => "123"
-    operator = Puppet::Parser::Expression::Minus.new :value => string
-    operator.compute_denotation(@scope).should == -123
+    operator = Puppet::Parser::Expression::Minus.new :scope => ((@scope)), :value => string
+    operator.compute_denotation.should == -123
   end
 
   it "should work with integers" do
     int = stub 'int', :denotation => 123
-    operator = Puppet::Parser::Expression::Minus.new :value => int
-    operator.compute_denotation(@scope).should == -123
+    operator = Puppet::Parser::Expression::Minus.new :scope => ((@scope)), :value => int
+    operator.compute_denotation.should == -123
   end
 
 end

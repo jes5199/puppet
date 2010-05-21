@@ -21,9 +21,9 @@ class TestVariable < Test::Unit::TestCase
   end
 
   def test_evaluate
-    assert_equal(:undef, @var.compute_denotation(@scope), "did not return :undef on unset var")
+    assert_equal(:undef, @var.compute_denotation, "did not return :undef on unset var")
     @scope.setvar(@name, "something")
-    assert_equal("something", @var.compute_denotation(@scope), "incorrect variable value")
+    assert_equal("something", @var.compute_denotation, "incorrect variable value")
   end
 end
 

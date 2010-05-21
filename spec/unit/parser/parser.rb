@@ -10,7 +10,7 @@ describe Puppet::Parser do
     @known_resource_types = Puppet::Resource::TypeCollection.new("development")
     @parser = Puppet::Parser::Parser.new "development"
     @parser.stubs(:known_resource_types).returns @known_resource_types
-    @true_ast = Puppet::Parser::Expression::Boolean.new :value => true
+    @true_ast = Puppet::Parser::Expression::Boolean.new :scope => ((@scope)), :value => true
   end
 
   it "should require an environment at initialization" do

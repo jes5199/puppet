@@ -8,10 +8,10 @@ class Puppet::Parser::Expression
 
     # Returns a boolean which is the result of the boolean operation
     # of lval and rval operands
-    def compute_denotation(scope)
+    def compute_denotation
       # evaluate the operands, should return a boolean value
-      lval = @lval.denotation(scope)
-      rval = @rval.denotation(scope)
+      lval = @lval.denotation
+      rval = @rval.denotation
 
       # convert to number if operands are number
       lval = Puppet::Parser::Scope.number?(lval) || lval

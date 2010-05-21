@@ -13,12 +13,12 @@ describe Puppet::Parser::Expression::VarDef do
       name = mock 'name'
       value = mock 'value'
 
-      name.expects(:denotation).with(@scope)
-      value.expects(:denotation).with(@scope)
+      name.expects(:denotation)
+      value.expects(:denotation)
 
-      vardef = Puppet::Parser::Expression::VarDef.new :name => name, :value => value, :file => nil,
+      vardef = Puppet::Parser::Expression::VarDef.new :scope => ((@scope)), :name => name, :value => value, :file => nil,
         :line => nil
-      vardef.compute_denotation(@scope)
+      vardef.compute_denotation
     end
 
     it "should be in append=false mode if called without append" do
@@ -27,9 +27,9 @@ describe Puppet::Parser::Expression::VarDef do
 
       @scope.expects(:setvar).with { |name,value,options| options[:append] == nil }
 
-      vardef = Puppet::Parser::Expression::VarDef.new :name => name, :value => value, :file => nil,
+      vardef = Puppet::Parser::Expression::VarDef.new :scope => ((@scope)), :name => name, :value => value, :file => nil,
         :line => nil
-      vardef.compute_denotation(@scope)
+      vardef.compute_denotation
     end
 
     it "should call scope in append mode if append is true" do
@@ -38,9 +38,9 @@ describe Puppet::Parser::Expression::VarDef do
 
       @scope.expects(:setvar).with { |name,value,options| options[:append] == true }
 
-      vardef = Puppet::Parser::Expression::VarDef.new :name => name, :value => value, :file => nil,
+      vardef = Puppet::Parser::Expression::VarDef.new :scope => ((@scope)), :name => name, :value => value, :file => nil,
         :line => nil, :append => true
-      vardef.compute_denotation(@scope)
+      vardef.compute_denotation
     end
 
     describe "when dealing with hash" do
@@ -48,11 +48,11 @@ describe Puppet::Parser::Expression::VarDef do
         access = stub 'name'
         access.stubs(:is_a?).with(Puppet::Parser::Expression::HashOrArrayAccess).returns(true)
         value = stub 'value', :denotation => "1"
-        vardef = Puppet::Parser::Expression::VarDef.new :name => access, :value => value, :file => nil, :line => nil
+        vardef = Puppet::Parser::Expression::VarDef.new :scope => ((@scope)), :name => access, :value => value, :file => nil, :line => nil
 
         access.expects(:assign).with(@scope, '1')
 
-        vardef.compute_denotation(@scope)
+        vardef.compute_denotation
       end
     end
 

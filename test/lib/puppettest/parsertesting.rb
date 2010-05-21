@@ -28,11 +28,11 @@ module PuppetTest::ParserTesting
       @evaluated = nil
     end
 
-    def denotation(*args)
+    def denotation
       evaluate
     end
 
-    def evaluate_match(othervalue, scope, options={})
+    def evaluate_match(othervalue, options={})
       value = evaluate
       othervalue == value
     end

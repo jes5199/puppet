@@ -19,8 +19,13 @@ class Puppet::Parser::Expression
 
   attr_accessor :parent, :scope
 
-  # Yield each contained Expression node in turn.  Used mostly by evaluate.
-  # This definition means that we don't have to override evaluate
+  def incarnate(scope)
+    @scope = scope
+    each { |child| child.incarnate(scope) }
+    self
+  end
+  # Yield each contained Expression node in turn.  Used mostly by incarnate.
+  # This definition means that we don't have to override incarnate
   # every time.
   def each
     [(instance_variables-[@parent]).collect { |v| instance_variable_get(v) }].flatten.select { |x| yield x if x.is_a? Expression }
@@ -65,11 +70,11 @@ class Puppet::Parser::Expression
   # correctly handles errors.  It is critical to use this method because
   # it can enable you to catch the error where it happens, rather than
   # much higher up the stack.
-  def denotation(*options)
+  def denotation
     # We duplicate code here, rather than using exceptwrap, because this
     # is called so many times during parsing.
     begin
-      @denotation ||= compute_denotation(*options)
+      @denotation ||= compute_denotation
     rescue Puppet::Error => detail
       raise adderrorcontext(detail)
     rescue => detail

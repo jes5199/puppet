@@ -7,10 +7,10 @@ class Puppet::Parser::Expression
     attr_accessor :param, :values
 
     # Find the value that corresponds with the test.
-    def compute_denotation(scope)
+    def compute_denotation
       level = scope.ephemeral_level
       # Get our parameter.
-      paramvalue = @param.denotation(scope)
+      paramvalue = @param.denotation
 
       default = nil
 
@@ -19,14 +19,14 @@ class Puppet::Parser::Expression
       # Then look for a match in the options.
       @values.each do |obj|
         # short circuit asap if we have a match
-        return obj.value.denotation(scope) if obj.param.evaluate_match(paramvalue, scope)
+        return obj.value.denotation if obj.param.evaluate_match(paramvalue)
 
         # Store the default, in case it's necessary.
         default = obj if obj.param.is_a?(Default)
       end
 
       # Unless we found something, look for the default.
-      return default.value.denotation(scope) if default
+      return default.value.denotation if default
 
       self.fail Puppet::ParseError, "No matching value for selector param '#{paramvalue}'"
     ensure

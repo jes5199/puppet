@@ -9,15 +9,15 @@ describe Puppet::Parser::Expression::ResourceOverride do
   before :each do
     @compiler = Puppet::Parser::Compiler.new(Puppet::Node.new("mynode"))
     @scope = Puppet::Parser::Scope.new(:compiler => @compiler)
-    @params = ast::ArrayConstructor.new({})
+    @params = Puppet::Parser::Expression::ArrayConstructor.new(:scope => ((@scope)))
     @compiler.stubs(:add_override)
   end
 
   it "should evaluate the overriden object" do
     klass = stub 'klass', :title => "title", :type => "type"
     object = mock 'object'
-    object.expects(:denotation).with(@scope).returns(klass)
-    ast::ResourceOverride.new(:object => object, :parameters => @params ).compute_denotation(@scope)
+    object.expects(:denotation).returns(klass)
+    Puppet::Parser::Expression::ResourceOverride.new(:scope => ((@scope)), :object => object, :parameters => @params ).compute_denotation
   end
 
   it "should tell the compiler to override the resource with our own" do
@@ -25,13 +25,13 @@ describe Puppet::Parser::Expression::ResourceOverride do
 
     klass = stub 'klass', :title => "title", :type => "one"
     object = mock 'object', :denotation => klass
-    ast::ResourceOverride.new(:object => object , :parameters => @params).compute_denotation(@scope)
+    Puppet::Parser::Expression::ResourceOverride.new(:scope => ((@scope)), :object => object , :parameters => @params).compute_denotation
   end
 
   it "should return the overriden resource directly when called with one item" do
     klass = stub 'klass', :title => "title", :type => "one"
     object = mock 'object', :denotation => klass
-    override = ast::ResourceOverride.new(:object => object , :parameters => @params).compute_denotation(@scope)
+    override = Puppet::Parser::Expression::ResourceOverride.new(:scope => ((@scope)), :object => object , :parameters => @params).compute_denotation
     override.should be_an_instance_of(Puppet::Parser::Resource)
     override.title.should == "title"
     override.type.should == "One"
@@ -43,7 +43,7 @@ describe Puppet::Parser::Expression::ResourceOverride do
 
     object = mock 'object', :denotation => [klass1,klass2]
 
-    override = ast::ResourceOverride.new(:object => object , :parameters => @params).compute_denotation(@scope)
+    override = Puppet::Parser::Expression::ResourceOverride.new(:scope => ((@scope)), :object => object , :parameters => @params).compute_denotation
     override.should have(2).elements
     override.each {|o| o.should be_an_instance_of(Puppet::Parser::Resource) }
   end

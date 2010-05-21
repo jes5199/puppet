@@ -12,9 +12,9 @@ class Collection < Expression::Branch
   associates_doc
 
   # We return an object that does a late-binding evaluation.
-  def compute_denotation(scope)
+  def compute_denotation
     if self.query
-      str, code = self.query.denotation scope
+      str, code = self.query.denotation
     else
       str = code = nil
     end
@@ -27,7 +27,7 @@ class Collection < Expression::Branch
     # Evaluate all of the specified params.
     if @override
       params = @override.collect do |param|
-        param.denotation(scope)
+        param.denotation
       end
 
 

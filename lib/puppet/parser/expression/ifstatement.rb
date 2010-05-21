@@ -11,16 +11,16 @@ class Puppet::Parser::Expression
     # Short-curcuit evaluation.  If we're true, evaluate our statements,
     # else if there's an 'else' setting, evaluate it.
     # the first option that matches.
-    def compute_denotation(scope)
+    def compute_denotation
       level = scope.ephemeral_level
-      value = @test.denotation(scope)
+      value = @test.denotation
 
       # let's emulate a new scope for each branches
       begin
         if Puppet::Parser::Scope.true?(value)
-          return @statements.denotation(scope)
+          return @statements.denotation
         else
-          return defined?(@else) ? @else.denotation(scope) : nil
+          return defined?(@else) ? @else.denotation : nil
         end
       ensure
         scope.unset_ephemeral_var(level)

@@ -10,11 +10,11 @@ describe Puppet::Parser::Expression::Nop do
 
   it "should do nothing on evaluation" do
     Puppet::Parser::Expression.expects(:denotation).never
-    Puppet::Parser::Expression::Nop.new({}).compute_denotation(@scope)
+    Puppet::Parser::Expression::Nop.new({}).compute_denotation
   end
 
   it "should not return anything" do
-    Puppet::Parser::Expression::Nop.new({}).compute_denotation(@scope).should be_nil
+    Puppet::Parser::Expression::Nop.new({}).compute_denotation.should be_nil
   end
 
 end

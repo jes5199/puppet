@@ -8,20 +8,20 @@ describe Puppet::Parser::Expression::HashConstructor do
   end
 
   it "should have a merge functionality" do
-    hash = Puppet::Parser::Expression::HashConstructor.new(:value => {})
+    hash = Puppet::Parser::Expression::HashConstructor.new(:scope => ((@scope)), :value => {})
     hash.should respond_to(:merge)
   end
 
   it "should be able to merge 2 Expression hashes" do
-    hash = Puppet::Parser::Expression::HashConstructor.new(:value => { "a" => "b" })
+    hash = Puppet::Parser::Expression::HashConstructor.new(:scope => ((@scope)), :value => { "a" => "b" })
 
-    hash.merge(Puppet::Parser::Expression::HashConstructor.new(:value => {"c" => "d"}))
+    hash.merge(Puppet::Parser::Expression::HashConstructor.new(:scope => ((@scope)), :value => {"c" => "d"}))
 
     hash.value.should == { "a" => "b", "c" => "d" }
   end
 
   it "should be able to merge with a ruby Hash" do
-    hash = Puppet::Parser::Expression::HashConstructor.new(:value => { "a" => "b" })
+    hash = Puppet::Parser::Expression::HashConstructor.new(:scope => ((@scope)), :value => { "a" => "b" })
 
     hash.merge({"c" => "d"})
 
@@ -34,11 +34,11 @@ describe Puppet::Parser::Expression::HashConstructor do
     key2 = stub "key2"
     value2 = stub "value2"
 
-    value1.expects(:denotation).with(@scope).returns("b")
-    value2.expects(:denotation).with(@scope).returns("d")
+    value1.expects(:denotation).returns("b")
+    value2.expects(:denotation).returns("d")
 
-    operator = Puppet::Parser::Expression::HashConstructor.new(:value => { key1 => value1, key2 => value2})
-    operator.compute_denotation(@scope)
+    operator = Puppet::Parser::Expression::HashConstructor.new(:scope => ((@scope)), :value => { key1 => value1, key2 => value2})
+    operator.compute_denotation
   end
 
   it "should evaluate the hash keys if they are Expression instances" do
@@ -47,11 +47,11 @@ describe Puppet::Parser::Expression::HashConstructor do
     key2 = stub "key2"
     value2 = stub "value2", :denotation => "two"
 
-    key1.expects(:denotation).with(@scope).returns("1")
-    key2.expects(:denotation).with(@scope).returns("2")
+    key1.expects(:denotation).returns("1")
+    key2.expects(:denotation).returns("2")
 
-    operator = Puppet::Parser::Expression::HashConstructor.new(:value => { key1 => value1, key2 => value2})
-    hash = operator.compute_denotation(@scope)
+    operator = Puppet::Parser::Expression::HashConstructor.new(:scope => ((@scope)), :value => { key1 => value1, key2 => value2})
+    hash = operator.compute_denotation
     hash["1"].should == "one"
     hash["2"].should == "two"
   end
@@ -62,8 +62,8 @@ describe Puppet::Parser::Expression::HashConstructor do
     key2 = "2"
     value2 = stub "value2", :denotation => "two"
 
-    operator = Puppet::Parser::Expression::HashConstructor.new(:value => { key1 => value1, key2 => value2})
-    hash = operator.compute_denotation(@scope)
+    operator = Puppet::Parser::Expression::HashConstructor.new(:scope => ((@scope)), :value => { key1 => value1, key2 => value2})
+    hash = operator.compute_denotation
     hash["1"].should == "one"
     hash["2"].should == "two"
   end
@@ -74,12 +74,12 @@ describe Puppet::Parser::Expression::HashConstructor do
     key2 = stub "key2"
     value2 = stub "value2", :denotation => "d"
 
-    operator = Puppet::Parser::Expression::HashConstructor.new(:value => { key1 => value1, key2 => value2})
-    operator.compute_denotation(@scope).should == { key1 => "b", key2 => "d" }
+    operator = Puppet::Parser::Expression::HashConstructor.new(:scope => ((@scope)), :value => { key1 => value1, key2 => value2})
+    operator.compute_denotation.should == { key1 => "b", key2 => "d" }
   end
 
   it "should return a valid string with to_s" do
-    hash = Puppet::Parser::Expression::HashConstructor.new(:value => { "a" => "b", "c" => "d" })
+    hash = Puppet::Parser::Expression::HashConstructor.new(:scope => ((@scope)), :value => { "a" => "b", "c" => "d" })
 
     hash.to_s.should == '{a => b, c => d}'
   end

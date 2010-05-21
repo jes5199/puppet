@@ -12,21 +12,21 @@ describe Puppet::Parser::Expression::ResourceReference do
 
   def newref(type, title)
     title = stub 'title', :denotation => title
-    ref = Puppet::Parser::Expression::ResourceReference.new(:type => type, :title => title)
+    ref = Puppet::Parser::Expression::ResourceReference.new(:scope => ((@scope)), :type => type, :title => title)
   end
 
   it "should correctly produce reference strings" do
-    newref("File", "/tmp/yay").compute_denotation(@scope).to_s.should == "File[/tmp/yay]"
+    newref("File", "/tmp/yay").compute_denotation.to_s.should == "File[/tmp/yay]"
   end
 
   it "should produce a single resource when the title evaluates to a string" do
-    newref("File", "/tmp/yay").compute_denotation(@scope).should == Puppet::Resource.new("file", "/tmp/yay")
+    newref("File", "/tmp/yay").compute_denotation.should == Puppet::Resource.new("file", "/tmp/yay")
   end
 
   it "should return an array of resources if given an array of titles" do
     titles = mock 'titles', :denotation => ["title1","title2"]
     ref = ast::ResourceReference.new( :title => titles, :type => "File" )
-    ref.compute_denotation(@scope).should == [
+    ref.compute_denotation.should == [
       Puppet::Resource.new("file", "title1"),
       Puppet::Resource.new("file", "title2")
     ]
@@ -34,7 +34,7 @@ describe Puppet::Parser::Expression::ResourceReference do
 
   it "should pass its scope's namespaces to all created resource references" do
     @scope.add_namespace "foo"
-    newref("File", "/tmp/yay").compute_denotation(@scope).namespaces.should == ["foo"]
+    newref("File", "/tmp/yay").compute_denotation.namespaces.should == ["foo"]
   end
 
   it "should return a correct representation when converting to string" do

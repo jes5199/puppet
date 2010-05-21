@@ -14,8 +14,8 @@ describe Puppet::Parser::Expression::ResourceDefaults do
   end
 
   it "should add defaults when evaluated" do
-    default = Puppet::Parser::Expression::ResourceDefaults.new :type => "file", :parameters => Puppet::Parser::Expression::ArrayConstructor.new(:children => [])
-    default.compute_denotation @scope
+    default = Puppet::Parser::Expression::ResourceDefaults.new :scope => ((@scope)), :type => "file", :parameters => Puppet::Parser::Expression::ArrayConstructor.new(:scope => ((@scope)), :children => [])
+    default.compute_denotation
 
     @scope.lookupdefaults("file").should_not be_nil
   end

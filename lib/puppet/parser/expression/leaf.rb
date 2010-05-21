@@ -6,13 +6,13 @@ class Puppet::Parser::Expression
     attr_accessor :value, :type
 
     # Return our value.
-    def compute_denotation(scope)
+    def compute_denotation
       @value
     end
 
     # evaluate ourselves, and match
-    def evaluate_match(value, scope)
-      obj = self.denotation(scope)
+    def evaluate_match(value)
+      obj = self.denotation
 
       obj   = obj.downcase   if obj.respond_to?(:downcase)
       value = value.downcase if value.respond_to?(:downcase)
@@ -52,7 +52,7 @@ class Puppet::Parser::Expression
 
   # The base string class.
   class String < Expression::Leaf
-    def compute_denotation(scope)
+    def compute_denotation
       @value
     end
 
@@ -63,7 +63,7 @@ class Puppet::Parser::Expression
 
   # An uninterpreted string.
   class FlatString < Expression::Leaf
-    def compute_denotation(scope)
+    def compute_denotation
       @value
     end
 
@@ -73,8 +73,8 @@ class Puppet::Parser::Expression
   end
 
   class Concat < Expression::Leaf
-    def compute_denotation(scope)
-      @value.collect { |x| x.compute_denotation(scope) }.join
+    def compute_denotation
+      @value.collect { |x| x.compute_denotation }.join
     end
 
     def to_s
@@ -133,7 +133,7 @@ class Puppet::Parser::Expression
   class Variable < Name
     # Looks up the value of the object in the scope tree (does
     # not include syntactical constructs, like '$' and '{}').
-    def compute_denotation(scope)
+    def compute_denotation
       parsewrap do
         if (var = scope.lookupvar(@value, false)) == :undefined
           var = :undef
@@ -151,15 +151,15 @@ class Puppet::Parser::Expression
     attr_accessor :variable, :key
 
     def evaluate_container(scope)
-      container = variable.respond_to?(:evaluate) ? variable.denotation(scope) : variable
+      container = variable.respond_to?(:evaluate) ? variable.denotation : variable
       (container.is_a?(Hash) or container.is_a?(Array)) ? container : scope.lookupvar(container)
     end
 
     def evaluate_key(scope)
-      key.respond_to?(:evaluate) ? key.denotation(scope) : key
+      key.respond_to?(:evaluate) ? key.denotation : key
     end
 
-    def compute_denotation(scope)
+    def compute_denotation
       object = evaluate_container(scope)
 
       raise Puppet::ParseError, "#{variable} is not an hash or array when accessing it with #{accesskey}" unless object.is_a?(Hash) or object.is_a?(Array)
@@ -194,17 +194,17 @@ class Puppet::Parser::Expression
     # we're returning self here to wrap the regexp and to be used in places
     # where a string would have been used, without modifying any client code.
     # For instance, in many places we have the following code snippet:
-    #  val = @val.denotation(@scope)
+    #  val = @val.denotation
     #  if val.match(otherval)
     #      ...
     #  end
     # this way, we don't have to modify this test specifically for handling
     # regexes.
-    def compute_denotation(scope)
+    def compute_denotation
       self
     end
 
-    def evaluate_match(value, scope, options = {})
+    def evaluate_match(value, options = {})
       value = value.is_a?(String) ? value : value.to_s
 
       if matched = @value.match(value)

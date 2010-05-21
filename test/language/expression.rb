@@ -36,14 +36,14 @@ class TestExpressions < Test::Unit::TestCase
     # We initialized it to true, so we should get that first
     ret = nil
     assert_nothing_raised {
-      ret = astif.compute_denotation(scope)
+      ret = astif.compute_denotation
     }
     assert_equal(:if, ret)
 
     # Now set it to false and check that
     faketest.evaluate = false
     assert_nothing_raised {
-      ret = astif.compute_denotation(scope)
+      ret = astif.compute_denotation
     }
     assert_equal(:else, ret)
   end
@@ -60,7 +60,7 @@ class TestExpressions < Test::Unit::TestCase
     scope.compiler.expects(:add_override).with { |res| res.is_a?(Puppet::Parser::Resource) }
     ret = nil
     assert_nothing_raised do
-      ret = ref.compute_denotation scope
+      ret = ref.compute_denotation
     end
 
     assert_instance_of(Puppet::Parser::Resource, ret, "Did not return override")
@@ -78,7 +78,7 @@ class TestExpressions < Test::Unit::TestCase
 
     ret = nil
     assert_nothing_raised do
-      ret = coll.compute_denotation scope
+      ret = coll.compute_denotation
     end
 
     assert_instance_of(Puppet::Parser::Collector, ret)

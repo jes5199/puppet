@@ -15,7 +15,7 @@ class Puppet::Parser::Expression
     end
 
     # Evaluate our children.
-    def compute_denotation(scope)
+    def compute_denotation
       # Make a new array, so we don't have to deal with the details of
       # flattening and such
       items = []
@@ -32,7 +32,7 @@ class Puppet::Parser::Expression
       }
 
       rets = items.flatten.collect { |child|
-        child.denotation(scope)
+        child.denotation
       }
       rets.reject { |o| o.nil? }
     end

@@ -13,14 +13,14 @@ class Puppet::Parser::Expression::Relationship < Puppet::Parser::Expression::Bra
 
   # Evaluate our object, but just return a simple array of the type
   # and name.
-  def compute_denotation(scope)
+  def compute_denotation
     if chained?
-      real_left = left.denotation(scope)
+      real_left = left.denotation
       left_dep = left_dep.shift if left_dep.is_a?(Array)
     else
-      real_left = left.denotation(scope)
+      real_left = left.denotation
     end
-    real_right = right.denotation(scope)
+    real_right = right.denotation
 
     source, target = sides2edge(real_left, real_right)
     result = Puppet::Parser::Relationship.new(source, target, type)

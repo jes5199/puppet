@@ -70,21 +70,21 @@ describe Puppet::Resource::Type do
     end
 
     it "should allow a Expression::HostName instance as its name" do
-      regex = Puppet::Parser::Expression::Regex.new(:value => /foo/)
-      name = Puppet::Parser::Expression::HostName.new(:value => regex)
+      regex = Puppet::Parser::Expression::Regex.new(:scope => ((@scope)), :value => /foo/)
+      name = Puppet::Parser::Expression::HostName.new(:scope => ((@scope)), :value => regex)
       lambda { Puppet::Resource::Type.new(:node, name) }.should_not raise_error
     end
 
     it "should match against the regexp in the Expression::HostName when a HostName instance is provided" do
-      regex = Puppet::Parser::Expression::Regex.new(:value => /\w/)
-      name = Puppet::Parser::Expression::HostName.new(:value => regex)
+      regex = Puppet::Parser::Expression::Regex.new(:scope => ((@scope)), :value => /\w/)
+      name = Puppet::Parser::Expression::HostName.new(:scope => ((@scope)), :value => regex)
       node = Puppet::Resource::Type.new(:node, name)
 
       node.match("foo").should be_true
     end
 
     it "should return the value of the hostname if provided a string-form Expression::HostName instance as the name" do
-      name = Puppet::Parser::Expression::HostName.new(:value => "foo")
+      name = Puppet::Parser::Expression::HostName.new(:scope => ((@scope)), :value => "foo")
       node = Puppet::Resource::Type.new(:node, name)
 
       node.name.should == "foo"
@@ -142,19 +142,19 @@ describe Puppet::Resource::Type do
 
     it "should return the name converted to a string when the name is not a regex" do
       pending "Need to define LoadedCode behaviour first"
-      name = Puppet::Parser::Expression::HostName.new(:value => "foo")
+      name = Puppet::Parser::Expression::HostName.new(:scope => ((@scope)), :value => "foo")
       Puppet::Resource::Type.new(:node, name).name.should == "foo"
     end
 
     it "should return the name converted to a string when the name is a regex" do
       pending "Need to define LoadedCode behaviour first"
-      name = Puppet::Parser::Expression::HostName.new(:value => /regex/)
+      name = Puppet::Parser::Expression::HostName.new(:scope => ((@scope)), :value => /regex/)
       Puppet::Resource::Type.new(:node, name).name.should == /regex/.to_s
     end
 
     it "should mark any created scopes as a node scope" do
       pending "Need to define LoadedCode behaviour first"
-      name = Puppet::Parser::Expression::HostName.new(:value => /regex/)
+      name = Puppet::Parser::Expression::HostName.new(:scope => ((@scope)), :value => /regex/)
       Puppet::Resource::Type.new(:node, name).name.should == /regex/.to_s
     end
   end
@@ -548,7 +548,7 @@ describe Puppet::Resource::Type do
 
   describe "when merging code from another instance" do
     def code(str)
-      Puppet::Parser::Expression::Leaf.new :value => str
+      Puppet::Parser::Expression::Leaf.new :scope => ((@scope)), :value => str
     end
 
     it "should fail unless it is a class" do
@@ -615,10 +615,10 @@ describe Puppet::Resource::Type do
     end
 
     it "should append the other class's code to its code if it has any" do
-      dcode = Puppet::Parser::Expression::ArrayConstructor.new :children => [code("dest")]
+      dcode = Puppet::Parser::Expression::ArrayConstructor.new :scope => ((@scope)), :children => [code("dest")]
       dest = Puppet::Resource::Type.new(:hostclass, "bar", :code => dcode)
 
-      scode = Puppet::Parser::Expression::ArrayConstructor.new :children => [code("source")]
+      scode = Puppet::Parser::Expression::ArrayConstructor.new :scope => ((@scope)), :children => [code("source")]
       source = Puppet::Resource::Type.new(:hostclass, "foo", :code => scode)
 
       dest.merge(source)

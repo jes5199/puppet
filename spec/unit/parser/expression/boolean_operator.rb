@@ -14,40 +14,40 @@ describe Puppet::Parser::Expression::BooleanOperator do
 
   it "should evaluate left operand inconditionally" do
     lval = stub "lval"
-    lval.expects(:denotation).with(@scope).returns("true")
+    lval.expects(:denotation).returns("true")
     rval = stub "rval", :denotation => false
     rval.expects(:denotation).never
 
-    operator = ast::BooleanOperator.new :rval => rval, :operator => "or", :lval => lval
-    operator.compute_denotation(@scope)
+    operator = Puppet::Parser::Expression::BooleanOperator.new :scope => ((@scope)), :rval => rval, :operator => "or", :lval => lval
+    operator.compute_denotation
   end
 
   it "should evaluate right 'and' operand only if left operand is true" do
     lval = stub "lval", :denotation => true
     rval = stub "rval", :denotation => false
-    rval.expects(:denotation).with(@scope).returns(false)
-    operator = ast::BooleanOperator.new :rval => rval, :operator => "and", :lval => lval
-    operator.compute_denotation(@scope)
+    rval.expects(:denotation).returns(false)
+    operator = Puppet::Parser::Expression::BooleanOperator.new :scope => ((@scope)), :rval => rval, :operator => "and", :lval => lval
+    operator.compute_denotation
   end
 
   it "should evaluate right 'or' operand only if left operand is false" do
     lval = stub "lval", :denotation => false
     rval = stub "rval", :denotation => false
-    rval.expects(:denotation).with(@scope).returns(false)
-    operator = ast::BooleanOperator.new :rval => rval, :operator => "or", :lval => lval
-    operator.compute_denotation(@scope)
+    rval.expects(:denotation).returns(false)
+    operator = Puppet::Parser::Expression::BooleanOperator.new :scope => ((@scope)), :rval => rval, :operator => "or", :lval => lval
+    operator.compute_denotation
   end
 
   it "should return true for false OR true" do
-    ast::BooleanOperator.new(:rval => @true_ast, :operator => "or", :lval => @false_ast).compute_denotation(@scope).should be_true
+    Puppet::Parser::Expression::BooleanOperator.new(:scope => ((@scope)), :rval => @true_ast, :operator => "or", :lval => @false_ast).compute_denotation.should be_true
   end
 
   it "should return false for true AND false" do
-    ast::BooleanOperator.new(:rval => @true_ast, :operator => "and", :lval => @false_ast ).compute_denotation(@scope).should be_false
+    Puppet::Parser::Expression::BooleanOperator.new(:scope => ((@scope)), :rval => @true_ast, :operator => "and", :lval => @false_ast ).compute_denotation.should be_false
   end
 
   it "should return true for true AND true" do
-    ast::BooleanOperator.new(:rval => @true_ast, :operator => "and", :lval => @true_ast ).compute_denotation(@scope).should be_true
+    Puppet::Parser::Expression::BooleanOperator.new(:scope => ((@scope)), :rval => @true_ast, :operator => "and", :lval => @true_ast ).compute_denotation.should be_true
   end
 
 end
