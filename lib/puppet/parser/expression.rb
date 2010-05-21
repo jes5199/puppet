@@ -69,7 +69,7 @@ class Puppet::Parser::Expression
     # We duplicate code here, rather than using exceptwrap, because this
     # is called so many times during parsing.
     begin
-      compute_denotation(*options)
+      @denotation ||= compute_denotation(*options)
     rescue Puppet::Error => detail
       raise adderrorcontext(detail)
     rescue => detail

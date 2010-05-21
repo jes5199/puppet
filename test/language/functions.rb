@@ -157,6 +157,15 @@ class TestLangFunctions < Test::Unit::TestCase
 
     # Now, fill in the last variable and make sure the whole thing
     # evaluates correctly.
+    ast = varobj("output", Puppet::Parser::Expression::Function.new(
+
+        :name => "template",
+        :ftype => :rvalue,
+
+        :arguments => Expression::ArrayConstructor.new(
+          :children => [stringobj("one"), stringobj("two")]
+        )
+    ))
     scope.setvar("two", "Two")
     scope.unsetvar("output")
     assert_nothing_raised do
@@ -373,12 +382,19 @@ class TestLangFunctions < Test::Unit::TestCase
         )
       )
     end
-    ast = varobj("output", func)
 
     {
       "" => "",
       false => "false",
     }.each do |string, value|
+      ast = varobj("output", Puppet::Parser::Expression::Function.new(
+
+        :name => "template",
+        :ftype => :rvalue,
+
+        :arguments => Expression::ArrayConstructor.new(
+          :children => [stringobj(template)]
+      )))
       scope = mkscope
       scope.setvar("yayness", string)
       assert_equal(string, scope.lookupvar("yayness", false))
