@@ -243,7 +243,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
 
         # Clear the cache to encourage the GC
         buckets.clear
-        return result
+        result
     end
 
     # Make sure all of our resources are "finished".
@@ -572,7 +572,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
         result.add_class(*self.classes)
         result.tag(*self.tags)
 
-        return result
+        result
     end
 
     def virtual_not_exported?(resource)

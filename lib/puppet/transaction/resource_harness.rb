@@ -13,7 +13,7 @@ class Puppet::Transaction::ResourceHarness
         deplabel = deps.collect { |r| r.ref }.join(",")
         plurality = deps.length > 1 ? "":"s"
         resource.warning "#{deplabel} still depend#{plurality} on me -- not purging"
-        return false
+        false
     end
 
     def apply_changes(status, changes)

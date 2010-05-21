@@ -190,13 +190,13 @@ class Puppet::Module
 
     def find_init_manifest
         return [] unless file = manifest("init.pp")
-        return [file]
+        [file]
     end
 
     def subpath(type)
         return File.join(path, type) unless type.to_s == "plugins"
 
-        return backward_compatible_plugins_dir
+        backward_compatible_plugins_dir
     end
 
     def backward_compatible_plugins_dir

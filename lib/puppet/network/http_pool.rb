@@ -99,6 +99,6 @@ module Puppet::Network::HttpPool
 
         http_cache[key] = http if keep_alive?
 
-        return http
+        http
     end
 end

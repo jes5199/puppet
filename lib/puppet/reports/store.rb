@@ -56,7 +56,7 @@ Puppet::Reports.register_report(:store) do
         end
 
         # Only testing cares about the return value
-        return file
+        file
     end
 end
 

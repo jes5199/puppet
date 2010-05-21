@@ -90,7 +90,7 @@ class Puppet::Util::Autoload
                 return named_file_is_missing(name)
             end
         end
-        return named_file_is_missing(name)
+        named_file_is_missing(name)
     end
 
     # Mark the named object as loaded.  Note that this supports unqualified

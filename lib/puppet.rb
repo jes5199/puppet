@@ -26,7 +26,7 @@ module Puppet
     PUPPETVERSION = '0.25.5'
 
     def Puppet.version
-        return PUPPETVERSION
+        PUPPETVERSION
     end
 
     class << self

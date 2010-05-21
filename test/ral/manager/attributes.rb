@@ -275,7 +275,7 @@ class TestTypeAttributes < Test::Unit::TestCase
         $yep = :absent
         type.provide(:only) do
             def self.supports_parameter?(param)
-                return param.name != :nope
+                param.name != :nope
             end
 
             def yep

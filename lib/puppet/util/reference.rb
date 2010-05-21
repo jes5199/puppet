@@ -115,7 +115,7 @@ class Puppet::Util::Reference
     end
 
     def h(name, level)
-        return "#{name}\n#{HEADER_LEVELS[level] * name.to_s.length}\n\n"
+        "#{name}\n#{HEADER_LEVELS[level] * name.to_s.length}\n\n"
     end
 
     def initialize(name, options = {}, &block)
@@ -135,7 +135,7 @@ class Puppet::Util::Reference
 
     # Indent every line in the chunk except those which begin with '..'.
     def indent(text, tab)
-        return text.gsub(/(^|\A)/, tab).gsub(/^ +\.\./, "..")
+        text.gsub(/(^|\A)/, tab).gsub(/^ +\.\./, "..")
     end
 
     def option(name, value)
@@ -151,7 +151,7 @@ class Puppet::Util::Reference
         #str += text.gsub(/\n/, "\n    ")
 
         str += "\n\n"
-        return str
+        str
     end
 
     # Remove all trac links.
@@ -175,7 +175,7 @@ class Puppet::Util::Reference
 
         text += self.class.footer if withcontents
 
-        return text
+        text
     end
 
     def to_text(withcontents = true)

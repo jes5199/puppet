@@ -9,7 +9,7 @@ class Puppet::Util::Storage
     include Puppet::Util
 
     def self.state
-        return @@state
+        @@state
     end
 
     def initialize
@@ -36,7 +36,7 @@ class Puppet::Util::Storage
             raise ArgumentError, "You can only cache information for Types and symbols"
         end
 
-        return @@state[name] ||= {}
+        @@state[name] ||= {}
     end
 
     def self.clear

@@ -100,7 +100,7 @@ module Puppet
             result = super
 
             string_file_diff(@resource[:path], actual_content) if ! result and Puppet[:show_diff]
-            return result
+            result
         end
 
         def retrieve
@@ -131,7 +131,7 @@ module Puppet
             # one valid value somewhere.
             @resource.write(:content)
 
-            return return_event
+            return_event
         end
 
         def write(file)

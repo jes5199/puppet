@@ -98,7 +98,7 @@ class Puppet::Resource::Type
     def match(string)
         return string.to_s.downcase == name unless name_is_regex?
 
-        return @name =~ string
+        @name =~ string
     end
 
     # Add code from a new instance to our code.
@@ -161,7 +161,7 @@ class Puppet::Resource::Type
 
     def name
         return @name unless @name.is_a?(Regexp)
-        return @name.source.downcase.gsub(/[^-\w:.]/,'').sub(/^\.+/,'')
+        @name.source.downcase.gsub(/[^-\w:.]/,'').sub(/^\.+/,'')
     end
 
     def name_is_regex?
@@ -250,7 +250,7 @@ class Puppet::Resource::Type
         #return unless klass = parent_type and parent_resource = resource.scope.compiler.catalog.resource(:class, klass.name)
         return unless klass = parent_type and parent_resource = resource.catalog.resource(:class, klass.name)
         parent_resource.evaluate unless parent_resource.evaluated?
-        return parent_scope(resource.scope, klass)
+        parent_scope(resource.scope, klass)
     end
 
     def evaluate_ruby_code(resource, scope)

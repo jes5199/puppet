@@ -28,7 +28,7 @@ module Puppet::Parser::Files
         if files.size == 0
             files = Dir.glob(abspat + ".pp").reject { |f| FileTest.directory?(f) }
         end
-        return files
+        files
     end
 
     # Find the concrete file denoted by +file+. If +file+ is absolute,
@@ -56,7 +56,7 @@ module Puppet::Parser::Files
             return td_file
         end
 
-        return nil
+        nil
     end
 
     def find_template_in_module(template, environment = nil)

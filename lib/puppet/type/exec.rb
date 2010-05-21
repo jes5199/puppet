@@ -88,7 +88,7 @@ module Puppet
 
             # Make output a bit prettier
             def change_to_s(currentvalue, newvalue)
-                return "executed successfully"
+                "executed successfully"
             end
 
             # First verify that all of our checks pass.
@@ -139,7 +139,7 @@ module Puppet
                     self.fail("#{self.resource[:command]} returned #{status.exitstatus} instead of one of [#{self.should.join(",")}]")
                 end
 
-                return event
+                event
             end
         end
 
@@ -341,7 +341,7 @@ module Puppet
             # If the file exists, return false (i.e., don't run the command),
             # else return true
             def check(value)
-                return ! FileTest.exists?(value)
+                ! FileTest.exists?(value)
             end
         end
 
@@ -378,7 +378,7 @@ module Puppet
                     return false
                 end
 
-                return status.exitstatus != 0
+                status.exitstatus != 0
             end
         end
 
@@ -420,7 +420,7 @@ module Puppet
                     return false
                 end
 
-                return status.exitstatus == 0
+                status.exitstatus == 0
             end
         end
 
@@ -493,7 +493,7 @@ module Puppet
                 end
             }
 
-            return true
+            true
         end
 
         # Verify that we have the executable

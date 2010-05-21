@@ -269,7 +269,7 @@ class Puppet::Resource
         result.file = self.file
         result.line = self.line
 
-        return result
+        result
     end
 
     def to_trans_ref
@@ -303,7 +303,7 @@ class Puppet::Resource
 
         result.tags = self.tags
 
-        return result
+        result
     end
 
     def name
@@ -401,7 +401,7 @@ class Puppet::Resource
         bucket.name = self.title
 
         # TransBuckets don't support parameters, which is why they're being deprecated.
-        return bucket
+        bucket
     end
 
     def extract_parameters(params)
@@ -476,7 +476,7 @@ class Puppet::Resource
 
             result = klass.canonicalize_ref(result) if klass.respond_to?(:canonicalize_ref)
         end
-        return munge_type_name(result || title)
+        munge_type_name(result || title)
     end
 
     def resolve_title_for_resource(title)

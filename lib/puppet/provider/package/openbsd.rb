@@ -85,7 +85,7 @@ Puppet::Type.type(:package).provide :openbsd, :parent => Puppet::Provider::Packa
             hash[:description] = $1
         end
 
-        return hash
+        hash
     end
 
     def uninstall

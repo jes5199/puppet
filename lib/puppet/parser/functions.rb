@@ -70,7 +70,7 @@ module Puppet::Parser::Functions
 
         autoloader.load(name) unless @functions.include? name
 
-        return (@functions.include? name) && @functions[name][:name]
+        (@functions.include? name) && @functions[name][:name]
     end
 
     def self.functiondocs
@@ -90,7 +90,7 @@ module Puppet::Parser::Functions
             ret += "\n\n- **Type**: #{hash[:type]}\n\n"
         end
 
-        return ret
+        ret
     end
 
     def self.functions

@@ -37,7 +37,7 @@ class Puppet::Util::Settings
             setting.getopt_args.each { |args| options << args }
         }
 
-        return options
+        options
     end
 
     # Generate the list of valid arguments, in a format that OptionParser can
@@ -48,13 +48,13 @@ class Puppet::Util::Settings
             options << setting.optparse_args
         }
 
-        return options
+        options
     end
 
     # Is our parameter a boolean parameter?
     def boolean?(param)
         param = param.to_sym
-        return !!(@config.include?(param) and @config[param].kind_of? BooleanSetting)
+        !!(@config.include?(param) and @config[param].kind_of? BooleanSetting)
     end
 
     # Remove all set values, potentially skipping cli values.
@@ -98,7 +98,7 @@ class Puppet::Util::Settings
             end
         end
 
-        return newval
+        newval
     end
 
     # Return a value's description.
@@ -247,11 +247,11 @@ class Puppet::Util::Settings
     def print_configs
         return print_config_options if value(:configprint) != ""
         return generate_config if value(:genconfig)
-        return generate_manifest if value(:genmanifest)
+        generate_manifest if value(:genmanifest)
     end
 
     def print_configs?
-        return (value(:configprint) != "" || value(:genconfig) || value(:genmanifest)) && true
+        (value(:configprint) != "" || value(:genconfig) || value(:genmanifest)) && true
     end
 
     # Return a given object's file metadata.
@@ -390,7 +390,7 @@ class Puppet::Util::Settings
         hash[:settings] = self
         setting = klass.new(hash)
 
-        return setting
+        setting
     end
 
     # This has to be private, because it doesn't add the settings to @config
@@ -461,7 +461,7 @@ class Puppet::Util::Settings
 
         user = Puppet::Type.type(:user).new :name => self[:user], :check => :ensure
 
-        return @service_user_available = user.exists?
+        @service_user_available = user.exists?
     end
 
     def set_value(param, value, type, options = {})
@@ -506,7 +506,7 @@ class Puppet::Util::Settings
             Puppet::Node::Environment.clear if defined?(Puppet::Node) and defined?(Puppet::Node::Environment)
         end
 
-        return value
+        value
     end
 
     # Set a bunch of defaults in a given section.  The sections are actually pretty
@@ -667,7 +667,7 @@ if @config.include?(:mode)
         # If we didn't get a value, use the default
         val = @config[param].default if val.nil?
 
-        return val
+        val
     end
 
     # Find the correct value using our search path.  Optionally accept an environment
@@ -696,7 +696,7 @@ if @config.include?(:mode)
 
         # And cache it
         @cache[environment||"none"][param] = val
-        return val
+        val
     end
 
     # Open a file with the appropriate user, group, and mode
@@ -773,7 +773,7 @@ if @config.include?(:mode)
 
         raise ArgumentError, "Default #{default} is not a file" unless obj.is_a? FileSetting
 
-        return obj
+        obj
     end
 
     # Create the transportable objects for users and groups.
@@ -832,7 +832,7 @@ if @config.include?(:mode)
             ''
         end
         result[:value] = value.sub(/\s*$/, '')
-        return result
+        result
     end
 
     # Convert arguments into booleans, integers, or whatever.
@@ -903,7 +903,7 @@ if @config.include?(:mode)
             end
         }
 
-        return result
+        result
     end
 
     # Read the file in.

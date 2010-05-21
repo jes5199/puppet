@@ -27,7 +27,7 @@ module PuppetTest
                 @messages << message
             end
 
-            return @messages.empty?
+            @messages.empty?
         end
     end
 end

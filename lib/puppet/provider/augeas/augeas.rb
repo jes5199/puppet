@@ -128,7 +128,7 @@ Puppet::Type.type(:augeas).provide(:augeas) do
             end
             args << argline
         end
-        return args
+        args
     end
 
 
@@ -185,7 +185,7 @@ Puppet::Type.type(:augeas).provide(:augeas) do
         else
             return_value = (result.send(comparator, arg))
         end
-        return !!return_value
+        !!return_value
     end
 
     # Used by the need_to_run? method to process match filters. Returns
@@ -236,20 +236,20 @@ Puppet::Type.type(:augeas).provide(:augeas) do
                 fail("Invalid array in command: #{cmd_array.join(" ")}")
             end
         end
-        return !!return_value
+        !!return_value
     end
 
     def get_augeas_version
-        return @aug.get("/augeas/version") || ""
+        @aug.get("/augeas/version") || ""
     end
 
     def set_augeas_save_mode(mode)
-        return @aug.set("/augeas/save", mode)
+        @aug.set("/augeas/save", mode)
     end
 
     def files_changed?
         saved_files = @aug.match("/augeas/events/saved")
-        return saved_files.size > 0
+        saved_files.size > 0
     end
 
     # Determines if augeas acutally needs to run.
@@ -295,7 +295,7 @@ Puppet::Type.type(:augeas).provide(:augeas) do
         ensure
             close_augeas
         end
-        return return_value
+        return_value
     end
 
     def execute_changes
@@ -312,7 +312,7 @@ Puppet::Type.type(:augeas).provide(:augeas) do
             close_augeas
         end
 
-        return :executed
+        :executed
     end
 
     # Actually execute the augeas changes.
