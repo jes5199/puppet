@@ -150,7 +150,7 @@ describe Puppet::Application do
 
         describe 'on POSIX systems' do
             confine "HUP works only on POSIX systems" => Puppet.features.posix?
-            
+
             it 'should signal process with HUP after block if restart requested during block execution' do
                 Puppet::Application.run_status = nil
                 target = mock 'target'

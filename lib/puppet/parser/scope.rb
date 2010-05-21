@@ -425,8 +425,7 @@ class Puppet::Parser::Scope
                 tmp = ss.scan(/[^\\$]+/)
                 # Puppet.debug("Got other: pos:%d; m:%s" % [ss.pos, tmp])
                 unless tmp
-                    error = Puppet::ParseError.new("Could not parse string %s" %
-                        string.inspect)
+                    error = Puppet::ParseError.new("Could not parse string %s" % string.inspect)
                     {:file= => file, :line= => line}.each do |m,v|
                         error.send(m, v) if v
                     end
@@ -464,7 +463,7 @@ class Puppet::Parser::Scope
         if level == :all
             @ephemeral = [ Ephemeral.new ]
         else
-            (@ephemeral.size - level).times do 
+            (@ephemeral.size - level).times do
                 @ephemeral.pop
             end
         end

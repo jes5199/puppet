@@ -384,8 +384,11 @@ describe Puppet::Type.type(:file) do
     it "should be able to create files when 'content' is specified but 'ensure' is not" do
         dest = tmpfile("files_with_content")
 
-        file = Puppet::Type.type(:file).new(
+
+                    file = Puppet::Type.type(:file).new(
+                
             :name => dest,
+        
             :content => "this is some content, yo"
         )
 
@@ -399,9 +402,12 @@ describe Puppet::Type.type(:file) do
     it "should create files with content if both 'content' and 'ensure' are set" do
         dest = tmpfile("files_with_content")
 
-        file = Puppet::Type.type(:file).new(
+
+                    file = Puppet::Type.type(:file).new(
+                
             :name => dest,
             :ensure => "file",
+        
             :content => "this is some content, yo"
         )
 
@@ -418,10 +424,13 @@ describe Puppet::Type.type(:file) do
         File.open(source, "w") { |f| f.puts "yay" }
         File.open(dest, "w") { |f| f.puts "boo" }
 
-        file = Puppet::Type.type(:file).new(
+
+                    file = Puppet::Type.type(:file).new(
+                
             :name => dest,
             :ensure => :absent,
             :source => source,
+        
             :backup => false
         )
 
@@ -447,18 +456,24 @@ describe Puppet::Type.type(:file) do
             # this file should get removed
             File.open(@purgee, "w") { |f| f.puts "footest" }
 
-            @lfobj = Puppet::Type.newfile(
+
+                        @lfobj = Puppet::Type.newfile(
+                
                 :title => "localfile",
                 :path => @localfile,
                 :content => "rahtest\n",
                 :ensure => :file,
+        
                 :backup => false
             )
 
-            @destobj = Puppet::Type.newfile(:title => "destdir", :path => @destdir,
+
+                        @destobj = Puppet::Type.newfile(
+                :title => "destdir", :path => @destdir,
                                         :source => @sourcedir,
                                         :backup => false,
                                         :purge => true,
+        
                                         :recurse => true)
 
             @catalog = Puppet::Resource::Catalog.new

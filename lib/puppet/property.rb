@@ -45,7 +45,7 @@ class Puppet::Property < Puppet::Parameter
         end
 
         def checkable?
-            if defined? @checkable
+            if defined?(@checkable)
                 return @checkable
             else
                 return true
@@ -206,9 +206,12 @@ class Puppet::Property < Puppet::Parameter
 
     # Send a log message.
     def log(msg)
-        Puppet::Util::Log.create(
+
+                    Puppet::Util::Log.create(
+                
             :level => resource[:loglevel],
             :message => msg,
+        
             :source => self
         )
     end
@@ -289,7 +292,7 @@ class Puppet::Property < Puppet::Parameter
 
     # Only return the first value
     def should
-        return nil unless defined? @should
+        return nil unless defined?(@should)
 
         unless @should.is_a?(Array)
             self.devfail "should for #{self.class.name} on #{resource.name} is not an array"

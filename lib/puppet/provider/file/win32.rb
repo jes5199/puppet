@@ -6,7 +6,7 @@ Puppet::Type.type(:file).provide :win32 do
     include Puppet::Util::Warnings
 
     require 'sys/admin'
-    
+
     def id2name(id)
         return id.to_s if id.is_a?(Symbol)
         return nil if id > Puppet[:maximum_uid].to_i

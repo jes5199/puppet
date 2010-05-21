@@ -22,7 +22,7 @@ module PuppetTest
                 return false
             end
             return false unless @messages.empty?
-            return true unless defined? @confines
+            return true unless defined?(@confines)
             @confines.find_all do |message, result|
                 ! result
             end.each do |message, result|

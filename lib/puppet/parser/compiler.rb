@@ -120,7 +120,7 @@ class Puppet::Parser::Compiler
 
     # Return the node's environment.
     def environment
-        unless defined? @environment
+        unless defined?(@environment)
             if node.environment and node.environment != ""
                 @environment = node.environment
             else
@@ -187,7 +187,7 @@ class Puppet::Parser::Compiler
     end
 
     # Create a new scope, with either a specified parent scope or
-    # using the top scope.  
+    # using the top scope.
     def newscope(parent, options = {})
         parent ||= topscope
         options[:compiler] = self
@@ -353,8 +353,7 @@ class Puppet::Parser::Compiler
         end
 
         unless remaining.empty?
-            raise Puppet::ParseError, "Failed to realize virtual resources %s" %
-                remaining.join(', ')
+            raise Puppet::ParseError, "Failed to realize virtual resources %s" % remaining.join(', ')
         end
     end
 
