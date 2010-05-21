@@ -167,7 +167,7 @@ class TestLangFunctions < Test::Unit::TestCase
         )
     ))
     scope.setvar("two", "Two")
-    scope.unsetvar("output")
+    
     assert_nothing_raised do
       ast.compute_denotation
     end
