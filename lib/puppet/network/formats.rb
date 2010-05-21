@@ -14,7 +14,7 @@ Puppet::Network::FormatHandler.create(:yaml, :mime => "text/yaml") do
     def render(instance)
         yaml = instance.to_yaml
 
-        yaml = fixup(yaml) unless yaml.nil?
+        yaml &&= fixup(yaml)
         yaml
     end
 
@@ -22,7 +22,7 @@ Puppet::Network::FormatHandler.create(:yaml, :mime => "text/yaml") do
     def render_multiple(instances)
         yaml = instances.to_yaml
 
-        yaml = fixup(yaml) unless yaml.nil?
+        yaml &&= fixup(yaml)
         yaml
     end
 
@@ -68,14 +68,14 @@ Puppet::Network::FormatHandler.create(:b64_zlib_yaml, :mime => "text/b64_zlib_ya
     def render(instance)
         yaml = instance.to_yaml
 
-        yaml = encode(fixup(yaml)) unless yaml.nil?
+        yaml &&= encode(fixup(yaml))
         yaml
     end
 
     def render_multiple(instances)
         yaml = instances.to_yaml
 
-        yaml = encode(fixup(yaml)) unless yaml.nil?
+        yaml &&= encode(fixup(yaml))
         yaml
     end
 

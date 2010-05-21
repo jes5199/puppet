@@ -137,7 +137,7 @@ class Puppet::Util::Settings
     # Handle a command-line argument.
     def handlearg(opt, value = nil)
         @cache.clear
-        value = munge_value(value) if value
+        value &&= munge_value(value)
         str = opt.sub(/^--/,'')
 
         bool = true
@@ -650,7 +650,7 @@ if @config.include?(:mode)
 
     def uninterpolated_value(param, environment = nil)
         param = param.to_sym
-        environment = environment.to_sym if environment
+        environment &&= environment.to_sym
 
         # See if we can find it within our searchable list of values
         val = catch :foundval do
@@ -674,7 +674,7 @@ if @config.include?(:mode)
     # in which to search before the other configuration sections.
     def value(param, environment = nil)
         param = param.to_sym
-        environment = environment.to_sym if environment
+        environment &&= environment.to_sym
 
         # Short circuit to nil for undefined parameters.
         return nil unless @config.include?(param)
