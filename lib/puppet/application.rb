@@ -115,269 +115,269 @@ require 'optparse'
 #  end
 module Puppet
 class Application
-    require 'puppet/util'
+  require 'puppet/util'
+  include Puppet::Util
+
+  BINDIRS = %w{sbin bin}.map{|dir| File.expand_path(File.dirname(__FILE__)) + "/../../#{dir}/*"}.join(" ")
+
+  class << self
     include Puppet::Util
 
-    BINDIRS = %w{sbin bin}.map{|dir| File.expand_path(File.dirname(__FILE__)) + "/../../#{dir}/*"}.join(" ")
+    attr_accessor :run_status
 
-    class << self
-        include Puppet::Util
-
-        attr_accessor :run_status
-
-        def clear!
-            self.run_status = nil
-        end
-
-        def stop!
-            self.run_status = :stop_requested
-        end
-
-        def restart!
-            self.run_status = :restart_requested
-        end
-
-        # Indicates that Puppet::Application.restart! has been invoked and components should
-        # do what is necessary to facilitate a restart.
-        def restart_requested?
-            :restart_requested == run_status
-        end
-
-        # Indicates that Puppet::Application.stop! has been invoked and components should do what is necessary
-        # for a clean stop.
-        def stop_requested?
-            :stop_requested == run_status
-        end
-
-        # Indicates that one of stop! or start! was invoked on Puppet::Application, and some kind of process
-        # shutdown/short-circuit may be necessary.
-        def interrupted?
-            [:restart_requested, :stop_requested].include? run_status
-        end
-
-        # Indicates that Puppet::Application believes that it's in usual running mode (no stop/restart request
-        # currently active).
-        def clear?
-            run_status.nil?
-        end
-
-        # Only executes the given block if the run status of Puppet::Application is clear (no restarts, stops,
-        # etc. requested).
-        # Upon block execution, checks the run status again; if a restart has been requested during the block's
-        # execution, then controlled_run will send a new HUP signal to the current process.
-        # Thus, long-running background processes can potentially finish their work before a restart.
-        def controlled_run(&block)
-            return unless clear?
-            result = block.call
-            Process.kill(:HUP, $PID) if restart_requested?
-            result
-        end
-
-        def should_parse_config
-            @parse_config = true
-        end
-
-        def should_not_parse_config
-            @parse_config = false
-        end
-
-        def should_parse_config?
-            @parse_config = true if ! defined?(@parse_config)
-            @parse_config
-        end
-
-        # used to declare code that handle an option
-        def option(*options, &block)
-            long = options.find { |opt| opt =~ /^--/ }.gsub(/^--(?:\[no-\])?([^ =]+).*$/, '\1' ).gsub('-','_')
-            fname = symbolize("handle_#{long}")
-            if (block_given?)
-                define_method(fname, &block)
-            else
-                define_method(fname) do |value|
-                    self.options["#{long}".to_sym] = value
-                end
-            end
-            self.option_parser_commands << [options, fname]
-        end
-
-        def banner(banner = nil)
-            @banner ||= banner
-        end
-
-        def option_parser_commands
-            @option_parser_commands ||= (
-                superclass.respond_to?(:option_parser_commands) ? superclass.option_parser_commands.dup : []
-            )
-            @option_parser_commands
-        end
-
-        def find(name)
-            self.const_get(name.to_s.capitalize)
-        end
-
-        def [](name)
-            find(name).new
-        end
-
-        def mode( mode_name = nil)
-            @mode ||= mode_name || @mode || :user
-            require 'puppet/util/mode'
-            Puppet::Util::Mode.new( @mode )
-        end
+    def clear!
+      self.run_status = nil
     end
 
-    attr_reader :options, :command_line
-
-    # Every app responds to --version
-    option("--version", "-V") do |arg|
-        puts "#{Puppet.version}"
-        exit
+    def stop!
+      self.run_status = :stop_requested
     end
 
-    # Every app responds to --help
-    option("--help", "-h") do |v|
-        help
+    def restart!
+      self.run_status = :restart_requested
+    end
+
+    # Indicates that Puppet::Application.restart! has been invoked and components should
+    # do what is necessary to facilitate a restart.
+    def restart_requested?
+      :restart_requested == run_status
+    end
+
+    # Indicates that Puppet::Application.stop! has been invoked and components should do what is necessary
+    # for a clean stop.
+    def stop_requested?
+      :stop_requested == run_status
+    end
+
+    # Indicates that one of stop! or start! was invoked on Puppet::Application, and some kind of process
+    # shutdown/short-circuit may be necessary.
+    def interrupted?
+      [:restart_requested, :stop_requested].include? run_status
+    end
+
+    # Indicates that Puppet::Application believes that it's in usual running mode (no stop/restart request
+    # currently active).
+    def clear?
+      run_status.nil?
+    end
+
+    # Only executes the given block if the run status of Puppet::Application is clear (no restarts, stops,
+    # etc. requested).
+    # Upon block execution, checks the run status again; if a restart has been requested during the block's
+    # execution, then controlled_run will send a new HUP signal to the current process.
+    # Thus, long-running background processes can potentially finish their work before a restart.
+    def controlled_run(&block)
+      return unless clear?
+      result = block.call
+      Process.kill(:HUP, $PID) if restart_requested?
+      result
+    end
+
+    def should_parse_config
+      @parse_config = true
+    end
+
+    def should_not_parse_config
+      @parse_config = false
     end
 
     def should_parse_config?
-        self.class.should_parse_config?
+      @parse_config = true if ! defined?(@parse_config)
+      @parse_config
     end
 
-    # override to execute code before running anything else
-    def preinit
-    end
-
-    def option_parser
-        return @option_parser if defined?(@option_parser)
-
-        @option_parser = OptionParser.new(self.class.banner)
-
-        self.class.option_parser_commands.each do |options, fname|
-            @option_parser.on(*options) do |value|
-                self.send(fname, value)
-            end
+    # used to declare code that handle an option
+    def option(*options, &block)
+      long = options.find { |opt| opt =~ /^--/ }.gsub(/^--(?:\[no-\])?([^ =]+).*$/, '\1' ).gsub('-','_')
+      fname = symbolize("handle_#{long}")
+      if (block_given?)
+        define_method(fname, &block)
+      else
+        define_method(fname) do |value|
+          self.options["#{long}".to_sym] = value
         end
-        @option_parser.default_argv = self.command_line.args
-        @option_parser
+      end
+      self.option_parser_commands << [options, fname]
     end
 
-    def initialize(command_line = nil)
-        require 'puppet/util/command_line'
-        @command_line = command_line || Puppet::Util::CommandLine.new
-        @mode = self.class.mode
-        @options = {}
-
-        $puppet_application_mode = @mode
-        $puppet_application_name = name
-        require 'puppet'
+    def banner(banner = nil)
+      @banner ||= banner
     end
 
-    # This is the main application entry point
-    def run
-        exit_on_fail("initialize") { preinit }
-        exit_on_fail("parse options") { parse_options }
-        exit_on_fail("parse configuration file") { Puppet.settings.parse } if should_parse_config?
-        exit_on_fail("prepare for execution") { setup }
-        exit_on_fail("run") { run_command }
+    def option_parser_commands
+      @option_parser_commands ||= (
+        superclass.respond_to?(:option_parser_commands) ? superclass.option_parser_commands.dup : []
+      )
+      @option_parser_commands
     end
 
-    def main
-        raise NotImplementedError, "No valid command or main"
+    def find(name)
+      self.const_get(name.to_s.capitalize)
     end
 
-    def run_command
-        main
+    def [](name)
+      find(name).new
     end
 
-    def setup
-        # Handle the logging settings
-        if options[:debug] or options[:verbose]
-            Puppet::Util::Log.newdestination(:console)
-            if options[:debug]
-                Puppet::Util::Log.level = :debug
-            else
-                Puppet::Util::Log.level = :info
-            end
-        end
+    def mode( mode_name = nil)
+      @mode ||= mode_name || @mode || :user
+      require 'puppet/util/mode'
+      Puppet::Util::Mode.new( @mode )
+    end
+  end
 
-        Puppet::Util::Log.newdestination(:syslog) unless options[:setdest]
+  attr_reader :options, :command_line
+
+  # Every app responds to --version
+  option("--version", "-V") do |arg|
+    puts "#{Puppet.version}"
+    exit
+  end
+
+  # Every app responds to --help
+  option("--help", "-h") do |v|
+    help
+  end
+
+  def should_parse_config?
+    self.class.should_parse_config?
+  end
+
+  # override to execute code before running anything else
+  def preinit
+  end
+
+  def option_parser
+    return @option_parser if defined?(@option_parser)
+
+    @option_parser = OptionParser.new(self.class.banner)
+
+    self.class.option_parser_commands.each do |options, fname|
+      @option_parser.on(*options) do |value|
+        self.send(fname, value)
+      end
+    end
+    @option_parser.default_argv = self.command_line.args
+    @option_parser
+  end
+
+  def initialize(command_line = nil)
+    require 'puppet/util/command_line'
+    @command_line = command_line || Puppet::Util::CommandLine.new
+    @mode = self.class.mode
+    @options = {}
+
+    $puppet_application_mode = @mode
+    $puppet_application_name = name
+    require 'puppet'
+  end
+
+  # This is the main application entry point
+  def run
+    exit_on_fail("initialize") { preinit }
+    exit_on_fail("parse options") { parse_options }
+    exit_on_fail("parse configuration file") { Puppet.settings.parse } if should_parse_config?
+    exit_on_fail("prepare for execution") { setup }
+    exit_on_fail("run") { run_command }
+  end
+
+  def main
+    raise NotImplementedError, "No valid command or main"
+  end
+
+  def run_command
+    main
+  end
+
+  def setup
+    # Handle the logging settings
+    if options[:debug] or options[:verbose]
+      Puppet::Util::Log.newdestination(:console)
+      if options[:debug]
+        Puppet::Util::Log.level = :debug
+      else
+        Puppet::Util::Log.level = :info
+      end
     end
 
-    def parse_options
-        # get all puppet options
-        optparse_opt = []
-        optparse_opt = Puppet.settings.optparse_addargs(optparse_opt)
+    Puppet::Util::Log.newdestination(:syslog) unless options[:setdest]
+  end
 
-        # convert them to OptionParser format
-        optparse_opt.each do |option|
-            self.option_parser.on(*option) do |arg|
-                handlearg(option[0], arg)
-            end
-        end
+  def parse_options
+    # get all puppet options
+    optparse_opt = []
+    optparse_opt = Puppet.settings.optparse_addargs(optparse_opt)
 
-        # scan command line argument
-        begin
-            self.option_parser.parse!
-        rescue OptionParser::ParseError => detail
-            $stderr.puts detail
-            $stderr.puts "Try 'puppet #{command_line.subcommand_name} --help'"
-            exit(1)
-        end
+    # convert them to OptionParser format
+    optparse_opt.each do |option|
+      self.option_parser.on(*option) do |arg|
+        handlearg(option[0], arg)
+      end
     end
 
-    def handlearg(opt, arg)
-        # rewrite --[no-]option to --no-option if that's what was given
-        if opt =~ /\[no-\]/ and !arg
-            opt = opt.gsub(/\[no-\]/,'no-')
-        end
-        # otherwise remove the [no-] prefix to not confuse everybody
-        opt = opt.gsub(/\[no-\]/, '')
-        unless respond_to?(:handle_unknown) and send(:handle_unknown, opt, arg)
-            # Puppet.settings.handlearg doesn't handle direct true/false :-)
-            if arg.is_a?(FalseClass)
-                arg = "false"
-            elsif arg.is_a?(TrueClass)
-                arg = "true"
-            end
-            Puppet.settings.handlearg(opt, arg)
-        end
+    # scan command line argument
+    begin
+      self.option_parser.parse!
+    rescue OptionParser::ParseError => detail
+      $stderr.puts detail
+      $stderr.puts "Try 'puppet #{command_line.subcommand_name} --help'"
+      exit(1)
     end
+  end
 
-    # this is used for testing
-    def self.exit(code)
-        exit(code)
+  def handlearg(opt, arg)
+    # rewrite --[no-]option to --no-option if that's what was given
+    if opt =~ /\[no-\]/ and !arg
+      opt = opt.gsub(/\[no-\]/,'no-')
     end
-
-    def name
-        self.class.to_s.sub(/.*::/,"").downcase.to_sym
+    # otherwise remove the [no-] prefix to not confuse everybody
+    opt = opt.gsub(/\[no-\]/, '')
+    unless respond_to?(:handle_unknown) and send(:handle_unknown, opt, arg)
+      # Puppet.settings.handlearg doesn't handle direct true/false :-)
+      if arg.is_a?(FalseClass)
+        arg = "false"
+      elsif arg.is_a?(TrueClass)
+        arg = "true"
+      end
+      Puppet.settings.handlearg(opt, arg)
     end
+  end
 
-    def help
-        if Puppet.features.usage?
-            # RH:FIXME: My goodness, this is ugly.
-            ::RDoc.const_set("PuppetSourceFile", name)
-            def (::RDoc).caller
-                docfile = `grep -l 'Puppet::Application\\[:#{::RDoc::PuppetSourceFile}\\]' #{BINDIRS}`.chomp
-                super << "#{docfile}:0"
-            end
-            ::RDoc::usage && exit
-        else
-            puts "No help available unless you have RDoc::usage installed"
-            exit
-        end
-    rescue Errno::ENOENT
-        puts "No help available for puppet #{name}"
-        exit
+  # this is used for testing
+  def self.exit(code)
+    exit(code)
+  end
+
+  def name
+    self.class.to_s.sub(/.*::/,"").downcase.to_sym
+  end
+
+  def help
+    if Puppet.features.usage?
+      # RH:FIXME: My goodness, this is ugly.
+      ::RDoc.const_set("PuppetSourceFile", name)
+      def (::RDoc).caller
+        docfile = `grep -l 'Puppet::Application\\[:#{::RDoc::PuppetSourceFile}\\]' #{BINDIRS}`.chomp
+        super << "#{docfile}:0"
+      end
+      ::RDoc::usage && exit
+    else
+      puts "No help available unless you have RDoc::usage installed"
+      exit
     end
+  rescue Errno::ENOENT
+    puts "No help available for puppet #{name}"
+    exit
+  end
 
-    private
+  private
 
-    def exit_on_fail(message, code = 1)
-            yield
-    rescue RuntimeError, NotImplementedError => detail
-            puts detail.backtrace if Puppet[:trace]
-            $stderr.puts "Could not #{message}: #{detail}"
-            exit(code)
-    end
+  def exit_on_fail(message, code = 1)
+      yield
+  rescue RuntimeError, NotImplementedError => detail
+      puts detail.backtrace if Puppet[:trace]
+      $stderr.puts "Could not #{message}: #{detail}"
+      exit(code)
+  end
 end
 end
