@@ -144,7 +144,6 @@ class Puppet::Parser::Resource < Puppet::Resource
     # was specified.
     def name
         @name ||= self[:name] || self.title
-        @name
     end
 
     def namespaces

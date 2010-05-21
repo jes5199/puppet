@@ -15,7 +15,6 @@ Puppet::Network::FormatHandler.create(:yaml, :mime => "text/yaml") do
         yaml = instance.to_yaml
 
         yaml &&= fixup(yaml)
-        yaml
     end
 
     # Yaml monkey-patches Array, so this works.
@@ -23,7 +22,6 @@ Puppet::Network::FormatHandler.create(:yaml, :mime => "text/yaml") do
         yaml = instances.to_yaml
 
         yaml &&= fixup(yaml)
-        yaml
     end
 
     # Everything's supported unless you're on 1.8.1
@@ -69,14 +67,12 @@ Puppet::Network::FormatHandler.create(:b64_zlib_yaml, :mime => "text/b64_zlib_ya
         yaml = instance.to_yaml
 
         yaml &&= encode(fixup(yaml))
-        yaml
     end
 
     def render_multiple(instances)
         yaml = instances.to_yaml
 
         yaml &&= encode(fixup(yaml))
-        yaml
     end
 
     # Because of yaml issue in ruby 1.8.1...

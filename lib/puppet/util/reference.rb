@@ -151,7 +151,6 @@ class Puppet::Util::Reference
         #str += text.gsub(/\n/, "\n    ")
 
         str += "\n\n"
-        str
     end
 
     # Remove all trac links.
