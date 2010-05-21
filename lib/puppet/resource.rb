@@ -183,8 +183,7 @@ class Puppet::Resource
 
     # Find our resource.
     def resolve
-        return catalog.resource(to_s) if catalog
-        return nil
+        return(catalog ? catalog.resource(to_s) : nil)
     end
 
     def title=(value)

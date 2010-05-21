@@ -55,8 +55,7 @@ class Puppet::Application::Doc < Puppet::Application
     end
 
     def run_command
-        return send(options[:mode]) if [:rdoc, :trac, :markdown].include?(options[:mode])
-        return other
+        return[:rdoc, :trac, :markdown].include?(options[:mode]) ? send(options[:mode]) : other
     end
 
     def rdoc
@@ -128,11 +127,7 @@ class Puppet::Application::Doc < Puppet::Application
 
     def other
         text = ""
-        if options[:references].length > 1
-            with_contents = false
-        else
-            with_contents = true
-        end
+        with_contents = options[:references].length <= 1
         exit_code = 0
         require 'puppet/util/reference'
         options[:references].sort { |a,b| a.to_s <=> b.to_s }.each do |name|
