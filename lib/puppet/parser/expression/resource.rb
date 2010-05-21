@@ -12,13 +12,13 @@ class Resource < Expression::ResourceReference
 
   # Does not actually return an object; instead sets an object
   # in the current scope.
-  def evaluate(scope)
+  def compute_denotation(scope)
     # Evaluate all of the specified params.
     paramobjects = parameters.collect { |param|
-      param.safeevaluate(scope)
+      param.denotation(scope)
     }
 
-    resource_titles = @title.safeevaluate(scope)
+    resource_titles = @title.denotation(scope)
 
     # it's easier to always use an array, even for only one name
     resource_titles = [resource_titles] unless resource_titles.is_a?(Array)

@@ -11,20 +11,20 @@ describe Puppet::Parser::Expression::Not do
 
   it "should evaluate its child expression" do
     val = stub "val"
-    val.expects(:safeevaluate).with(@scope)
+    val.expects(:denotation).with(@scope)
 
     operator = Puppet::Parser::Expression::Not.new :value => val
-    operator.evaluate(@scope)
+    operator.compute_denotation(@scope)
   end
 
   it "should return true for ! false" do
     operator = Puppet::Parser::Expression::Not.new :value => @false_ast
-    operator.evaluate(@scope).should == true
+    operator.compute_denotation(@scope).should == true
   end
 
   it "should return false for ! true" do
     operator = Puppet::Parser::Expression::Not.new :value => @true_ast
-    operator.evaluate(@scope).should == false
+    operator.compute_denotation(@scope).should == false
   end
 
 end

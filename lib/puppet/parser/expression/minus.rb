@@ -7,8 +7,8 @@ class Puppet::Parser::Expression
   class Minus < Expression::Branch
     attr_accessor :value
 
-    def evaluate(scope)
-      val = @value.safeevaluate(scope)
+    def compute_denotation(scope)
+      val = @value.denotation(scope)
       val = Puppet::Parser::Scope.number?(val)
       if val == nil
         raise ArgumentError, "minus operand #{val} is not a number"

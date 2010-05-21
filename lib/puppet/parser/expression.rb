@@ -45,8 +45,8 @@ class Puppet::Parser::Expression
   # should override this method.
   # of the contained children and evaluates them in turn, returning a
   # list of all of the collected values, rejecting nil values
-  def evaluate(*options)
-    raise Puppet::DevError, "Did not override #evaluate in #{self.class}"
+  def comute_denotation(*options)
+    raise Puppet::DevError, "Did not override #compute_denotation in #{self.class}"
   end
 
   # Throw a parse error.
@@ -61,15 +61,15 @@ class Puppet::Parser::Expression
     end
   end
 
-  # The version of the evaluate method that should be called, because it
+  # Acceses the expressions denotation via a wrapper that memoizes and
   # correctly handles errors.  It is critical to use this method because
   # it can enable you to catch the error where it happens, rather than
   # much higher up the stack.
-  def safeevaluate(*options)
+  def denotation(*options)
     # We duplicate code here, rather than using exceptwrap, because this
     # is called so many times during parsing.
     begin
-      return self.evaluate(*options)
+      compute_denotation(*options)
     rescue Puppet::Error => detail
       raise adderrorcontext(detail)
     rescue => detail

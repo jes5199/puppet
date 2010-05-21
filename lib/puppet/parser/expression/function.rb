@@ -10,7 +10,7 @@ class Puppet::Parser::Expression
 
     
 
-    def evaluate(scope)
+    def compute_denotation(scope)
 
       # Make sure it's a defined function
       raise Puppet::ParseError, "Unknown function #{@name}" unless @fname
@@ -31,7 +31,7 @@ class Puppet::Parser::Expression
 
 
       # We don't need to evaluate the name, because it's plaintext
-      args = @arguments.safeevaluate(scope)
+      args = @arguments.denotation(scope)
 
       scope.send("function_#{@name}", args)
     end

@@ -11,8 +11,8 @@ class Puppet::Parser::Expression
 
     # Evaluate the actual statements; this only gets called if
     # our test was true matched.
-    def evaluate(scope)
-      @statements.safeevaluate(scope)
+    def compute_denotation(scope)
+      @statements.denotation(scope)
     end
   end
 end

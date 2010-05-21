@@ -34,7 +34,7 @@ class TestLangFunctions < Test::Unit::TestCase
           :children => [nameobj("avalue")]
         )
       )
-      func.evaluate(mkscope)
+      func.compute_denotation(mkscope)
     end
 
     assert_nothing_raised do
@@ -60,7 +60,7 @@ class TestLangFunctions < Test::Unit::TestCase
     scope = mkscope
     val = nil
     assert_nothing_raised do
-      val = func.evaluate(scope)
+      val = func.compute_denotation(scope)
     end
 
     assert_equal("output avalue", val)
@@ -76,7 +76,7 @@ class TestLangFunctions < Test::Unit::TestCase
 
       val = nil
       assert_nothing_raised do
-        val = func.evaluate(scope)
+        val = func.compute_denotation(scope)
       end
 
       assert_equal(retval, val, "'tagged' returned #{val} for #{tag}")
@@ -107,7 +107,7 @@ class TestLangFunctions < Test::Unit::TestCase
     scope = mkscope
     val = nil
     assert_raise(Puppet::ParseError) do
-      val = func.evaluate(scope)
+      val = func.compute_denotation(scope)
     end
   end
 
@@ -142,14 +142,14 @@ class TestLangFunctions < Test::Unit::TestCase
 
     # Test that our manual exception throw fails the parse
     assert_raise(Puppet::ParseError) do
-      ast.evaluate(scope)
+      ast.compute_denotation(scope)
     end
 
     # Test that our use of an undefined instance variable does not throw
     # an exception, but only safely continues.
     scope.setvar("one", "One")
     assert_nothing_raised do
-      ast.evaluate(scope)
+      ast.compute_denotation(scope)
     end
 
     # Ensure that we got the output we expected from that evaluation.
@@ -160,7 +160,7 @@ class TestLangFunctions < Test::Unit::TestCase
     scope.setvar("two", "Two")
     scope.unsetvar("output")
     assert_nothing_raised do
-      ast.evaluate(scope)
+      ast.compute_denotation(scope)
     end
 
 
@@ -195,13 +195,13 @@ class TestLangFunctions < Test::Unit::TestCase
 
     scope = mkscope
     assert_raise(Puppet::ParseError) do
-      ast.evaluate(scope)
+      ast.compute_denotation(scope)
     end
 
     scope.setvar("yay", "this is yay")
 
     assert_nothing_raised do
-      ast.evaluate(scope)
+      ast.compute_denotation(scope)
     end
 
 
@@ -238,13 +238,13 @@ class TestLangFunctions < Test::Unit::TestCase
     # Verify that we get an exception using old-style accessors.
     scope = mkscope
     assert_raise(Puppet::ParseError) do
-      ast.evaluate(scope)
+      ast.compute_denotation(scope)
     end
 
     # Verify that we evaluate and return their value correctly.
     scope.setvar("deprecated", "deprecated value")
     assert_nothing_raised do
-      ast.evaluate(scope)
+      ast.compute_denotation(scope)
     end
 
 
@@ -277,7 +277,7 @@ class TestLangFunctions < Test::Unit::TestCase
     # Verify that Kernel methods still shadow deprecated variable lookups.
     scope = mkscope
     assert_nothing_raised("No exception for Kernel shadowed variable names") do
-      ast.evaluate(scope)
+      ast.compute_denotation(scope)
     end
   end
 
@@ -306,7 +306,7 @@ class TestLangFunctions < Test::Unit::TestCase
     scope = mkscope
     scope.setvar("myvar", "this is yayness")
     assert_raise(Puppet::ParseError) do
-      ast.evaluate(scope)
+      ast.compute_denotation(scope)
     end
   end
 
@@ -384,7 +384,7 @@ class TestLangFunctions < Test::Unit::TestCase
       assert_equal(string, scope.lookupvar("yayness", false))
 
       assert_nothing_raised("An empty string was not a valid variable value") do
-        ast.evaluate(scope)
+        ast.compute_denotation(scope)
       end
 
 

@@ -8,14 +8,14 @@ class Puppet::Parser::Expression
 
     # Returns a boolean which is the result of the boolean operation
     # of lval and rval operands
-    def evaluate(scope)
+    def compute_denotation(scope)
       # evaluate the operands, should return a boolean value
-      lval = @lval.safeevaluate(scope)
+      lval = @lval.denotation(scope)
       lval = Puppet::Parser::Scope.number?(lval)
       if lval == nil
         raise ArgumentError, "left operand of #{@operator} is not a number"
       end
-      rval = @rval.safeevaluate(scope)
+      rval = @rval.denotation(scope)
       rval = Puppet::Parser::Scope.number?(rval)
       if rval == nil
         raise ArgumentError, "right operand of #{@operator} is not a number"

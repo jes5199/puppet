@@ -11,13 +11,13 @@ describe Puppet::Parser::Expression::IfStatement do
 
     before :each do
       @test = stub 'test'
-      @test.stubs(:safeevaluate).with(@scope)
+      @test.stubs(:denotation).with(@scope)
 
       @stmt = stub 'stmt'
-      @stmt.stubs(:safeevaluate).with(@scope)
+      @stmt.stubs(:denotation).with(@scope)
 
       @else = stub 'else'
-      @else.stubs(:safeevaluate).with(@scope)
+      @else.stubs(:denotation).with(@scope)
 
       @ifstmt = Puppet::Parser::Expression::IfStatement.new :test => @test, :statements => @stmt
       @ifelsestmt = Puppet::Parser::Expression::IfStatement.new :test => @test, :statements => @stmt, :else => @else
@@ -26,51 +26,51 @@ describe Puppet::Parser::Expression::IfStatement do
     it "should evaluate test" do
       Puppet::Parser::Scope.stubs(:true?).returns(false)
 
-      @test.expects(:safeevaluate).with(@scope)
+      @test.expects(:denotation).with(@scope)
 
-      @ifstmt.evaluate(@scope)
+      @ifstmt.compute_denotation(@scope)
     end
 
     it "should evaluate if statements if test is true" do
       Puppet::Parser::Scope.stubs(:true?).returns(true)
 
-      @stmt.expects(:safeevaluate).with(@scope)
+      @stmt.expects(:denotation).with(@scope)
 
-      @ifstmt.evaluate(@scope)
+      @ifstmt.compute_denotation(@scope)
     end
 
     it "should not evaluate if statements if test is false" do
       Puppet::Parser::Scope.stubs(:true?).returns(false)
 
-      @stmt.expects(:safeevaluate).with(@scope).never
+      @stmt.expects(:denotation).with(@scope).never
 
-      @ifstmt.evaluate(@scope)
+      @ifstmt.compute_denotation(@scope)
     end
 
     it "should evaluate the else branch if test is false" do
       Puppet::Parser::Scope.stubs(:true?).returns(false)
 
-      @else.expects(:safeevaluate).with(@scope)
+      @else.expects(:denotation).with(@scope)
 
-      @ifelsestmt.evaluate(@scope)
+      @ifelsestmt.compute_denotation(@scope)
     end
 
     it "should not evaluate the else branch if test is true" do
       Puppet::Parser::Scope.stubs(:true?).returns(true)
 
-      @else.expects(:safeevaluate).with(@scope).never
+      @else.expects(:denotation).with(@scope).never
 
-      @ifelsestmt.evaluate(@scope)
+      @ifelsestmt.compute_denotation(@scope)
     end
 
     it "should reset ephemeral statements after evaluation" do
       @scope.expects(:ephemeral_level).returns(:level)
       Puppet::Parser::Scope.stubs(:true?).returns(true)
 
-      @stmt.expects(:safeevaluate).with(@scope)
+      @stmt.expects(:denotation).with(@scope)
       @scope.expects(:unset_ephemeral_var).with(:level)
 
-      @ifstmt.evaluate(@scope)
+      @ifstmt.compute_denotation(@scope)
     end
   end
 end

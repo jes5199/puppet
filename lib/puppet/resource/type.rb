@@ -72,7 +72,7 @@ class Puppet::Resource::Type
 
     set_resource_parameters(resource, scope)
 
-    code.safeevaluate(scope) if code
+    code.denotation(scope) if code
 
     evaluate_ruby_code(resource, scope) if ruby_code
   end
@@ -197,7 +197,7 @@ class Puppet::Resource::Type
       # Even if 'default' is a false value, it's an Expression, so this works fine
       fail Puppet::ParseError, "Must pass #{param} to #{resource.ref}" unless default
 
-      value = default.safeevaluate(scope)
+      value = default.denotation(scope)
       scope.setvar(param.to_s, value)
 
       # Set it in the resource, too, so the value makes it to the client.

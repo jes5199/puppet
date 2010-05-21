@@ -13,46 +13,46 @@ describe Puppet::Parser::Expression::VarDef do
       name = mock 'name'
       value = mock 'value'
 
-      name.expects(:safeevaluate).with(@scope)
-      value.expects(:safeevaluate).with(@scope)
+      name.expects(:denotation).with(@scope)
+      value.expects(:denotation).with(@scope)
 
       vardef = Puppet::Parser::Expression::VarDef.new :name => name, :value => value, :file => nil,
         :line => nil
-      vardef.evaluate(@scope)
+      vardef.compute_denotation(@scope)
     end
 
     it "should be in append=false mode if called without append" do
-      name = stub 'name', :safeevaluate => "var"
-      value = stub 'value', :safeevaluate => "1"
+      name = stub 'name', :denotation => "var"
+      value = stub 'value', :denotation => "1"
 
       @scope.expects(:setvar).with { |name,value,options| options[:append] == nil }
 
       vardef = Puppet::Parser::Expression::VarDef.new :name => name, :value => value, :file => nil,
         :line => nil
-      vardef.evaluate(@scope)
+      vardef.compute_denotation(@scope)
     end
 
     it "should call scope in append mode if append is true" do
-      name = stub 'name', :safeevaluate => "var"
-      value = stub 'value', :safeevaluate => "1"
+      name = stub 'name', :denotation => "var"
+      value = stub 'value', :denotation => "1"
 
       @scope.expects(:setvar).with { |name,value,options| options[:append] == true }
 
       vardef = Puppet::Parser::Expression::VarDef.new :name => name, :value => value, :file => nil,
         :line => nil, :append => true
-      vardef.evaluate(@scope)
+      vardef.compute_denotation(@scope)
     end
 
     describe "when dealing with hash" do
       it "should delegate to the HashOrArrayAccess assign" do
         access = stub 'name'
         access.stubs(:is_a?).with(Puppet::Parser::Expression::HashOrArrayAccess).returns(true)
-        value = stub 'value', :safeevaluate => "1"
+        value = stub 'value', :denotation => "1"
         vardef = Puppet::Parser::Expression::VarDef.new :name => access, :value => value, :file => nil, :line => nil
 
         access.expects(:assign).with(@scope, '1')
 
-        vardef.evaluate(@scope)
+        vardef.compute_denotation(@scope)
       end
     end
 

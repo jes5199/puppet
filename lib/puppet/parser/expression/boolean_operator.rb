@@ -8,16 +8,16 @@ class Puppet::Parser::Expression
 
     # Returns a boolean which is the result of the boolean operation
     # of lval and rval operands
-    def evaluate(scope)
+    def compute_denotation(scope)
       # evaluate the first operand, should return a boolean value
-      lval = @lval.safeevaluate(scope)
+      lval = @lval.denotation(scope)
 
       # return result
       # lazy evaluate right operand
       case @operator
       when "and"
         if Puppet::Parser::Scope.true?(lval)
-          rval = @rval.safeevaluate(scope)
+          rval = @rval.denotation(scope)
           Puppet::Parser::Scope.true?(rval)
         else # false and false == false
           false
@@ -26,7 +26,7 @@ class Puppet::Parser::Expression
         if Puppet::Parser::Scope.true?(lval)
           true
         else
-          rval = @rval.safeevaluate(scope)
+          rval = @rval.denotation(scope)
           Puppet::Parser::Scope.true?(rval)
         end
       end

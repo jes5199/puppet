@@ -5,12 +5,12 @@ class Puppet::Parser::Expression
     include Enumerable
 
     # Evaluate our children.
-    def evaluate(scope)
+    def compute_denotation(scope)
       items = {}
 
       @value.each_pair do |k,v|
-        key = k.respond_to?(:safeevaluate) ? k.safeevaluate(scope) : k
-        items.merge!({ key => v.safeevaluate(scope) })
+        key = k.respond_to?(:denotation) ? k.denotation(scope) : k
+        items.merge!({ key => v.denotation(scope) })
       end
 
       items

@@ -28,7 +28,7 @@ module PuppetTest::ParserTesting
       @evaluated = nil
     end
 
-    def safeevaluate(*args)
+    def denotation(*args)
       evaluate
     end
 

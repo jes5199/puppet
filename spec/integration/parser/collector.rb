@@ -29,7 +29,7 @@ describe Puppet::Parser::Collector do
   }.each do |result, ary|
     ary.each do |string|
       it "should return '#{result}' when collecting resources with '#{string}'" do
-        str, code = query(string).evaluate @scope
+        str, code = query(string).compute_denotation @scope
         code.should be_instance_of(Proc)
         code.call(@resource).should == result
       end

@@ -16,11 +16,11 @@ describe Puppet::Parser::Expression::ArrayConstructor do
     item1 = stub "item1", :is_a? => true
     item2 = stub "item2", :is_a? => true
 
-    item1.expects(:safeevaluate).with(@scope).returns(123)
-    item2.expects(:safeevaluate).with(@scope).returns(246)
+    item1.expects(:denotation).with(@scope).returns(123)
+    item2.expects(:denotation).with(@scope).returns(246)
 
     operator = Puppet::Parser::Expression::ArrayConstructor.new :children => [item1,item2]
-    operator.evaluate(@scope)
+    operator.compute_denotation(@scope)
   end
 
   it "should evaluate childrens of type ArrayConstructor" do
@@ -30,10 +30,10 @@ describe Puppet::Parser::Expression::ArrayConstructor do
     item2.stubs(:instance_of?).with(Puppet::Parser::Expression::ArrayConstructor).returns(true)
     item2.stubs(:each).yields(item1)
 
-    item1.expects(:safeevaluate).with(@scope).returns(123)
+    item1.expects(:denotation).with(@scope).returns(123)
 
     operator = Puppet::Parser::Expression::ArrayConstructor.new :children => [item2]
-    operator.evaluate(@scope).should == [123]
+    operator.compute_denotation(@scope).should == [123]
   end
 
   it "should flatten children coming from children ArrayConstructor" do
@@ -43,10 +43,10 @@ describe Puppet::Parser::Expression::ArrayConstructor do
     item2.stubs(:instance_of?).with(Puppet::Parser::Expression::ArrayConstructor).returns(true)
     item2.stubs(:each).yields([item1])
 
-    item1.expects(:safeevaluate).with(@scope).returns(123)
+    item1.expects(:denotation).with(@scope).returns(123)
 
     operator = Puppet::Parser::Expression::ArrayConstructor.new :children => [item2]
-    operator.evaluate(@scope).should == [123]
+    operator.compute_denotation(@scope).should == [123]
   end
 
   it "should not flatten the results of children evaluation" do
@@ -56,10 +56,10 @@ describe Puppet::Parser::Expression::ArrayConstructor do
     item2.stubs(:instance_of?).with(Puppet::Parser::Expression::ArrayConstructor).returns(true)
     item2.stubs(:each).yields([item1])
 
-    item1.expects(:safeevaluate).with(@scope).returns([123])
+    item1.expects(:denotation).with(@scope).returns([123])
 
     operator = Puppet::Parser::Expression::ArrayConstructor.new :children => [item2]
-    operator.evaluate(@scope).should == [[123]]
+    operator.compute_denotation(@scope).should == [[123]]
   end
 
   it "should return a valid string with to_s" do

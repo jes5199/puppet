@@ -15,28 +15,28 @@ describe Puppet::Parser::Expression::Leaf do
 
   describe "when evaluate_match is called" do
     it "should evaluate itself" do
-      @leaf.expects(:safeevaluate).with(@scope)
+      @leaf.expects(:denotation).with(@scope)
 
       @leaf.evaluate_match("value", @scope)
     end
 
     it "should match values by equality" do
       @value.stubs(:==).returns(false)
-      @leaf.stubs(:safeevaluate).with(@scope).returns(@value)
+      @leaf.stubs(:denotation).with(@scope).returns(@value)
       @value.expects(:==).with("value")
 
       @leaf.evaluate_match("value", @scope)
     end
 
     it "should downcase the evaluated value if wanted" do
-      @leaf.stubs(:safeevaluate).with(@scope).returns(@value)
+      @leaf.stubs(:denotation).with(@scope).returns(@value)
       @value.expects(:downcase).returns("value")
 
       @leaf.evaluate_match("value", @scope)
     end
 
     it "should match undef if value is an empty string" do
-      @leaf.stubs(:safeevaluate).with(@scope).returns("")
+      @leaf.stubs(:denotation).with(@scope).returns("")
 
       @leaf.evaluate_match(:undef, @scope).should be_true
     end
@@ -113,9 +113,9 @@ describe Puppet::Parser::Expression::HashOrArrayAccess do
       variable = stub 'variable', :evaluate => "a"
       access = Puppet::Parser::Expression::HashOrArrayAccess.new(:variable => variable, :key => 0 )
 
-      variable.expects(:safeevaluate).with(@scope).returns("a")
+      variable.expects(:denotation).with(@scope).returns("a")
 
-      access.evaluate(@scope).should == "b"
+      access.compute_denotation(@scope).should == "b"
     end
 
     it "should evaluate the access key part if necessary" do
@@ -124,9 +124,9 @@ describe Puppet::Parser::Expression::HashOrArrayAccess do
       index = stub 'index', :evaluate => 0
       access = Puppet::Parser::Expression::HashOrArrayAccess.new(:variable => "a", :key => index )
 
-      index.expects(:safeevaluate).with(@scope).returns(0)
+      index.expects(:denotation).with(@scope).returns(0)
 
-      access.evaluate(@scope).should == "b"
+      access.compute_denotation(@scope).should == "b"
     end
 
     it "should be able to return an array member" do
@@ -134,7 +134,7 @@ describe Puppet::Parser::Expression::HashOrArrayAccess do
 
       access = Puppet::Parser::Expression::HashOrArrayAccess.new(:variable => "a", :key => 1 )
 
-      access.evaluate(@scope).should == "val2"
+      access.compute_denotation(@scope).should == "val2"
     end
 
     it "should be able to return an hash value" do
@@ -142,7 +142,7 @@ describe Puppet::Parser::Expression::HashOrArrayAccess do
 
       access = Puppet::Parser::Expression::HashOrArrayAccess.new(:variable => "a", :key => "key2" )
 
-      access.evaluate(@scope).should == "val2"
+      access.compute_denotation(@scope).should == "val2"
     end
 
     it "should raise an error if the variable lookup didn't return an hash or an array" do
@@ -150,7 +150,7 @@ describe Puppet::Parser::Expression::HashOrArrayAccess do
 
       access = Puppet::Parser::Expression::HashOrArrayAccess.new(:variable => "a", :key => "key2" )
 
-      lambda { access.evaluate(@scope) }.should raise_error
+      lambda { access.compute_denotation(@scope) }.should raise_error
     end
 
     it "should raise an error if the variable wasn't in the scope" do
@@ -158,7 +158,7 @@ describe Puppet::Parser::Expression::HashOrArrayAccess do
 
       access = Puppet::Parser::Expression::HashOrArrayAccess.new(:variable => "a", :key => "key2" )
 
-      lambda { access.evaluate(@scope) }.should raise_error
+      lambda { access.compute_denotation(@scope) }.should raise_error
     end
 
     it "should return a correct string representation" do
@@ -172,7 +172,7 @@ describe Puppet::Parser::Expression::HashOrArrayAccess do
       access1 = Puppet::Parser::Expression::HashOrArrayAccess.new(:variable => "a", :key => "key")
       access2 = Puppet::Parser::Expression::HashOrArrayAccess.new(:variable => access1, :key => "subkey")
 
-      access2.evaluate(@scope).should == 'b'
+      access2.compute_denotation(@scope).should == 'b'
     end
 
     it "should work with interleaved array and hash access" do
@@ -181,7 +181,7 @@ describe Puppet::Parser::Expression::HashOrArrayAccess do
       access1 = Puppet::Parser::Expression::HashOrArrayAccess.new(:variable => "a", :key => "key")
       access2 = Puppet::Parser::Expression::HashOrArrayAccess.new(:variable => access1, :key => 1)
 
-      access2.evaluate(@scope).should == 'b'
+      access2.compute_denotation(@scope).should == 'b'
     end
   end
 
@@ -229,7 +229,7 @@ describe Puppet::Parser::Expression::Regex do
     it "should return self" do
       val = Puppet::Parser::Expression::Regex.new :value => "/ab/"
 
-      val.evaluate(@scope).should === val
+      val.compute_denotation(@scope).should === val
     end
   end
 
@@ -296,12 +296,12 @@ describe Puppet::Parser::Expression::Variable do
 
   it "should lookup the variable in scope" do
     @scope.expects(:lookupvar).with("myvar", false).returns(:myvalue)
-    @var.safeevaluate(@scope).should == :myvalue
+    @var.denotation(@scope).should == :myvalue
   end
 
   it "should return undef if the variable wasn't set" do
     @scope.expects(:lookupvar).with("myvar", false).returns(:undefined)
-    @var.safeevaluate(@scope).should == :undef
+    @var.denotation(@scope).should == :undef
   end
 
   describe "when converting to string" do
@@ -346,7 +346,7 @@ describe Puppet::Parser::Expression::HostName do
   end
 
   it "should evaluate to its value" do
-    @host.evaluate(@scope).should == @value
+    @host.compute_denotation(@scope).should == @value
   end
 
   it "should delegate eql? to the underlying value if it is an HostName" do

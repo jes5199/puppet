@@ -6,8 +6,8 @@ class Puppet::Parser::Expression::ResourceReference < Puppet::Parser::Expression
 
   # Evaluate our object, but just return a simple array of the type
   # and name.
-  def evaluate(scope)
-    titles = Array(title.safeevaluate(scope)).collect { |t| Puppet::Resource.new(type, t, :namespaces => scope.namespaces) }
+  def compute_denotation(scope)
+    titles = Array(title.denotation(scope)).collect { |t| Puppet::Resource.new(type, t, :namespaces => scope.namespaces) }
     return(titles.length == 1 ? titles.pop : titles)
   end
 

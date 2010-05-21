@@ -46,30 +46,30 @@ describe Puppet::Parser::Expression::Relationship do
     end
 
     it "should create a relationship with the evaluated source and target and add it to the scope" do
-      source = stub 'source', :safeevaluate => :left
-      target = stub 'target', :safeevaluate => :right
-      @class.new(source, target, '->').evaluate(@scope)
+      source = stub 'source', :denotation => :left
+      target = stub 'target', :denotation => :right
+      @class.new(source, target, '->').compute_denotation(@scope)
       @compiler.relationships[0].source.should == :left
       @compiler.relationships[0].target.should == :right
     end
 
     describe "a chained relationship" do
       before do
-        @left = stub 'left', :safeevaluate => :left
-        @middle = stub 'middle', :safeevaluate => :middle
-        @right = stub 'right', :safeevaluate => :right
+        @left = stub 'left', :denotation => :left
+        @middle = stub 'middle', :denotation => :middle
+        @right = stub 'right', :denotation => :right
         @first = @class.new(@left, @middle, '->')
         @second = @class.new(@first, @right, '->')
       end
 
       it "should evaluate the relationship to the left" do
-        @first.expects(:evaluate).with(@scope).returns Puppet::Parser::Relationship.new(:left, :right, :relationship)
+        @first.expects(:compute_denotation).with(@scope).returns Puppet::Parser::Relationship.new(:left, :right, :relationship)
 
-        @second.evaluate(@scope)
+        @second.compute_denotation(@scope)
       end
 
       it "should use the right side of the left relationship as its source" do
-        @second.evaluate(@scope)
+        @second.compute_denotation(@scope)
 
         @compiler.relationships[0].source.should == :left
         @compiler.relationships[0].target.should == :middle
@@ -78,10 +78,10 @@ describe Puppet::Parser::Expression::Relationship do
       end
 
       it "should only evaluate a given Expression node once" do
-        @left.expects(:safeevaluate).once.returns :left
-        @middle.expects(:safeevaluate).once.returns :middle
-        @right.expects(:safeevaluate).once.returns :right
-        @second.evaluate(@scope)
+        @left.expects(:denotation).once.returns :left
+        @middle.expects(:denotation).once.returns :middle
+        @right.expects(:denotation).once.returns :right
+        @second.compute_denotation(@scope)
       end
     end
   end

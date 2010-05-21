@@ -12,15 +12,15 @@ class Puppet::Parser::Expression
 
     # Does not actually return an object; instead sets an object
     # in the current scope.
-    def evaluate(scope)
+    def compute_denotation(scope)
       # Get our object reference.
-      resource = @object.safeevaluate(scope)
+      resource = @object.denotation(scope)
 
       hash = {}
 
       # Evaluate all of the specified params.
       params = @parameters.collect { |param|
-        param.safeevaluate(scope)
+        param.denotation(scope)
       }
 
       # Now we just create a normal resource, but we call a very different

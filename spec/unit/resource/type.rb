@@ -283,13 +283,13 @@ describe Puppet::Resource::Type do
     end
 
     it "should evaluate and set its default values as variables for parameters not provided by the resource" do
-      @type.set_arguments :foo => stub("value", :safeevaluate => "something")
+      @type.set_arguments :foo => stub("value", :denotation => "something")
       @type.set_resource_parameters(@resource, @scope)
       @scope.lookupvar("foo").should == "something"
     end
 
     it "should set all default values as parameters in the resource" do
-      @type.set_arguments :foo => stub("value", :safeevaluate => "something")
+      @type.set_arguments :foo => stub("value", :denotation => "something")
 
       @type.set_resource_parameters(@resource, @scope)
 
@@ -404,7 +404,7 @@ describe Puppet::Resource::Type do
     it "should evaluate the Expression code if any is provided" do
       code = stub 'code'
       @type.stubs(:code).returns code
-      code.expects(:safeevaluate)
+      code.expects(:denotation)
 
       @type.evaluate_code(@resource)
     end

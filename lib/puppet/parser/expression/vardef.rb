@@ -12,12 +12,12 @@ class Puppet::Parser::Expression
 
     # Look up our name and value, and store them appropriately.  The
     # lexer strips off the syntax stuff like '$'.
-    def evaluate(scope)
-      value = @value.safeevaluate(scope)
+    def compute_denotation(scope)
+      value = @value.denotation(scope)
       if name.is_a?(HashOrArrayAccess)
         name.assign(scope, value)
       else
-        name = @name.safeevaluate(scope)
+        name = @name.denotation(scope)
 
         parsewrap do
           scope.setvar(name,value, :file => @file, :line => @line, :append => @append)

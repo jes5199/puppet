@@ -7,8 +7,8 @@ class Puppet::Parser::Expression
   class Not < Expression::Branch
     attr_accessor :value
 
-    def evaluate(scope)
-      val = @value.safeevaluate(scope)
+    def compute_denotation(scope)
+      val = @value.denotation(scope)
       ! Puppet::Parser::Scope.true?(val)
     end
   end

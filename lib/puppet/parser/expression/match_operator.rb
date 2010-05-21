@@ -8,8 +8,8 @@ class Puppet::Parser::Expression
 
     # Returns a boolean which is the result of the boolean operation
     # of lval and rval operands
-    def evaluate(scope)
-      lval = @lval.safeevaluate(scope)
+    def compute_denotation(scope)
+      lval = @lval.denotation(scope)
 
       return(rval.evaluate_match(lval, scope) ? @operator == "=~" : @operator == "!~")
     end

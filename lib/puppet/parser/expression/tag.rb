@@ -8,8 +8,8 @@ class Puppet::Parser::Expression
     @name = :class
     attr_accessor :type
 
-    def evaluate(scope)
-      types = @type.safeevaluate(scope)
+    def compute_denotation(scope)
+      types = @type.denotation(scope)
 
       types = [types] unless types.is_a? Array
 

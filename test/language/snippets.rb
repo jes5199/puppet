@@ -75,7 +75,7 @@ class TestSnippets < Test::Unit::TestCase
 
   def ast2scope(ast)
     scope = Puppet::Parser::Scope.new
-    ast.evaluate(scope)
+    ast.compute_denotation(scope)
 
     scope
   end

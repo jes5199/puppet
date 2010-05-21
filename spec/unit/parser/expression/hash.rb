@@ -34,48 +34,48 @@ describe Puppet::Parser::Expression::HashConstructor do
     key2 = stub "key2"
     value2 = stub "value2"
 
-    value1.expects(:safeevaluate).with(@scope).returns("b")
-    value2.expects(:safeevaluate).with(@scope).returns("d")
+    value1.expects(:denotation).with(@scope).returns("b")
+    value2.expects(:denotation).with(@scope).returns("d")
 
     operator = Puppet::Parser::Expression::HashConstructor.new(:value => { key1 => value1, key2 => value2})
-    operator.evaluate(@scope)
+    operator.compute_denotation(@scope)
   end
 
   it "should evaluate the hash keys if they are Expression instances" do
     key1 = stub "key1"
-    value1 = stub "value1", :safeevaluate => "one"
+    value1 = stub "value1", :denotation => "one"
     key2 = stub "key2"
-    value2 = stub "value2", :safeevaluate => "two"
+    value2 = stub "value2", :denotation => "two"
 
-    key1.expects(:safeevaluate).with(@scope).returns("1")
-    key2.expects(:safeevaluate).with(@scope).returns("2")
+    key1.expects(:denotation).with(@scope).returns("1")
+    key2.expects(:denotation).with(@scope).returns("2")
 
     operator = Puppet::Parser::Expression::HashConstructor.new(:value => { key1 => value1, key2 => value2})
-    hash = operator.evaluate(@scope)
+    hash = operator.compute_denotation(@scope)
     hash["1"].should == "one"
     hash["2"].should == "two"
   end
 
   it "should evaluate the hash keys if they are not Expression instances" do
     key1 = "1"
-    value1 = stub "value1", :safeevaluate => "one"
+    value1 = stub "value1", :denotation => "one"
     key2 = "2"
-    value2 = stub "value2", :safeevaluate => "two"
+    value2 = stub "value2", :denotation => "two"
 
     operator = Puppet::Parser::Expression::HashConstructor.new(:value => { key1 => value1, key2 => value2})
-    hash = operator.evaluate(@scope)
+    hash = operator.compute_denotation(@scope)
     hash["1"].should == "one"
     hash["2"].should == "two"
   end
 
   it "should return an evaluated hash" do
     key1 = stub "key1"
-    value1 = stub "value1", :safeevaluate => "b"
+    value1 = stub "value1", :denotation => "b"
     key2 = stub "key2"
-    value2 = stub "value2", :safeevaluate => "d"
+    value2 = stub "value2", :denotation => "d"
 
     operator = Puppet::Parser::Expression::HashConstructor.new(:value => { key1 => value1, key2 => value2})
-    operator.evaluate(@scope).should == { key1 => "b", key2 => "d" }
+    operator.compute_denotation(@scope).should == { key1 => "b", key2 => "d" }
   end
 
   it "should return a valid string with to_s" do
