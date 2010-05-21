@@ -8,7 +8,7 @@ class Puppet::Parser::Expression
 
     attr_accessor :name, :arguments
 
-    @settor = true
+    
 
     def evaluate(scope)
 

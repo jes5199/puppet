@@ -8,7 +8,7 @@ class Puppet::Parser::Expression
 
     attr_accessor :name, :value, :append
 
-    @settor = true
+    
 
     # Look up our name and value, and store them appropriately.  The
     # lexer strips off the syntax stuff like '$'.

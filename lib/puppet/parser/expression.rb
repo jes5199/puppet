@@ -39,14 +39,7 @@ class Puppet::Parser::Expression
     end
   end
 
-  # Does this ast object set something?  If so, it gets evaluated first.
-  def self.settor?
-    if defined?(@settor)
-      @settor
-    else
-      false
-    end
-  end
+  
 
   # Evaluate the current object.  Just a stub method, since the subclass
   # should override this method.
