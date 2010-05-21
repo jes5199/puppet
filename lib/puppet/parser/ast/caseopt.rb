@@ -9,10 +9,6 @@ class Puppet::Parser::AST
     # so that CaseStatement can compare, and then it will selectively
     # decide whether to fully evaluate this option
 
-    def each
-      [@value,@statements].each { |child| yield child }
-    end
-
     # Are we the default option?
     def default?
       # Cache the @default value.

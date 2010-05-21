@@ -36,9 +36,5 @@ class Puppet::Parser::AST
     ensure
       scope.unset_ephemeral_var(level)
     end
-
-    def each
-      [@test,@options].each { |child| yield child }
-    end
   end
 end

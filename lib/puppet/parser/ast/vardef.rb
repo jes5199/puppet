@@ -24,10 +24,5 @@ class Puppet::Parser::AST
         end
       end
     end
-
-    def each
-      [@name,@value].each { |child| yield child }
-    end
   end
-
 end

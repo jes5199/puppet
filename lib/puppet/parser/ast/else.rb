@@ -9,10 +9,6 @@ class Puppet::Parser::AST
 
     attr_accessor :statements
 
-    def each
-      yield @statements
-    end
-
     # Evaluate the actual statements; this only gets called if
     # our test was true matched.
     def evaluate(scope)

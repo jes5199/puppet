@@ -7,10 +7,6 @@ class Puppet::Parser::AST
   class Minus < AST::Branch
     attr_accessor :value
 
-    def each
-      yield @value
-    end
-
     def evaluate(scope)
       val = @value.safeevaluate(scope)
       val = Puppet::Parser::Scope.number?(val)

@@ -5,10 +5,6 @@ class Puppet::Parser::AST
   class ResourceParam < AST::Branch
     attr_accessor :value, :param, :add
 
-    def each
-      [@param,@value].each { |child| yield child }
-    end
-
     # Return the parameter and the value.
     def evaluate(scope)
 

@@ -19,6 +19,13 @@ class Puppet::Parser::AST
 
   attr_accessor :parent, :scope
 
+  # Yield each contained AST node in turn.  Used mostly by evaluate.
+  # This definition means that we don't have to override evaluate
+  # every time.
+  def each
+    [(instance_variables-[@parent]).collect { |v| instance_variable_get(v) }].flatten.select { |x| yield x if x.is_a? AST }
+  end
+
   # don't fetch lexer comment by default
   def use_docs
     self.class.use_docs

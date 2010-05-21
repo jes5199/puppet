@@ -8,10 +8,6 @@ class Puppet::Parser::AST
 
     attr_accessor :test, :else, :statements
 
-    def each
-      [@test,@else,@statements].each { |child| yield child }
-    end
-
     # Short-curcuit evaluation.  If we're true, evaluate our statements,
     # else if there's an 'else' setting, evaluate it.
     # the first option that matches.

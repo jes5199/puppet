@@ -6,10 +6,6 @@ class Puppet::Parser::AST
   class Selector < AST::Branch
     attr_accessor :param, :values
 
-    def each
-      [@param,@values].each { |child| yield child }
-    end
-
     # Find the value that corresponds with the test.
     def evaluate(scope)
       level = scope.ephemeral_level

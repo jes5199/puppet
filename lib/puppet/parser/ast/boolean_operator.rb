@@ -6,11 +6,6 @@ class Puppet::Parser::AST
 
     attr_accessor :operator, :lval, :rval
 
-    # Iterate across all of our children.
-    def each
-      [@lval,@rval,@operator].each { |child| yield child }
-    end
-
     # Returns a boolean which is the result of the boolean operation
     # of lval and rval operands
     def evaluate(scope)

@@ -7,10 +7,6 @@ class Puppet::Parser::AST
   class Not < AST::Branch
     attr_accessor :value
 
-    def each
-      yield @value
-    end
-
     def evaluate(scope)
       val = @value.safeevaluate(scope)
       ! Puppet::Parser::Scope.true?(val)

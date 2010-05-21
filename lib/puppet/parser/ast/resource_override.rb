@@ -10,14 +10,6 @@ class Puppet::Parser::AST
     attr_accessor :object
     attr_reader :parameters
 
-    # Iterate across all of our children.
-    def each
-      [@object,@parameters].flatten.each { |param|
-        #Puppet.debug("yielding param #{param}")
-        yield param
-      }
-    end
-
     # Does not actually return an object; instead sets an object
     # in the current scope.
     def evaluate(scope)
