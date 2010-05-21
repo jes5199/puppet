@@ -61,7 +61,7 @@ class Puppet::Util::Storage
             return
         end
         unless File.file?(Puppet[:statefile])
-            Puppet.warning("Checksumfile %s is not a file, ignoring" % Puppet[:statefile])
+            Puppet.warning("Checksumfile #{Puppet[:statefile]} is not a file, ignoring")
             return
         end
         Puppet::Util.benchmark(:debug, "Loaded state") do
@@ -69,12 +69,12 @@ class Puppet::Util::Storage
                 begin
                     @@state = YAML.load(file)
                 rescue => detail
-                    Puppet.err "Checksumfile %s is corrupt (%s); replacing" % [Puppet[:statefile], detail]
+                    Puppet.err "Checksumfile #{Puppet[:statefile]} is corrupt (#{detail}); replacing"
                     begin
                         File.rename(Puppet[:statefile], Puppet[:statefile] + ".bad")
                     rescue
                         raise Puppet::Error,
-                            "Could not rename corrupt %s; remove manually" % Puppet[:statefile]
+                            "Could not rename corrupt #{Puppet[:statefile]}; remove manually"
                     end
                 end
             end
@@ -85,7 +85,7 @@ class Puppet::Util::Storage
             self.init
         end
 
-        #Puppet.debug "Loaded state is %s" % @@state.inspect
+        #Puppet.debug "Loaded state is #{@@state.inspect}"
     end
 
     def self.stateinspect
@@ -96,7 +96,7 @@ class Puppet::Util::Storage
         Puppet.debug "Storing state"
 
         unless FileTest.exist?(Puppet[:statefile])
-            Puppet.info "Creating state file %s" % Puppet[:statefile]
+            Puppet.info "Creating state file #{Puppet[:statefile]}"
         end
 
         Puppet::Util.benchmark(:debug, "Stored state") do

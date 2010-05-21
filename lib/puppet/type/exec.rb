@@ -136,7 +136,7 @@ module Puppet
                 end
 
                 unless self.should.include?(status.exitstatus.to_s)
-                    self.fail("%s returned %s instead of one of [%s]" % [self.resource[:command], status.exitstatus, self.should.join(",")])
+                    self.fail("#{self.resource[:command]} returned #{status.exitstatus} instead of one of [#{self.should.join(",")}]")
                 end
 
                 return event
@@ -253,7 +253,7 @@ module Puppet
                 values = [values] unless values.is_a? Array
                 values.each do |value|
                     unless value =~ /\w+=/
-                        raise ArgumentError, "Invalid environment setting '%s'" % value
+                        raise ArgumentError, "Invalid environment setting '#{value}'"
                     end
                 end
             end
@@ -378,7 +378,7 @@ module Puppet
                 begin
                     output, status = @resource.run(value, true)
                 rescue Timeout::Error
-                    err "Check %s exceeded timeout" % value.inspect
+                    err "Check #{value.inspect} exceeded timeout"
                     return false
                 end
 
@@ -420,7 +420,7 @@ module Puppet
                 begin
                     output, status = @resource.run(value, true)
                 rescue Timeout::Error
-                    err "Check %s exceeded timeout" % value.inspect
+                    err "Check #{value.inspect} exceeded timeout"
                     return false
                 end
 
@@ -514,7 +514,7 @@ module Puppet
                         path = %x{which #{exe}}.chomp
                         if path == ""
                             raise ArgumentError,
-                                "Could not find command '%s'" % exe
+                                "Could not find command '#{exe}'"
                         else
                             exe = path
                         end
@@ -529,15 +529,15 @@ module Puppet
                 end
             else
                 raise ArgumentError,
-                    "'%s' is somehow not qualified with no search path" % self[:command]
+                    "'#{self[:command]}' is somehow not qualified with no search path"
             end
 
             unless FileTest.exists?(exe)
-                raise ArgumentError, "Could not find executable '%s'" % exe
+                raise ArgumentError, "Could not find executable '#{exe}'"
             end
             unless FileTest.executable?(exe)
                 raise ArgumentError,
-                    "'%s' is not executable" % exe
+                    "'#{exe}' is not executable"
             end
         end
 
@@ -574,7 +574,7 @@ module Puppet
                     if check
                         dir = nil
                     else
-                        self.fail "Working directory '%s' does not exist" % dir
+                        self.fail "Working directory '#{dir}' does not exist"
                     end
                 end
             end
@@ -603,12 +603,12 @@ module Puppet
                                 value = $2
                                 if environment.include? name
                                     warning(
-                                    "Overriding environment setting '%s' with '%s'" % [name, value]
+                                    "Overriding environment setting '#{name}' with '#{value}'"
                                     )
                                 end
                                 environment[name] = value
                             else
-                                warning "Cannot understand environment setting %s" % setting.inspect
+                                warning "Cannot understand environment setting #{setting.inspect}"
                             end
                         end
                     end
@@ -636,7 +636,7 @@ module Puppet
             exe = extractexe(cmd)
             # if we're not fully qualified, require a path
             if File.expand_path(exe) != exe and self[:path].nil?
-                self.fail "'%s' is both unqualifed and specified no search path" % cmd
+                self.fail "'#{cmd}' is both unqualifed and specified no search path"
             end
         end
 

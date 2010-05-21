@@ -58,7 +58,7 @@ require 'puppet/provider/parsedfile'
 
     def target
         begin
-            @resource.should(:target) || File.expand_path("~%s/.ssh/authorized_keys" % user)
+            @resource.should(:target) || File.expand_path("~#{user}/.ssh/authorized_keys")
         rescue
             raise Puppet::Error, "Target not defined and/or specified user does not exist yet"
         end
