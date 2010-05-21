@@ -97,7 +97,7 @@ class Puppet::Parameter
 
         # Is this parameter the namevar?  Defaults to false.
         def isnamevar?
-            defined?(@isnamevar) && @isnamevar
+            @isnamevar
         end
 
         # This parameter is required.
@@ -112,7 +112,7 @@ class Puppet::Parameter
 
         # Is this parameter required?  Defaults to false.
         def required?
-            defined?(@required) && @required
+            @required
         end
 
         # Verify that we got a good value
@@ -171,9 +171,9 @@ class Puppet::Parameter
 
         error = type.new(args.join(" "))
 
-        error.line = @resource.line if defined?(@resource) and @resource and @resource.line
+        error.line = @resource.line if @resource and @resource.line
 
-        error.file = @resource.file if defined?(@resource) and @resource and @resource.file
+        error.file = @resource.file if @resource and @resource.file
 
         raise error
     end
@@ -219,7 +219,7 @@ class Puppet::Parameter
     # return the full path to us, for logging and rollback; not currently
     # used
     def pathbuilder
-        if defined?(@resource) and @resource
+        if @resource
             return [@resource.pathbuilder, self.name]
         else
             return [self.name]
