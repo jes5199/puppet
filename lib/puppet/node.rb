@@ -75,7 +75,7 @@ class Puppet::Node
   end
 
   # Calculate the list of names we might use for looking
-  # up our node.  This is only used for AST nodes.
+  # up our node.  This is only used for Expression nodes.
   def names
     return [name] if Puppet.settings[:strict_hostname_checking]
 

@@ -69,22 +69,22 @@ describe Puppet::Resource::Type do
       lambda { Puppet::Resource::Type.new(:node, /foo/) }.should_not raise_error
     end
 
-    it "should allow a AST::HostName instance as its name" do
-      regex = Puppet::Parser::AST::Regex.new(:value => /foo/)
-      name = Puppet::Parser::AST::HostName.new(:value => regex)
+    it "should allow a Expression::HostName instance as its name" do
+      regex = Puppet::Parser::Expression::Regex.new(:value => /foo/)
+      name = Puppet::Parser::Expression::HostName.new(:value => regex)
       lambda { Puppet::Resource::Type.new(:node, name) }.should_not raise_error
     end
 
-    it "should match against the regexp in the AST::HostName when a HostName instance is provided" do
-      regex = Puppet::Parser::AST::Regex.new(:value => /\w/)
-      name = Puppet::Parser::AST::HostName.new(:value => regex)
+    it "should match against the regexp in the Expression::HostName when a HostName instance is provided" do
+      regex = Puppet::Parser::Expression::Regex.new(:value => /\w/)
+      name = Puppet::Parser::Expression::HostName.new(:value => regex)
       node = Puppet::Resource::Type.new(:node, name)
 
       node.match("foo").should be_true
     end
 
-    it "should return the value of the hostname if provided a string-form AST::HostName instance as the name" do
-      name = Puppet::Parser::AST::HostName.new(:value => "foo")
+    it "should return the value of the hostname if provided a string-form Expression::HostName instance as the name" do
+      name = Puppet::Parser::Expression::HostName.new(:value => "foo")
       node = Puppet::Resource::Type.new(:node, name)
 
       node.name.should == "foo"
@@ -142,19 +142,19 @@ describe Puppet::Resource::Type do
 
     it "should return the name converted to a string when the name is not a regex" do
       pending "Need to define LoadedCode behaviour first"
-      name = Puppet::Parser::AST::HostName.new(:value => "foo")
+      name = Puppet::Parser::Expression::HostName.new(:value => "foo")
       Puppet::Resource::Type.new(:node, name).name.should == "foo"
     end
 
     it "should return the name converted to a string when the name is a regex" do
       pending "Need to define LoadedCode behaviour first"
-      name = Puppet::Parser::AST::HostName.new(:value => /regex/)
+      name = Puppet::Parser::Expression::HostName.new(:value => /regex/)
       Puppet::Resource::Type.new(:node, name).name.should == /regex/.to_s
     end
 
     it "should mark any created scopes as a node scope" do
       pending "Need to define LoadedCode behaviour first"
-      name = Puppet::Parser::AST::HostName.new(:value => /regex/)
+      name = Puppet::Parser::Expression::HostName.new(:value => /regex/)
       Puppet::Resource::Type.new(:node, name).name.should == /regex/.to_s
     end
   end
@@ -401,7 +401,7 @@ describe Puppet::Resource::Type do
       @scope.class_scope(@type).should be_nil
     end
 
-    it "should evaluate the AST code if any is provided" do
+    it "should evaluate the Expression code if any is provided" do
       code = stub 'code'
       @type.stubs(:code).returns code
       code.expects(:safeevaluate)
@@ -548,7 +548,7 @@ describe Puppet::Resource::Type do
 
   describe "when merging code from another instance" do
     def code(str)
-      Puppet::Parser::AST::Leaf.new :value => str
+      Puppet::Parser::Expression::Leaf.new :value => str
     end
 
     it "should fail unless it is a class" do
@@ -596,13 +596,13 @@ describe Puppet::Resource::Type do
       dest.doc.should == "foonessyayness"
     end
 
-    it "should turn its code into an ASTArray if necessary" do
+    it "should turn its code into an ArrayConstructor if necessary" do
       dest = Puppet::Resource::Type.new(:hostclass, "bar", :code => code("foo"))
       source = Puppet::Resource::Type.new(:hostclass, "foo", :code => code("bar"))
 
       dest.merge(source)
 
-      dest.code.should be_instance_of(Puppet::Parser::AST::ASTArray)
+      dest.code.should be_instance_of(Puppet::Parser::Expression::ArrayConstructor)
     end
 
     it "should set the other class's code as its code if it has none" do
@@ -615,10 +615,10 @@ describe Puppet::Resource::Type do
     end
 
     it "should append the other class's code to its code if it has any" do
-      dcode = Puppet::Parser::AST::ASTArray.new :children => [code("dest")]
+      dcode = Puppet::Parser::Expression::ArrayConstructor.new :children => [code("dest")]
       dest = Puppet::Resource::Type.new(:hostclass, "bar", :code => dcode)
 
-      scode = Puppet::Parser::AST::ASTArray.new :children => [code("source")]
+      scode = Puppet::Parser::Expression::ArrayConstructor.new :children => [code("source")]
       source = Puppet::Resource::Type.new(:hostclass, "foo", :code => scode)
 
       dest.merge(source)

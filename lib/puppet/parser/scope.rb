@@ -12,7 +12,7 @@ class Puppet::Parser::Scope
   include Puppet::Resource::TypeCollectionHelper
   require 'puppet/parser/resource'
 
-  AST = Puppet::Parser::AST
+  Expression = Puppet::Parser::Expression
 
   Puppet::Util.logmethods(self)
 

@@ -146,8 +146,8 @@ describe Puppet::Util::RDoc do
         end
 
         resource = stub_everything 'resource', :line => 1
-        resource.stubs(:is_a?).with(Puppet::Parser::AST::ASTArray).returns(false)
-        resource.stubs(:is_a?).with(Puppet::Parser::AST::Resource).returns(true)
+        resource.stubs(:is_a?).with(Puppet::Parser::Expression::ArrayConstructor).returns(false)
+        resource.stubs(:is_a?).with(Puppet::Parser::Expression::Resource).returns(true)
         @class.stubs(:code).returns([resource])
 
         resource.expects(:doc)

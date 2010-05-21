@@ -4,13 +4,13 @@ require File.dirname(__FILE__) + '/../../spec_helper'
 
 describe Puppet::Parser do
 
-  ast = Puppet::Parser::AST
+  ast = Puppet::Parser::Expression
 
   before :each do
     @known_resource_types = Puppet::Resource::TypeCollection.new("development")
     @parser = Puppet::Parser::Parser.new "development"
     @parser.stubs(:known_resource_types).returns @known_resource_types
-    @true_ast = Puppet::Parser::AST::Boolean.new :value => true
+    @true_ast = Puppet::Parser::Expression::Boolean.new :value => true
   end
 
   it "should require an environment at initialization" do
@@ -143,7 +143,7 @@ describe Puppet::Parser do
     it "should create an ast::ResourceReference" do
       ast::Resource.stubs(:new)
       ast::ResourceReference.expects(:new).with { |arg|
-        arg[:line]==1 and arg[:type]=="File" and arg[:title].is_a?(ast::ASTArray)
+        arg[:line]==1 and arg[:type]=="File" and arg[:title].is_a?(ast::ArrayConstructor)
       }
       @parser.parse('exec { test: command => File["a","b"] }')
     end
@@ -225,7 +225,7 @@ describe Puppet::Parser do
     end
   end
 
-  describe "when providing AST context" do
+  describe "when providing Expression context" do
     before do
       @lexer = stub 'lexer', :line => 50, :file => "/foo/bar", :getcomment => "whev"
       @parser.stubs(:lexer).returns @lexer
@@ -270,13 +270,13 @@ describe Puppet::Parser do
       @parser.ast(@class, :foo => "bar")
     end
 
-    it "should prefer provided options over AST context" do
+    it "should prefer provided options over Expression context" do
       @class.expects(:new).with { |opts| opts[:file] == "/bar" }
       @parser.expects(:ast_context).returns :file => "/foo"
       @parser.ast(@class, :file => "/bar")
     end
 
-    it "should include docs when the AST class uses them" do
+    it "should include docs when the Expression class uses them" do
       @class.expects(:use_docs).returns true
       @class.stubs(:new)
       @parser.expects(:ast_context).with(true).returns({})
@@ -294,7 +294,7 @@ describe Puppet::Parser do
       @parser.stubs(:node).returns(nil)
 
       @nodename = stub 'nodename', :is_a? => false, :value => "foo"
-      @nodename.stubs(:is_a?).with(Puppet::Parser::AST::HostName).returns(true)
+      @nodename.stubs(:is_a?).with(Puppet::Parser::Expression::HostName).returns(true)
     end
 
     it "should return an array of nodes" do

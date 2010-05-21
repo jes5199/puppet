@@ -138,7 +138,7 @@ describe Puppet::Parser::Resource do
   end
 
   describe "when evaluating" do
-    it "should evaluate the associated AST definition" do
+    it "should evaluate the associated Expression definition" do
       definition = newdefine "mydefine"
       res = Puppet::Parser::Resource.new("mydefine", "whatever", :scope => @scope, :source => @source)
       definition.expects(:evaluate_code).with(res)
@@ -146,14 +146,14 @@ describe Puppet::Parser::Resource do
       res.evaluate
     end
 
-    it "should evaluate the associated AST class" do
+    it "should evaluate the associated Expression class" do
       @class = newclass "myclass"
       res = Puppet::Parser::Resource.new("class", "myclass", :scope => @scope, :source => @source)
       @class.expects(:evaluate_code).with(res)
       res.evaluate
     end
 
-    it "should evaluate the associated AST node" do
+    it "should evaluate the associated Expression node" do
       nodedef = newnode("mynode")
       res = Puppet::Parser::Resource.new("node", "mynode", :scope => @scope, :source => @source)
       nodedef.expects(:evaluate_code).with(res)

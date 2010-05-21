@@ -193,7 +193,7 @@ class Puppet::Parser::Compiler
     @resource_overrides[resource.ref]
   end
 
-  # The top scope is usually the top-level scope, but if we're using AST nodes,
+  # The top scope is usually the top-level scope, but if we're using Expression nodes,
   # then it is instead the node's scope.
   def topscope
     node_scope || @topscope

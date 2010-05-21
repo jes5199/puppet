@@ -71,7 +71,7 @@ module Puppet::Util::RDoc
     puts ast.doc if !ast.doc.nil? and !ast.doc.empty?
     if Puppet.settings[:document_all]
       # scan each underlying resources to produce documentation
-      code = ast.code.children if ast.code.is_a?(Puppet::Parser::AST::ASTArray)
+      code = ast.code.children if ast.code.is_a?(Puppet::Parser::Expression::ArrayConstructor)
       code ||= ast.code
       output_resource_doc(code) unless code.nil?
     end
@@ -79,9 +79,9 @@ module Puppet::Util::RDoc
 
   def output_resource_doc(code)
     code.sort { |a,b| a.line <=> b.line }.each do |stmt|
-      output_resource_doc(stmt.children) if stmt.is_a?(Puppet::Parser::AST::ASTArray)
+      output_resource_doc(stmt.children) if stmt.is_a?(Puppet::Parser::Expression::ArrayConstructor)
 
-      if stmt.is_a?(Puppet::Parser::AST::Resource)
+      if stmt.is_a?(Puppet::Parser::Expression::Resource)
         puts stmt.doc if !stmt.doc.nil? and !stmt.doc.empty?
       end
     end

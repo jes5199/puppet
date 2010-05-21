@@ -3,12 +3,12 @@ require 'puppet/rails'
 
 module PuppetTest::ParserTesting
   include PuppetTest
-  AST = Puppet::Parser::AST
+  Expression = Puppet::Parser::Expression
 
   Compiler = Puppet::Parser::Compiler
 
   # A fake class that we can use for testing evaluation.
-  class FakeAST
+  class FakeExpression
     attr_writer :evaluate
 
     def evaluated?
@@ -39,7 +39,7 @@ module PuppetTest::ParserTesting
   end
 
   def astarray(*args)
-    AST::ASTArray.new(
+    Expression::ArrayConstructor.new(
       :children => args
     )
   end
@@ -74,13 +74,13 @@ module PuppetTest::ParserTesting
     hash[:file] ||= __FILE__
     hash[:line] ||= __LINE__
     hash[:type] ||= name
-    AST::HostClass.new(hash)
+    Expression::HostClass.new(hash)
   end
 
   def tagobj(*names)
     args = {}
     newnames = names.collect do |name|
-      if name.is_a? AST
+      if name.is_a? Expression
         name
       else
         nameobj(name)
@@ -88,15 +88,15 @@ module PuppetTest::ParserTesting
     end
     args[:type] = astarray(*newnames)
     assert_nothing_raised("Could not create tag #{names.inspect}") {
-      return AST::Tag.new(args)
+      return Expression::Tag.new(args)
     }
   end
 
   def resourcedef(type, title, params)
-    title = stringobj(title) unless title.is_a?(AST)
+    title = stringobj(title) unless title.is_a? Expression
     assert_nothing_raised("Could not create #{type} #{title}") {
 
-      return AST::Resource.new(
+      return Expression::Resource.new(
 
         :file => __FILE__,
         :line => __LINE__,
@@ -117,7 +117,7 @@ module PuppetTest::ParserTesting
   def resourceoverride(type, title, params)
     assert_nothing_raised("Could not create #{type} #{name}") {
 
-      return AST::ResourceOverride.new(
+      return Expression::ResourceOverride.new(
 
         :file => __FILE__,
         :line => __LINE__,
@@ -132,7 +132,7 @@ module PuppetTest::ParserTesting
   def resourceref(type, title)
     assert_nothing_raised("Could not create #{type} #{title}") {
 
-      return AST::ResourceReference.new(
+      return Expression::ResourceReference.new(
 
         :file => __FILE__,
         :line => __LINE__,
@@ -152,7 +152,7 @@ module PuppetTest::ParserTesting
   def nameobj(name)
     assert_nothing_raised("Could not create name #{name}") {
 
-      return AST::Name.new(
+      return Expression::Name.new(
 
         :file => tempfile,
 
@@ -165,7 +165,7 @@ module PuppetTest::ParserTesting
   def typeobj(name)
     assert_nothing_raised("Could not create type #{name}") {
 
-      return AST::Type.new(
+      return Expression::Type.new(
 
         :file => tempfile,
 
@@ -178,14 +178,14 @@ module PuppetTest::ParserTesting
   def nodedef(name)
     assert_nothing_raised("Could not create node #{name}") {
 
-      return AST::NodeDef.new(
+      return Expression::NodeDef.new(
 
         :file => tempfile,
 
         :line => rand(100),
         :names => nameobj(name),
 
-          :code => AST::ASTArray.new(
+          :code => Expression::ArrayConstructor.new(
 
             :children => [
               varobj("#{name}var", "#{name}value"),
@@ -203,7 +203,7 @@ module PuppetTest::ParserTesting
       resourceparam(param, value)
     }
 
-      return AST::ResourceInstance.new(
+      return Expression::ResourceInstance.new(
 
         :file => tempfile,
 
@@ -218,7 +218,7 @@ module PuppetTest::ParserTesting
     value = stringobj(value) if value.is_a?(String)
     assert_nothing_raised("Could not create param #{param}") {
 
-      return AST::ResourceParam.new(
+      return Expression::ResourceParam.new(
 
         :file => tempfile,
 
@@ -231,7 +231,7 @@ module PuppetTest::ParserTesting
 
   def stringobj(value)
 
-    AST::String.new(
+    Expression::String.new(
 
       :file => tempfile,
 
@@ -241,10 +241,10 @@ module PuppetTest::ParserTesting
   end
 
   def varobj(name, value)
-    value = stringobj(value) unless value.is_a? AST
+    value = stringobj(value) unless value.is_a? Expression
     assert_nothing_raised("Could not create #{name} code") {
 
-      return AST::VarDef.new(
+      return Expression::VarDef.new(
 
         :file => tempfile,
 
@@ -258,7 +258,7 @@ module PuppetTest::ParserTesting
   def varref(name)
     assert_nothing_raised("Could not create #{name} variable") {
 
-      return AST::Variable.new(
+      return Expression::Variable.new(
 
         :file => __FILE__,
         :line => __LINE__,
@@ -270,7 +270,7 @@ module PuppetTest::ParserTesting
 
   def argobj(name, value)
     assert_nothing_raised("Could not create #{name} compargument") {
-      return AST::CompArgument.new(
+      return Expression::CompArgument.new(
         :children => [nameobj(name), stringobj(value)]
           )
     }
@@ -280,7 +280,7 @@ module PuppetTest::ParserTesting
     pary = []
     params.each { |p,v|
 
-      pary << AST::ResourceParam.new(
+      pary << Expression::ResourceParam.new(
 
         :file => __FILE__,
         :line => __LINE__,
@@ -290,7 +290,7 @@ module PuppetTest::ParserTesting
           )
     }
 
-      past = AST::ASTArray.new(
+      past = Expression::ArrayConstructor.new(
 
         :file => __FILE__,
         :line => __LINE__,
@@ -300,7 +300,7 @@ module PuppetTest::ParserTesting
 
     assert_nothing_raised("Could not create defaults for #{type}") {
 
-      return AST::ResourceDefaults.new(
+      return Expression::ResourceDefaults.new(
 
         :file => __FILE__,
         :line => __LINE__,
@@ -319,12 +319,12 @@ module PuppetTest::ParserTesting
     func = nil
     assert_nothing_raised do
 
-      func = Puppet::Parser::AST::Function.new(
+      func = Puppet::Parser::Expression::Function.new(
 
         :name => function,
         :ftype => ftype,
 
-        :arguments => AST::ASTArray.new(
+        :arguments => Expression::ArrayConstructor.new(
           :children => [nameobj(name)]
         )
       )
@@ -411,7 +411,7 @@ module PuppetTest::ParserTesting
   def assert_evaluate(children)
     top = nil
     assert_nothing_raised("Could not create top object") {
-      top = AST::ASTArray.new(
+      top = Expression::ArrayConstructor.new(
         :children => children
       )
     }

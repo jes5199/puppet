@@ -79,7 +79,7 @@ describe Puppet::Parser::Parser do
   end
 
   describe "when parsing comments before statement" do
-    it "should associate the documentation to the statement AST node" do
+    it "should associate the documentation to the statement Expression node" do
       ast = @parser.parse("""
       # comment
       class test {}
@@ -91,19 +91,19 @@ describe Puppet::Parser::Parser do
 
   describe "when parsing" do
     it "should be able to parse normal left to right relationships" do
-      "Notify[foo] -> Notify[bar]".should parse_as(Puppet::Parser::AST::Relationship)
+      "Notify[foo] -> Notify[bar]".should parse_as(Puppet::Parser::Expression::Relationship)
     end
 
     it "should be able to parse right to left relationships" do
-      "Notify[foo] <- Notify[bar]".should parse_as(Puppet::Parser::AST::Relationship)
+      "Notify[foo] <- Notify[bar]".should parse_as(Puppet::Parser::Expression::Relationship)
     end
 
     it "should be able to parse normal left to right subscriptions" do
-      "Notify[foo] ~> Notify[bar]".should parse_as(Puppet::Parser::AST::Relationship)
+      "Notify[foo] ~> Notify[bar]".should parse_as(Puppet::Parser::Expression::Relationship)
     end
 
     it "should be able to parse right to left subscriptions" do
-      "Notify[foo] <~ Notify[bar]".should parse_as(Puppet::Parser::AST::Relationship)
+      "Notify[foo] <~ Notify[bar]".should parse_as(Puppet::Parser::Expression::Relationship)
     end
 
     it "should correctly set the arrow type of a relationship" do

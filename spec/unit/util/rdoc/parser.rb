@@ -135,7 +135,7 @@ describe RDoc::Parser do
     end
   end
 
-  describe "when parsing AST elements" do
+  describe "when parsing Expression elements" do
     before :each do
       @klass = stub_everything 'klass', :file => "module/manifests/init.pp", :name => "myclass", :type => :hostclass
       @definition = stub_everything 'definition', :file => "module/manifests/init.pp", :type => :definition, :name => "mydef"
@@ -341,15 +341,15 @@ describe RDoc::Parser do
     def create_stmt(name)
       stmt_value = stub "#{name}_value", :value => "myclass"
       stmt = stub_everything 'stmt', :name => name, :arguments => [stmt_value], :doc => "mydoc"
-      stmt.stubs(:is_a?).with(Puppet::Parser::AST::ASTArray).returns(false)
-      stmt.stubs(:is_a?).with(Puppet::Parser::AST::Function).returns(true)
+      stmt.stubs(:is_a?).with(Puppet::Parser::Expression::ArrayConstructor).returns(false)
+      stmt.stubs(:is_a?).with(Puppet::Parser::Expression::Function).returns(true)
       stmt
     end
 
     before(:each) do
       @class = stub_everything 'class'
       @code = stub_everything 'code'
-      @code.stubs(:is_a?).with(Puppet::Parser::AST::ASTArray).returns(true)
+      @code.stubs(:is_a?).with(Puppet::Parser::Expression::ArrayConstructor).returns(true)
     end
 
     it "should also scan mono-instruction code" do
@@ -378,15 +378,15 @@ describe RDoc::Parser do
     def create_stmt
       stmt_value = stub "resource_ref", :to_s => "File[\"/tmp/a\"]"
       stmt = stub_everything 'stmt', :name => "realize", :arguments => [stmt_value], :doc => "mydoc"
-      stmt.stubs(:is_a?).with(Puppet::Parser::AST::ASTArray).returns(false)
-      stmt.stubs(:is_a?).with(Puppet::Parser::AST::Function).returns(true)
+      stmt.stubs(:is_a?).with(Puppet::Parser::Expression::ArrayConstructor).returns(false)
+      stmt.stubs(:is_a?).with(Puppet::Parser::Expression::Function).returns(true)
       stmt
     end
 
     before(:each) do
       @class = stub_everything 'class'
       @code = stub_everything 'code'
-      @code.stubs(:is_a?).with(Puppet::Parser::AST::ASTArray).returns(true)
+      @code.stubs(:is_a?).with(Puppet::Parser::Expression::ArrayConstructor).returns(true)
     end
 
     it "should also scan mono-instruction code" do
@@ -408,11 +408,11 @@ describe RDoc::Parser do
       @class = stub_everything 'class'
 
       @stmt = stub_everything 'stmt', :name => "myvar", :value => "myvalue", :doc => "mydoc"
-      @stmt.stubs(:is_a?).with(Puppet::Parser::AST::ASTArray).returns(false)
-      @stmt.stubs(:is_a?).with(Puppet::Parser::AST::VarDef).returns(true)
+      @stmt.stubs(:is_a?).with(Puppet::Parser::Expression::ArrayConstructor).returns(false)
+      @stmt.stubs(:is_a?).with(Puppet::Parser::Expression::VarDef).returns(true)
 
       @code = stub_everything 'code'
-      @code.stubs(:is_a?).with(Puppet::Parser::AST::ASTArray).returns(true)
+      @code.stubs(:is_a?).with(Puppet::Parser::Expression::ArrayConstructor).returns(true)
     end
 
     it "should recursively register variables to the current container" do
@@ -435,11 +435,11 @@ describe RDoc::Parser do
 
       param = stub 'params', :children => []
       @stmt = stub_everything 'stmt', :type => "File", :title => "myfile", :doc => "mydoc", :params => param
-      @stmt.stubs(:is_a?).with(Puppet::Parser::AST::ASTArray).returns(false)
-      @stmt.stubs(:is_a?).with(Puppet::Parser::AST::Resource).returns(true)
+      @stmt.stubs(:is_a?).with(Puppet::Parser::Expression::ArrayConstructor).returns(false)
+      @stmt.stubs(:is_a?).with(Puppet::Parser::Expression::Resource).returns(true)
 
       @code = stub_everything 'code'
-      @code.stubs(:is_a?).with(Puppet::Parser::AST::ASTArray).returns(true)
+      @code.stubs(:is_a?).with(Puppet::Parser::Expression::ArrayConstructor).returns(true)
     end
 
     it "should register a PuppetResource to the current container" do

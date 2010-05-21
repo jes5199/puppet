@@ -1,6 +1,6 @@
 module PuppetTest::RailsTesting
   Parser = Puppet::Parser
-  AST = Puppet::Parser::AST
+  Expression = Puppet::Parser::Expression
   include PuppetTest::ParserTesting
 
   def teardown

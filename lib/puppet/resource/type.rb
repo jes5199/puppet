@@ -2,7 +2,7 @@ require 'puppet/parser/parser'
 require 'puppet/util/warnings'
 require 'puppet/util/errors'
 require 'puppet/util/inline_docs'
-require 'puppet/parser/ast/leaf'
+require 'puppet/parser/expression/leaf'
 require 'puppet/dsl'
 
 class Puppet::Resource::Type
@@ -81,7 +81,7 @@ class Puppet::Resource::Type
     @type = type.to_s.downcase.to_sym
     raise ArgumentError, "Invalid resource supertype '#{type}'" unless RESOURCE_SUPERTYPES.include?(@type)
 
-    name = convert_from_ast(name) if name.is_a?(Puppet::Parser::AST::HostName)
+    name = convert_from_ast(name) if name.is_a?(Puppet::Parser::Expression::HostName)
 
     set_name_and_namespace(name)
 
@@ -126,7 +126,7 @@ class Puppet::Resource::Type
       return
     end
 
-    array_class = Puppet::Parser::AST::ASTArray
+    array_class = Puppet::Parser::Expression::ArrayConstructor
     self.code = array_class.new(:children => [self.code]) unless self.code.is_a?(array_class)
 
     if other.code.is_a?(array_class)
@@ -194,7 +194,7 @@ class Puppet::Resource::Type
       param = param.to_sym
       next if set.include?(param)
 
-      # Even if 'default' is a false value, it's an AST value, so this works fine
+      # Even if 'default' is a false value, it's an Expression, so this works fine
       fail Puppet::ParseError, "Must pass #{param} to #{resource.ref}" unless default
 
       value = default.safeevaluate(scope)
@@ -239,7 +239,7 @@ class Puppet::Resource::Type
 
   def convert_from_ast(name)
     value = name.value
-    if value.is_a?(Puppet::Parser::AST::Regex)
+    if value.is_a?(Puppet::Parser::Expression::Regex)
       name = value.value
     else
       name = value

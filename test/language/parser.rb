@@ -289,7 +289,7 @@ class TestParser < Test::Unit::TestCase
     }
 
     ret.hostclass("").code.each do |obj|
-      assert_instance_of(AST::Collection, obj)
+      assert_instance_of(Expression::Collection, obj)
     end
   end
 
@@ -381,12 +381,12 @@ file { "/tmp/yayness":
     assert_nothing_raised {
       ret = parser.parse(str1).hostclass("").code[0]
     }
-    assert_instance_of(Puppet::Parser::AST::IfStatement, ret)
+    assert_instance_of(Puppet::Parser::Expression::IfStatement, ret)
     parser = mkparser
     str2 = %{if true { #{exec.call("true")} } else { #{exec.call("false")} }}
     ret = parser.parse(str2).hostclass("").code[0]
-    assert_instance_of(Puppet::Parser::AST::IfStatement, ret)
-    assert_instance_of(Puppet::Parser::AST::Else, ret.else)
+    assert_instance_of(Puppet::Parser::Expression::IfStatement, ret)
+    assert_instance_of(Puppet::Parser::Expression::Else, ret.else)
   end
 
   def test_hostclass
@@ -485,9 +485,9 @@ file { "/tmp/yayness":
         ret = parser.parse("#{at}file { '/tmp/testing': owner => root }")
       end
 
-      assert_instance_of(AST::ASTArray, ret.hostclass("").code)
+      assert_instance_of(Expression::ArrayConstructor, ret.hostclass("").code)
       resdef = ret.hostclass("").code[0]
-      assert_instance_of(AST::Resource, resdef)
+      assert_instance_of(Expression::Resource, resdef)
       assert_equal("/tmp/testing", resdef.title.value)
       # We always get an astarray back, so...
       check.call(resdef, "simple resource")
@@ -498,7 +498,7 @@ file { "/tmp/yayness":
       end
 
       ret.hostclass("").code.each do |res|
-        assert_instance_of(AST::Resource, res)
+        assert_instance_of(Expression::Resource, res)
         check.call(res, "multiresource")
       end
     end
@@ -538,7 +538,7 @@ file { "/tmp/yayness":
       end
 
       coll = ret.hostclass("").code[0]
-      assert_instance_of(AST::Collection, coll)
+      assert_instance_of(Expression::Collection, coll)
       assert_equal(form, coll.form)
     end
 
@@ -563,10 +563,10 @@ file { "/tmp/yayness":
         res = parser.parse(str).hostclass("").code[0]
       end
 
-      assert_instance_of(AST::Collection, res)
+      assert_instance_of(Expression::Collection, res)
 
       query = res.query
-      assert_instance_of(AST::CollExpr, query)
+      assert_instance_of(Expression::CollExpr, query)
 
       assert_equal(:virtual, query.form)
       assert_equal("title", query.test1.value)
@@ -586,14 +586,14 @@ file { "/tmp/yayness":
         res = parser.parse(str).hostclass("").code[0]
       end
 
-      assert_instance_of(AST::Collection, res)
+      assert_instance_of(Expression::Collection, res)
 
       query = res.query
-      assert_instance_of(AST::CollExpr, query)
+      assert_instance_of(Expression::CollExpr, query)
 
       assert_equal(joiner, query.oper)
-      assert_instance_of(AST::CollExpr, query.test1)
-      assert_instance_of(AST::CollExpr, query.test2)
+      assert_instance_of(Expression::CollExpr, query.test1)
+      assert_instance_of(Expression::CollExpr, query.test2)
     end
   end
 
@@ -610,14 +610,14 @@ file { "/tmp/yayness":
         res = parser.parse(str).hostclass("").code[0]
       end
 
-      assert_instance_of(AST::Collection, res)
+      assert_instance_of(Expression::Collection, res)
 
       query = res.query
-      assert_instance_of(AST::CollExpr, query)
+      assert_instance_of(Expression::CollExpr, query)
 
       #assert_equal(joiner, query.oper)
-      #assert_instance_of(AST::CollExpr, query.test1)
-      #assert_instance_of(AST::CollExpr, query.test2)
+      #assert_instance_of(Expression::CollExpr, query.test1)
+      #assert_instance_of(Expression::CollExpr, query.test2)
     end
   end
 
@@ -693,8 +693,8 @@ file { "/tmp/yayness":
 
     main = result.hostclass("").code
     children = main.children
-    assert_instance_of(AST::VarDef, main.children[0])
-    assert_instance_of(AST::Undef, main.children[0].value)
+    assert_instance_of(Expression::VarDef, main.children[0])
+    assert_instance_of(Expression::Undef, main.children[0].value)
   end
 
   # Prompted by #729 -- parsing should not modify the interpreter.
@@ -706,7 +706,7 @@ file { "/tmp/yayness":
     assert_nothing_raised("Could not parse") do
       result = parser.parse(str)
     end
-    assert_instance_of(Puppet::Resource::TypeCollection, result, "Did not get a ASTSet back from parsing")
+    assert_instance_of(Puppet::Resource::TypeCollection, result, "Did not get a SetConstructor (there is no such class) back from parsing")
 
     assert_instance_of(Puppet::Resource::Type, result.hostclass("yay"), "Did not create 'yay' class")
     assert_instance_of(Puppet::Resource::Type, result.hostclass(""), "Did not create main class")

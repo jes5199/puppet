@@ -1,6 +1,6 @@
 module PuppetTest::ResourceTesting
   Parser = Puppet::Parser
-  AST = Puppet::Parser::AST
+  Expression = Puppet::Parser::Expression
 
   def mkevaltest(parser = nil)
     parser ||= mkparser

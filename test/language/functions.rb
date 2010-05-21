@@ -14,11 +14,11 @@ class TestLangFunctions < Test::Unit::TestCase
   def test_functions
     assert_nothing_raised do
 
-      Puppet::Parser::AST::Function.new(
+      Puppet::Parser::Expression::Function.new(
 
         :name => "fakefunction",
 
-        :arguments => AST::ASTArray.new(
+        :arguments => Expression::ArrayConstructor.new(
           :children => [nameobj("avalue")]
         )
       )
@@ -26,11 +26,11 @@ class TestLangFunctions < Test::Unit::TestCase
 
     assert_raise(Puppet::ParseError) do
 
-      func = Puppet::Parser::AST::Function.new(
+      func = Puppet::Parser::Expression::Function.new(
 
         :name => "fakefunction",
 
-        :arguments => AST::ASTArray.new(
+        :arguments => Expression::ArrayConstructor.new(
           :children => [nameobj("avalue")]
         )
       )
@@ -46,12 +46,12 @@ class TestLangFunctions < Test::Unit::TestCase
     func = nil
     assert_nothing_raised do
 
-      func = Puppet::Parser::AST::Function.new(
+      func = Puppet::Parser::Expression::Function.new(
 
         :name => "fakefunction",
         :ftype => :rvalue,
 
-        :arguments => AST::ASTArray.new(
+        :arguments => Expression::ArrayConstructor.new(
           :children => [nameobj("avalue")]
         )
       )
@@ -93,12 +93,12 @@ class TestLangFunctions < Test::Unit::TestCase
     func = nil
     assert_nothing_raised do
 
-      func = Puppet::Parser::AST::Function.new(
+      func = Puppet::Parser::Expression::Function.new(
 
         :name => "fail",
         :ftype => :statement,
 
-        :arguments => AST::ASTArray.new(
+        :arguments => Expression::ArrayConstructor.new(
           :children => [stringobj("this is a failure"), stringobj("and another")]
         )
       )
@@ -126,12 +126,12 @@ class TestLangFunctions < Test::Unit::TestCase
     func = nil
     assert_nothing_raised do
 
-      func = Puppet::Parser::AST::Function.new(
+      func = Puppet::Parser::Expression::Function.new(
 
         :name => "template",
         :ftype => :rvalue,
 
-        :arguments => AST::ASTArray.new(
+        :arguments => Expression::ArrayConstructor.new(
           :children => [stringobj("one"), stringobj("two")]
         )
       )
@@ -181,12 +181,12 @@ class TestLangFunctions < Test::Unit::TestCase
     func = nil
     assert_nothing_raised do
 
-      func = Puppet::Parser::AST::Function.new(
+      func = Puppet::Parser::Expression::Function.new(
 
         :name => "template",
         :ftype => :rvalue,
 
-        :arguments => AST::ASTArray.new(
+        :arguments => Expression::ArrayConstructor.new(
           :children => [stringobj(template)]
         )
       )
@@ -223,12 +223,12 @@ class TestLangFunctions < Test::Unit::TestCase
     func = nil
     assert_nothing_raised do
 
-      func = Puppet::Parser::AST::Function.new(
+      func = Puppet::Parser::Expression::Function.new(
 
         :name => "template",
         :ftype => :rvalue,
 
-        :arguments => AST::ASTArray.new(
+        :arguments => Expression::ArrayConstructor.new(
           :children => [stringobj(template)]
         )
       )
@@ -262,12 +262,12 @@ class TestLangFunctions < Test::Unit::TestCase
     func = nil
     assert_nothing_raised do
 
-      func = Puppet::Parser::AST::Function.new(
+      func = Puppet::Parser::Expression::Function.new(
 
         :name => "template",
         :ftype => :rvalue,
 
-        :arguments => AST::ASTArray.new(
+        :arguments => Expression::ArrayConstructor.new(
           :children => [stringobj(template)]
         )
       )
@@ -291,12 +291,12 @@ class TestLangFunctions < Test::Unit::TestCase
     func = nil
     assert_nothing_raised do
 
-      func = Puppet::Parser::AST::Function.new(
+      func = Puppet::Parser::Expression::Function.new(
 
         :name => "template",
         :ftype => :rvalue,
 
-        :arguments => AST::ASTArray.new(
+        :arguments => Expression::ArrayConstructor.new(
           :children => [stringobj(template)]
         )
       )
@@ -363,12 +363,12 @@ class TestLangFunctions < Test::Unit::TestCase
     func = nil
     assert_nothing_raised do
 
-      func = Puppet::Parser::AST::Function.new(
+      func = Puppet::Parser::Expression::Function.new(
 
         :name => "template",
         :ftype => :rvalue,
 
-        :arguments => AST::ASTArray.new(
+        :arguments => Expression::ArrayConstructor.new(
           :children => [stringobj(template)]
         )
       )

@@ -170,13 +170,13 @@ class TestScope < Test::Unit::TestCase
     scope_res = Puppet::Parser::Resource.new(:file, "/file", :scope => config.topscope)
     config.topscope.resource = scope_res
 
-    args = AST::ASTArray.new(
+    args = Expression::ArrayConstructor.new(
       :children => [nameobj("arg")]
     )
 
     # Create a top-level define
     parser.newdefine "one", :arguments => [%w{arg}],
-      :code => AST::ASTArray.new(
+      :code => Expression::ArrayConstructor.new(
         :children => [
           resourcedef("file", "/tmp", {"owner" => varref("arg")})
         ]
