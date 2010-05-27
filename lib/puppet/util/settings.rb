@@ -183,23 +183,13 @@ class Puppet::Util::Settings
 
     # Create a new collection of config settings.
     def initialize
-        @config = {}
-        @shortnames = {}
-
-        @created = []
-        @searchpath = nil
-
         # Mutex-like thing to protect @values
         @sync = Sync.new
 
-        # Keep track of set values.
-        @values = Hash.new { |hash, key| hash[key] = {} }
+        require 'puppet/util/settings/specifications'
+        @specification = Puppet::Util::Settings::Specifications.new
 
-        # And keep a per-environment cache
-        @cache = Hash.new { |hash, key| hash[key] = {} }
-
-        # The list of sections we've used.
-        @used = []
+        @hooks_to_call = Hash.new
     end
 
     # NOTE: ACS ahh the util classes. . .sigh
@@ -334,31 +324,12 @@ class Puppet::Util::Settings
         data.each do |area, values|
             metas[area] = values.delete(:_meta)
             values.each do |key,value|
-                set_value(key, value, area, :dont_trigger_handles => true, :ignore_bad_settings => true )
+                set_value(key, value, area, :delay_hooks => true, :ignore_bad_settings => true )
+                queue_hook(key)
             end
         end
 
-        # Determine our environment, if we have one.
-        if @config[:environment]
-            env = self.value(:environment).to_sym
-        else
-            env = "none"
-        end
-
-        # Call any hooks we should be calling.
-        settings_with_hooks.each do |setting|
-            each_source(env) do |source|
-                if value = @values[source][setting.name]
-                    # We still have to use value() to retrieve the value, since
-                    # we want the fully interpolated value, not $vardir/lib or whatever.
-                    # This results in extra work, but so few of the settings
-                    # will have associated hooks that it ends up being less work this
-                    # way overall.
-                    setting.handle(self.value(setting.name, env))
-                    break
-                end
-            end
-        end
+        call_hooks
 
         # We have to do it in the reverse of the search path,
         # because multiple sections could set the same value
@@ -369,40 +340,6 @@ class Puppet::Util::Settings
             end
         end
     end
-
-    # Create a new setting.  The value is passed in because it's used to determine
-    # what kind of setting we're creating, but the value itself might be either
-    # a default or a value, so we can't actually assign it.
-    def newsetting(hash)
-        klass = nil
-        if hash[:section]
-            hash[:section] = hash[:section].to_sym
-        end
-        if type = hash[:type]
-            unless klass = {:setting => Setting, :file => FileSetting, :boolean => BooleanSetting}[type]
-                raise ArgumentError, "Invalid setting type '%s'" % type
-            end
-            hash.delete(:type)
-        else
-            case hash[:default]
-            when true, false, "true", "false"
-                klass = BooleanSetting
-            when /^\$\w+\//, /^\//
-                klass = FileSetting
-            when String, Integer, Float # nothing
-                klass = Setting
-            else
-                raise ArgumentError, "Invalid value '%s' for %s" % [hash[:default].inspect, hash[:name]]
-            end
-        end
-        hash[:settings] = self
-        setting = klass.new(hash)
-
-        return setting
-    end
-
-    # This has to be private, because it doesn't add the settings to @config
-    private :newsetting
 
     # Iterate across all of the objects in a given section.
     def persection(section)
@@ -474,9 +411,8 @@ class Puppet::Util::Settings
         return @service_user_available = user.exists?
     end
 
-    def set_value(param, value, type, options = {})
-        param = param.to_sym
-        unless setting = @config[param]
+    def set_value(param, value, section, options = {})
+        unless setting = @specification.exists? param
             if options[:ignore_bad_settings]
                 return
             else
@@ -484,16 +420,15 @@ class Puppet::Util::Settings
                     "Attempt to assign a value to unknown configuration parameter %s" % param.inspect
             end
         end
-        if setting.respond_to?(:munge)
-            value = setting.munge(value)
-        end
-        if setting.respond_to?(:handle) and not options[:dont_trigger_handles]
-            setting.handle(value)
-        end
+
+        value = setting.munge(value)
+        setting.hook(value) unless options[:delay_hooks]
+
         if ReadOnly.include? param
             raise ArgumentError,
                 "You're attempting to set configuration parameter $#{param}, which is read-only."
         end
+
         require 'puppet/util/command_line'
         command_line = Puppet::Util::CommandLine.new
         legacy_to_mode = Puppet::Util::CommandLine::LegacyName.inject({}) do |hash, pair|
@@ -502,12 +437,12 @@ class Puppet::Util::Settings
             hash[legacy.to_sym] = Puppet::Application.find(app).mode.name
             hash
         end
-        if new_type = legacy_to_mode[type]
-            Puppet.warning "You have configuration parameter $#{param} specified in [#{type}], which is a deprecated section. I'm assuming you meant [#{new_type}]"
-            type = new_type
+        if new_type = legacy_to_mode[section]
+            Puppet.warning "You have configuration parameter $#{param} specified in [#{section}], which is a deprecated section. I'm assuming you meant [#{new_type}]"
+            section = new_type
         end
         @sync.synchronize do # yay, thread-safe
-            @values[type][param] = value
+            @values[section][param] = value
             @cache.clear
 
             clearused
@@ -526,39 +461,35 @@ class Puppet::Util::Settings
     # Set a bunch of defaults in a given section.  The sections are actually pretty
     # pointless, but they help break things up a bit, anyway.
     def setdefaults(section, defs)
-        section = section.to_sym
         call = []
-        defs.each { |name, hash|
-            if hash.is_a? Array
-                unless hash.length == 2
+        defs.each { |name, options|
+            if options.is_a? Array
+                unless options.length == 2
                     raise ArgumentError, "Defaults specified as an array must contain only the default value and the decription"
                 end
-                tmp = hash
-                hash = {}
-                [:default, :desc].zip(tmp).each { |p,v| hash[p] = v }
+                options = {
+                    :default => options[0],
+                    :desc    => options[1]
+                }
             end
-            name = name.to_sym
-            hash[:name] = name
-            hash[:section] = section
-            if @config.include?(name)
-                raise ArgumentError, "Parameter %s is already defined" % name
-            end
-            tryconfig = newsetting(hash)
-            if short = tryconfig.short
-                if other = @shortnames[short]
-                    raise ArgumentError, "Parameter %s is already using short name '%s'" % [other.name, short]
-                end
-                @shortnames[short] = tryconfig
-            end
-            @config[name] = tryconfig
 
-            # Collect the settings that need to have their hooks called immediately.
-            # We have to collect them so that we can be sure we're fully initialized before
-            # the hook is called.
-            call << tryconfig if tryconfig.call_on_define
+            @specifications[name] = options
+
+            if options[:call_on_define]
+                @queue_hook[name] = true
+            end
         }
+    end
 
-        call.each { |setting| setting.handle(self.value(setting.name)) }
+    def queue_hook(name)
+        @hooks_to_call[name] = true
+    end
+
+    def call_hooks
+        @hooks_to_call.keys.each do |name|
+            @specifications.metadata[name].hook( self.value(name) )
+            @hooks_to_call.delete name
+        end
     end
 
     # Create a timer to check whether the file should be reparsed.
@@ -575,7 +506,7 @@ class Puppet::Util::Settings
 
         @config.values.find_all { |value| value.is_a?(FileSetting) }.each do |file|
             next unless (sections.nil? or sections.include?(file.section))
-            next unless resource = file.to_resource
+            next unless resource = file.to_resource(self)
             next if catalog.resource(resource.ref)
 
             catalog.add_resource(resource)
@@ -607,7 +538,7 @@ Generated on #{Time.now}.
         end
         eachsection do |section|
             persection(section) do |obj|
-                str += obj.to_config + "\n" unless ReadOnly.include? obj.name
+                str += obj.to_config(self) + "\n" unless ReadOnly.include? obj.name
             end
         end
 
@@ -831,12 +762,6 @@ Generated on #{Time.now}.
             source = self.mode if source == :mode
             yield source
         end
-    end
-
-    # Return all settings that have associated hooks; this is so
-    # we can call them after parsing the configuration file.
-    def settings_with_hooks
-        @config.values.find_all { |setting| setting.respond_to?(:handle) }
     end
 
     # Extract extra setting information for files.

@@ -58,7 +58,6 @@ module Puppet
         :path => {:default => "none",
             :desc => "The shell search path.  Defaults to whatever is inherited
                 from the parent process.",
-            :call_on_define => true, # Call our hook with the default value, so we always get the libdir set.
             :hook => proc do |value|
                 ENV["PATH"] = "" if ENV["PATH"].nil?
                 ENV["PATH"] = value unless value == "none"
@@ -564,7 +563,6 @@ module Puppet
         ],
         :reportserver => {
             :default => "$server",
-            :call_on_define => false,
             :desc => "(Deprecated for 'report_server') The server to which to send transaction reports.",
             :hook => proc do |value|
               if value
@@ -745,12 +743,11 @@ module Puppet
     setdefaults(:master,
         :storeconfigs => {:default => false, :desc => "Whether to store each client's configuration.  This
             requires ActiveRecord from Ruby on Rails.",
-            :call_on_define => true, # Call our hook with the default value, so we always get the libdir set.
             :hook => proc do |value|
-                require 'puppet/node'
-                require 'puppet/node/facts'
-                require 'puppet/resource/catalog'
                 if value
+                    require 'puppet/node'
+                    require 'puppet/node/facts'
+                    require 'puppet/resource/catalog'
                     raise "StoreConfigs not supported without ActiveRecord 2.1 or higher" unless Puppet.features.rails?
                     Puppet::Resource::Catalog.cache_class = :active_record unless Puppet.settings[:async_storeconfigs]
                     Puppet::Node::Facts.cache_class = :active_record
@@ -760,9 +757,7 @@ module Puppet
         }
     )
 
-    # This doesn't actually work right now.
     setdefaults(:parser,
-        :lexical => [false, "Whether to use lexical scoping (vs. dynamic)."],
         :templatedir => ["$vardir/templates",
             "Where Puppet looks for template files.  Can be a list of colon-seperated
              directories."

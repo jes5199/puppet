@@ -25,16 +25,20 @@ class Puppet::Util::Settings::Setting
         end
     end
 
+    def munge(value)
+        value # default is pass-through
+    end
+
+    def handle(value)
+        # default is no-op
+    end
+
     def hook=(block)
         meta_def :handle, &block
     end
 
     # Create the new element.  Pretty much just sets the name.
     def initialize(args = {})
-        unless @settings = args.delete(:settings)
-            raise ArgumentError.new("You must refer to a settings object")
-        end
-
         args.each do |param, value|
             method = param.to_s + "="
             unless self.respond_to? method
@@ -78,7 +82,7 @@ class Puppet::Util::Settings::Setting
     end
 
     # Convert the object to a config statement.
-    def to_config
+    def to_config(settings)
         str = @desc.gsub(/^/, "# ") + "\n"
 
         # Add in a statement about the default.
@@ -89,7 +93,7 @@ class Puppet::Util::Settings::Setting
         # If the value has not been overridden, then print it out commented
         # and unconverted, so it's clear that that's the default and how it
         # works.
-        value = @settings.value(self.name)
+        value = settings.value(self.name)
 
         if value != @default
             line = "%s = %s" % [@name, value]
@@ -103,8 +107,8 @@ class Puppet::Util::Settings::Setting
     end
 
     # Retrieves the value, or if it's not set, retrieves the default.
-    def value
-        @settings.value(self.name)
+    def value(settings)
+        settings.value(self.name)
     end
 end
 

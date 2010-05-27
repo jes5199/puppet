@@ -22,9 +22,9 @@ class Puppet::Util::Settings::FileSetting < Puppet::Util::Settings::Setting
         @group = value
     end
 
-    def group
+    def group(settings)
         return unless defined?(@group) && @group
-        @settings[:group]
+        settings[:group]
     end
 
     def owner=(value)
@@ -35,14 +35,14 @@ class Puppet::Util::Settings::FileSetting < Puppet::Util::Settings::Setting
         @owner = value
     end
 
-    def owner
+    def owner(settings)
         return unless defined?(@owner) && @owner
-        return "root" if @owner == "root" or ! use_service_user?
-        @settings[:user]
+        return "root" if @owner == "root" or ! use_service_user?(settings)
+        settings[:user]
     end
 
-    def use_service_user?
-        @settings[:mkusers] or @settings.service_user_available?
+    def use_service_user?(settings)
+        settings[:mkusers] or settings.service_user_available?
     end
 
     # Set the type appropriately.  Yep, a hack.  This supports either naming
@@ -61,8 +61,8 @@ class Puppet::Util::Settings::FileSetting < Puppet::Util::Settings::Setting
     end
 
     # Return the appropriate type.
-    def type
-        value = @settings.value(self.name)
+    def type(settings)
+        value = settings.value(self.name)
         if @name.to_s =~ /dir/
             return :directory
         elsif value.to_s =~ /\/$/
@@ -75,8 +75,8 @@ class Puppet::Util::Settings::FileSetting < Puppet::Util::Settings::Setting
     end
 
     # Turn our setting thing into a Puppet::Resource instance.
-    def to_resource
-        return nil unless type = self.type
+    def to_resource(settings)
+        return nil unless type = self.type(settings)
 
         path = self.value
 
@@ -94,8 +94,8 @@ class Puppet::Util::Settings::FileSetting < Puppet::Util::Settings::Setting
             resource[:mode] = self.mode if self.mode
 
             if Puppet.features.root?
-                resource[:owner] = self.owner if self.owner
-                resource[:group] = self.group if self.group
+                resource[:owner] = self.owner(settings)
+                resource[:group] = self.group(settings)
             end
         end
 
@@ -106,19 +106,6 @@ class Puppet::Util::Settings::FileSetting < Puppet::Util::Settings::Setting
         resource.tag(self.section, self.name, "settings")
 
         resource
-    end
-
-    # Make sure any provided variables look up to something.
-    def validate(value)
-        return true unless value.is_a? String
-        value.scan(/\$(\w+)/) { |name|
-            name = $1
-            unless @settings.include?(name)
-                raise ArgumentError,
-                    "Settings parameter '%s' is undefined" %
-                    name
-            end
-        }
     end
 end
 
