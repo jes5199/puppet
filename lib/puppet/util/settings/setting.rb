@@ -75,27 +75,6 @@ class Puppet::Util::Settings::Setting
         end
     end
 
-    def iscreated
-        @iscreated = true
-    end
-
-    def iscreated?
-        if defined? @iscreated
-            return @iscreated
-        else
-            return false
-        end
-    end
-
-    def set?
-        if defined? @value and ! @value.nil?
-            return true
-        else
-            return false
-        end
-    end
-
-    # short name for the celement
     def short=(value)
         if value.to_s.length != 1
             raise ArgumentError, "Short names can only be one character."
@@ -117,8 +96,8 @@ class Puppet::Util::Settings::Setting
         # works.
         value = settings.value(self.name)
 
-        if value != @default
-            line = "%s = %s" % [@name, value]
+        if value[:value] != @default
+            line = "%s = %s" % [@name, value[:value]]
         else
             line = "# %s = %s" % [@name, @default]
         end
@@ -126,11 +105,6 @@ class Puppet::Util::Settings::Setting
         str += line + "\n"
 
         str.gsub(/^/, "    ")
-    end
-
-    # Retrieves the value, or if it's not set, retrieves the default.
-    def value(settings)
-        settings.value(self.name)
     end
 end
 
