@@ -5,10 +5,18 @@ module Puppet
         is running as root or the user that ``puppet master`` is supposed to run as, it defaults to a system directory, but if it's running as any other user,
         it defaults to being in ``~``."],
         :vardir => [Puppet.mode.var_dir, "Where Puppet stores dynamic and growing data.  The default for this parameter is calculated specially, like `confdir`_."],
-        :name => [Puppet.application_name.to_s, "The name of the application, if we are running as one.  The
-            default is essentially $0 without the path or ``.rb``."],
-        :mode => [Puppet.mode.name.to_s, "The name of the application, if we are running as one.  The
-            default is essentially $0 without the path or ``.rb``."]
+        :name => {
+            :default   => Puppet.application_name.to_s,
+            :desc      => "The name of the application, if we are running as one.  The
+            default is essentially $0 without the path or ``.rb``."
+            :read_only => true,
+        },
+        :mode => {
+            :default   => Puppet.mode.name.to_s,
+            :desc      => "The name of the application, if we are running as one.  The
+            default is essentially $0 without the path or ``.rb``."
+            :read_only => true,
+        }
     )
 
     setdefaults(:main, :logdir => Puppet.mode.logopts)

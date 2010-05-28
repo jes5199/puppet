@@ -17,8 +17,6 @@ class Puppet::Util::Settings
     attr_accessor :file
     attr_reader :timer
 
-    ReadOnly = [:mode, :name]
-
     def initialize
         # Mutex-like thing to protect values
         @sync = Sync.new
@@ -49,6 +47,8 @@ class Puppet::Util::Settings
     end
 
     def write(key, dest, value)
+        dest = @layers[dest] || dest
+
         @specifications.validator[key, dest] = value
     end
 
@@ -127,118 +127,20 @@ class Puppet::Util::Settings
         set_value(str, value, :cli)
     end
 
-    # Prints the contents of a config file with the available config settings, or it
-    # prints a single value of a config setting.
-    def print_config_options
-        env = value(:environment)
-        val = value(:configprint)
-        if val == "all"
-            hash = {}
-            each do |name, obj|
-                val = value(name,env)
-                val = val.inspect if val == ""
-                hash[name] = val
-            end
-            hash.sort { |a,b| a[0].to_s <=> b[0].to_s }.each do |name, val|
-                puts "%s = %s" % [name, val]
-            end
-        else
-            val.split(/\s*,\s*/).sort.each do |v|
-                if include?(v)
-                    #if there is only one value, just print it for back compatibility
-                    if v == val
-                         puts value(val,env)
-                         break
-                    end
-                    puts "%s = %s" % [v, value(v,env)]
-                else
-                    puts "invalid parameter: %s" % v
-                    return false
-                end
-            end
-        end
-        true
-    end
-
-    def generate_config
-        puts to_config
-        true
-    end
-
-    def generate_manifest
-        puts to_manifest
-        true
-    end
-
-    def print_configs
-        return print_config_options if value(:configprint) != ""
-        return generate_config if value(:genconfig)
-        return generate_manifest if value(:genmanifest)
-    end
-
-    def print_configs?
-        return (value(:configprint) != "" || value(:genconfig) || value(:genmanifest)) && true
-    end
-
-    # Return a given object's file metadata.
-    def metadata(param)
-        if obj = @config[param.to_sym] and obj.is_a?(FileSetting)
-            return [:owner, :group, :mode].inject({}) do |meta, p|
-                if v = obj.send(p)
-                    meta[p] = v
-                end
-                meta
-            end
-        else
-            nil
-        end
-    end
-
-    # Make a directory with the appropriate user, group, and mode
-    def mkdir(default)
-        obj = get_config_file_default(default)
-
-        Puppet::Util::SUIDManager.asuser(obj.owner, obj.group) do
-            mode = obj.mode || 0750
-            Dir.mkdir(obj.value, mode)
-        end
-    end
-
-    # Figure out the section name for the mode.
-    def mode
-        convert(@config[:mode].default).intern if @config[:mode]
-    end
-
-    # Return all of the parameters associated with a given section.
-    def params(section = nil)
-        if section
-            section = section.intern if section.is_a? String
-            @config.find_all { |name, obj|
-                obj.section == section
-            }.collect { |name, obj|
-                name
-            }
-        else
-            @config.keys
-        end
-    end
-
-    # Parse the configuration file.  Just provides
-    # thread safety.
-    def parse
-        raise "No :config setting defined; cannot parse unknown config file" unless self[:config]
+    def load_from_file
+        raise "No :config setting defined; cannot load unknown config file" unless self[:config]
 
         # Create a timer so that this file will get checked automatically
         # and reparsed if necessary.
         set_filetimeout_timer()
 
         @sync.synchronize do
-            unsafe_parse(self[:config])
+            unsafe_load_from_file(self[:config])
         end
     end
 
-    # Unsafely parse the file -- this isn't thread-safe and causes plenty of problems if used directly.
-    def unsafe_parse(file)
+    #this might not be thread safe
+    def unsafe_load_from_file(file)
         return unless FileTest.exist?(file)
         begin
             data = parse_file(file)
@@ -248,37 +150,11 @@ class Puppet::Util::Settings
             return
         end
 
-        unsafe_clear(true)
-
-        metas = {}
-        data.each do |area, values|
-            metas[area] = values.delete(:_meta)
+        data.each do |section, values|
             values.each do |key,value|
-                set_value(key, value, area, :delay_hooks => true, :ignore_bad_settings => true )
-                queue_hook(key)
+                self.write(key, section, value) if self.include? key
             end
         end
-
-        call_hooks
-
-        # We have to do it in the reverse of the search path,
-        # because multiple sections could set the same value
-        # and I'm too lazy to only set the metadata once.
-        searchpath.reverse.each do |source|
-            if meta = metas[source]
-                set_metadata(meta)
-            end
-        end
-    end
-
-    # Iterate across all of the objects in a given section.
-    def persection(section)
-        section = section.to_sym
-        self.each { |name, obj|
-            if obj.section == section
-                yield obj
-            end
-        }
     end
 
     # Cache this in an easily clearable way, since we were
@@ -293,7 +169,7 @@ class Puppet::Util::Settings
     def reparse
         if file and file.changed?
             Puppet.notice "Reparsing %s" % file.file
-            parse
+            load_from_file
             reuse()
         end
     end
@@ -413,13 +289,6 @@ class Puppet::Util::Settings
 
     def queue_hook(name)
         @hooks_to_call[name] = true
-    end
-
-    def call_hooks
-        @hooks_to_call.keys.each do |name|
-            @specifications.metadata[name].hook( self.value(name) )
-            @hooks_to_call.delete name
-        end
     end
 
     # Create a timer to check whether the file should be reparsed.
@@ -576,12 +445,6 @@ Generated on #{Time.now}.
         # And cache it
         @cache[environment||"none"][param] = val
         return val
-    end
-
-    # Open a file with the appropriate user, group, and mode
-    def write(default, *args, &bloc)
-        obj = get_config_file_default(default)
-        writesub(default, value(obj.name), *args, &bloc)
     end
 
     # Open a non-default file under a default dir with the appropriate user,
