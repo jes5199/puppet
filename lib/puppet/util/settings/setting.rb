@@ -3,6 +3,26 @@ class Puppet::Util::Settings::Setting
     attr_accessor :name, :section, :default, :setbycli, :call_on_define
     attr_reader :desc, :short
 
+    def self.classify( options )
+        if options[:type]
+            {:setting => Setting, :file => FileSetting, :boolean => BooleanSetting}[options[:type]] or 
+                raise ArgumentError, "Invalid setting type #{options[:type]}"
+        else
+            case options[:default]
+            when Boolean
+                BooleanSetting
+            when /^\$\w+\//, /^\//
+                FileSetting
+            else
+                Setting
+            end
+        end
+    end
+
+    def self.objectify( options )
+        self.classify(options).new(options)
+    end
+
     def desc=(value)
         @desc = value.gsub(/^\s*/, '')
     end
@@ -29,12 +49,12 @@ class Puppet::Util::Settings::Setting
         value # default is pass-through
     end
 
-    def handle(value)
+    def hook(value)
         # default is no-op
     end
 
     def hook=(block)
-        meta_def :handle, &block
+        meta_def :hook, &block
     end
 
     # Create the new element.  Pretty much just sets the name.

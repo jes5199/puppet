@@ -19,14 +19,67 @@ class Puppet::Util::Settings
 
     ReadOnly = [:mode, :name]
 
-    # Retrieve a config value
-    def [](param)
-        value(param)
+    def initialize
+        # Mutex-like thing to protect values
+        @sync = Sync.new
+
+        require 'puppet/util/settings/specifications'
+        @specification = Puppet::Util::Settings::Specifications.new
+
+        require 'puppet/util/settings/interpolator'
+        @specification = Puppet::Util::Settings::Interpolator.new
+
+        @layers = Hash.new
+        @current_layer_names = []
+        @write_layer_name = nil
     end
 
-    # Set a config value.  This doesn't set the defaults, it sets the value itself.
-    def []=(param, value)
-        set_value(param, value, :memory)
+    # Retrieve a config value
+    def [](key)
+        @specifications.read_chain(*current_layers, @interpolator)[key]
+    end
+
+    def include?(key)
+        @specifications.include? key
+    end
+
+    # Set a config value.  This doesn't set the defaults, it sets the value in a layer.
+    def []=(key, value)
+        @specifications.validator[key, write_layer] = value
+    end
+
+    def write(key, dest, value)
+        @specifications.validator[key, dest] = value
+    end
+
+    def current_layers
+        @current_layer_names.map{ |name| @layers[name] }
+    end
+
+    def write_layer
+        @layers[@write_layer_name]
+    end
+
+    def push_layer(name)
+        @current_layer_names.push name
+        @layers[name] = {}
+    end
+
+    def pop_layer
+        @layers.delete @current_layer_names.pop
+    end
+
+    def with_layer(name = nil)
+        name ||= Object.new # guaranteed unique key hack
+        yield( push_layer(name) )
+        pop_layer
+    end
+
+    def without_noop
+        with_layer do |layer|
+            write(:noop, layer, false) if self.include? name
+            yield
+        end
     end
 
     # Generate the list of valid arguments, in a format that GetoptLong can
@@ -51,95 +104,6 @@ class Puppet::Util::Settings
         return options
     end
 
-    # Is our parameter a boolean parameter?
-    def boolean?(param)
-        param = param.to_sym
-        if @config.include?(param) and @config[param].kind_of? BooleanSetting
-            return true
-        else
-            return false
-        end
-    end
-
-    # Remove all set values, potentially skipping cli values.
-    def clear(exceptcli = false)
-        @sync.synchronize do
-            unsafe_clear(exceptcli)
-        end
-    end
-    
-    # Remove all set values, potentially skipping cli values.
-    def unsafe_clear(exceptcli = false)
-        @values.each do |name, values|
-            @values.delete(name) unless exceptcli and name == :cli
-        end
-
-        # Don't clear the 'used' in this case, since it's a config file reparse,
-        # and we want to retain this info.
-        unless exceptcli
-            @used = []
-        end
-
-        @cache.clear
-    end
-
-    # This is mostly just used for testing.
-    def clearused
-        @cache.clear
-        @used = []
-    end
-
-    # Do variable interpolation on the value.
-    def convert(value, environment = nil)
-        return value unless value
-        return value unless value.is_a? String
-        newval = value.gsub(/\$(\w+)|\$\{(\w+)\}/) do |value|
-            varname = $2 || $1
-            if varname == "environment" and environment
-                environment
-            elsif pval = self.value(varname)
-                pval
-            else
-                raise Puppet::DevError, "Could not find value for %s" % value
-            end
-        end
-
-        return newval
-    end
-
-    # Return a value's description.
-    def description(name)
-        if obj = @config[name.to_sym]
-            obj.desc
-        else
-            nil
-        end
-    end
-
-    def each
-        @config.each { |name, object|
-            yield name, object
-        }
-    end
-
-    # Iterate over each section name.
-    def eachsection
-        yielded = []
-        @config.each do |name, object|
-            section = object.section
-            unless yielded.include? section
-                yield section
-                yielded << section
-            end
-        end
-    end
-
-    # Return an object by name.
-    def setting(param)
-        param = param.to_sym
-        @config[param]
-    end
-
     # Handle a command-line argument.
     def handlearg(opt, value = nil)
         @cache.clear
@@ -162,40 +126,6 @@ class Puppet::Util::Settings
 
         set_value(str, value, :cli)
     end
-
-    def without_noop
-        old_noop = value(:noop,:cli) and set_value(:noop, false, :cli) if valid?(:noop)
-        yield
-    ensure
-        set_value(:noop, old_noop, :cli) if valid?(:noop)
-    end
-
-    def include?(name)
-        name = name.intern if name.is_a? String
-        @config.include?(name)
-    end
-
-    # check to see if a short name is already defined
-    def shortinclude?(short)
-        short = short.intern if name.is_a? String
-        @shortnames.include?(short)
-    end
-
-    # Create a new collection of config settings.
-    def initialize
-        # Mutex-like thing to protect @values
-        @sync = Sync.new
-
-        require 'puppet/util/settings/specifications'
-        @specification = Puppet::Util::Settings::Specifications.new
-
-        @hooks_to_call = Hash.new
-    end
-
-    # NOTE: ACS ahh the util classes. . .sigh
-    # as part of a fix for 1183, I pulled the logic for the following 5 methods out of the executables and puppet.rb
-    # They probably deserve their own class, but I don't want to do that until I can refactor environments
-    # its a little better than where they were
 
     # Prints the contents of a config file with the available config settings, or it
     # prints a single value of a config setting.
