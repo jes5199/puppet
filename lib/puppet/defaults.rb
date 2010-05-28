@@ -8,13 +8,13 @@ module Puppet
         :name => {
             :default   => Puppet.application_name.to_s,
             :desc      => "The name of the application, if we are running as one.  The
-            default is essentially $0 without the path or ``.rb``."
+            default is essentially $0 without the path or ``.rb``.",
             :read_only => true,
         },
         :mode => {
             :default   => Puppet.mode.name.to_s,
             :desc      => "The name of the application, if we are running as one.  The
-            default is essentially $0 without the path or ``.rb``."
+            default is essentially $0 without the path or ``.rb``.",
             :read_only => true,
         }
     )

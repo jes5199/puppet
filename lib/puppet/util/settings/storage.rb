@@ -8,7 +8,7 @@ class Puppet::Util::Settings::Storage
     end
 
     def []=(name, value_or_options)
-        @storage[name] = if name_or_options.is_a? Hash
+        @storage[name] = if value_or_options.is_a? Hash
             value_or_options
         else
             {:value => value_or_options}

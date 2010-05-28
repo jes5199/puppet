@@ -1,5 +1,5 @@
 class Puppet::Util::Settings::ReadHooks
-    def intialize( metadata )
+    def initialize( metadata )
         @metadata = metadata
     end
 

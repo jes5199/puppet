@@ -18,11 +18,6 @@ class Puppet::Util::Settings::Specifications
         @read_hooks = Puppet::Util::Settings::ReadHooks.new(@metadata) 
     end
 
-    def read_chain(*middles)
-        require 'lib/puppet/util/settings/read_chain'
-        Puppet::Util::Settings::ReadChain.new(@defaults, *middles, @read_hooks)
-    end
-
     def []=( name, options )
         if @metadata[name]
             raise Puppet::DevError, "There's already a setting named #{name.inspect}"
@@ -34,7 +29,7 @@ class Puppet::Util::Settings::Specifications
 
         @short_names[options[:short]] = name
 
-        @metadata[name] = Setting.objectify( options.update(:name => name) )
+        @metadata[name] = Puppet::Util::Settings::Setting.objectify( options.update(:name => name) )
         @validator[name, @defaults] = options[:default]
     end
 

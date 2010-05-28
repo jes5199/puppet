@@ -1,9 +1,5 @@
-require 'puppet'
 require 'sync'
 require 'getoptlong'
-require 'puppet/external/event-loop'
-require 'puppet/util/cacher'
-require 'puppet/util/loadedfile'
 
 # The class for handling configuration files.
 class Puppet::Util::Settings
@@ -22,19 +18,32 @@ class Puppet::Util::Settings
         @sync = Sync.new
 
         require 'puppet/util/settings/specifications'
-        @specification = Puppet::Util::Settings::Specifications.new
+        @specifications = Puppet::Util::Settings::Specifications.new
 
         require 'puppet/util/settings/interpolator'
-        @specification = Puppet::Util::Settings::Interpolator.new
+        @interpolator = Puppet::Util::Settings::Interpolator.new
 
         @layers = Hash.new
         @current_layer_names = []
         @write_layer_name = nil
+
+        @layers_from_config_file = []
+
+        @active_config_file = nil
+        @file_watcher = Hash.new do |hash, filename|
+            require 'puppet/util/loadedfile'
+            hash[filename] = Puppet::Util::LoadedFile.new(filename)
+        end
+    end
+
+    def read_chain(*layers)
+        require 'lib/puppet/util/settings/read_chain'
+        Puppet::Util::Settings::ReadChain.new(*layers)
     end
 
     # Retrieve a config value
     def [](key)
-        @specifications.read_chain(*current_layers, @interpolator)[key]
+        self.read_chain(* [@specifications.defaults] + current_layers + [ @interpolator, @specifications.read_hooks ] )[key]
     end
 
     def include?(key)
@@ -150,61 +159,35 @@ class Puppet::Util::Settings
             return
         end
 
+        clear_layers_from_config_file
+
         data.each do |section, values|
+            @layers_from_config_file.push section
             values.each do |key,value|
                 self.write(key, section, value) if self.include? key
             end
         end
     end
 
-    # Cache this in an easily clearable way, since we were
-    # having trouble cleaning it up after tests.
-    cached_attr(:file) do
-        if path = self[:config] and FileTest.exist?(path)
-            Puppet::Util::LoadedFile.new(path)
+    def clear_layers_from_config_file
+        @layers_from_config_file.each do |name|
+            @layer[name].clear
         end
+        @layers_from_config_file = []
     end
 
     # Reparse our config file, if necessary.
     def reparse
-        if file and file.changed?
-            Puppet.notice "Reparsing %s" % file.file
+        if @active_config_file != self[:config] || @file_watcher[@active_config_file].changed?
+            @active_config_file = file 
+            Puppet.notice "Settings file (#{@active_config_file}) has changed"
             load_from_file
-            reuse()
-        end
-    end
-
-    def reuse
-        return unless defined? @used
-        @sync.synchronize do # yay, thread-safe
-            new = @used
-            @used = []
-            self.use(*new)
         end
     end
 
     # The order in which to search for values.
-    def searchpath(environment = nil)
-        if environment
-            [:cli, :memory, environment, :mode, :main]
-        else
-            [:cli, :memory, :mode, :main]
-        end
-    end
-
-    # Get a list of objects per section
-    def sectionlist
-        sectionlist = []
-        self.each { |name, obj|
-            section = obj.section || "puppet"
-            sections[section] ||= []
-            unless sectionlist.include?(section)
-                sectionlist << section
-            end
-            sections[section] << obj
-        }
-
-        return sectionlist, sections
+    def search_list
+        ["main", self[:mode], self[:environment], :cli]
     end
 
     def service_user_available?
@@ -218,7 +201,7 @@ class Puppet::Util::Settings
     end
 
     def set_value(param, value, section, options = {})
-        unless setting = @specification.exists? param
+        unless setting = @specifications.exists?(param)
             if options[:ignore_bad_settings]
                 return
             else
@@ -249,9 +232,6 @@ class Puppet::Util::Settings
         end
         @sync.synchronize do # yay, thread-safe
             @values[section][param] = value
-            @cache.clear
-
-            clearused
 
             # Clear the list of environments, because they cache, at least, the module path.
             # We *could* preferentially just clear them if the modulepath is changed,
@@ -280,20 +260,13 @@ class Puppet::Util::Settings
             end
 
             @specifications[name] = options
-
-            if options[:call_on_define]
-                @queue_hook[name] = true
-            end
         }
-    end
-
-    def queue_hook(name)
-        @hooks_to_call[name] = true
     end
 
     # Create a timer to check whether the file should be reparsed.
     def set_filetimeout_timer
         return unless timeout = self[:filetimeout] and timeout = Integer(timeout) and timeout > 0
+        require 'puppet/external/event-loop'
         timer = EventLoop::Timer.new(:interval => timeout, :tolerance => 1, :start? => true) { self.reparse() }
     end
 

@@ -1,20 +1,24 @@
 # The base element type.
 class Puppet::Util::Settings::Setting
     attr_accessor :name, :section, :default, :setbycli, :call_on_define
+    attr_accessor :read_only
     attr_reader :desc, :short
+    attr_writer :hook, :type
 
     def self.classify( options )
+        require 'puppet/util/settings/boolean_setting'
+        require 'puppet/util/settings/file_setting'
         if options[:type]
-            {:setting => Setting, :file => FileSetting, :boolean => BooleanSetting}[options[:type]] or 
+            {:setting => Puppet::Util::Settings::Setting, :file => Puppet::Util::Settings::FileSetting, :boolean => Puppet::Util::Settings::BooleanSetting}[options[:type]] or 
                 raise ArgumentError, "Invalid setting type #{options[:type]}"
         else
             case options[:default]
-            when Boolean
-                BooleanSetting
+            when true, false # friggin ruby doesn't have a shared superclass for these
+                Puppet::Util::Settings::BooleanSetting
             when /^\$\w+\//, /^\//
-                FileSetting
+                Puppet::Util::Settings::FileSetting
             else
-                Setting
+                Puppet::Util::Settings::Setting
             end
         end
     end
@@ -50,20 +54,18 @@ class Puppet::Util::Settings::Setting
     end
 
     def hook(value)
-        # default is no-op
-    end
-
-    def hook=(block)
-        meta_def :hook, &block
+        @hook.call(value) if @hook
     end
 
     # Create the new element.  Pretty much just sets the name.
     def initialize(args = {})
+        @read_only = false
+        @hook      = nil
+
+        p args
+
         args.each do |param, value|
             method = param.to_s + "="
-            unless self.respond_to? method
-                raise ArgumentError, "%s does not accept %s" % [self.class, param]
-            end
 
             self.send(method, value)
         end

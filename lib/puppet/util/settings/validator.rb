@@ -1,9 +1,9 @@
 class Puppet::Util::Settings::Validator
-    def intialize( metadata )
+    def initialize( metadata )
         @metadata = metadata
     end
 
-    def []=(key,dest,value)
+    def []=(*args)
         case args.length
         when 3
             key, dest, value = args
