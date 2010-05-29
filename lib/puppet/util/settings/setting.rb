@@ -57,12 +57,9 @@ class Puppet::Util::Settings::Setting
         @hook.call(value) if @hook
     end
 
-    # Create the new element.  Pretty much just sets the name.
     def initialize(args = {})
         @read_only = false
         @hook      = nil
-
-        p args
 
         args.each do |param, value|
             method = param.to_s + "="

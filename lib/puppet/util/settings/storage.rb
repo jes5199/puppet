@@ -4,7 +4,7 @@ class Puppet::Util::Settings::Storage
     end
 
     def [](name, value={})
-        value.update(@storage[name])
+        value.update(@storage[name] || {})
     end
 
     def []=(name, value_or_options)

@@ -21,10 +21,10 @@ class Puppet::Util::Settings
         @specifications = Puppet::Util::Settings::Specifications.new
 
         require 'puppet/util/settings/interpolator'
-        @interpolator = Puppet::Util::Settings::Interpolator.new
+        @interpolator = Puppet::Util::Settings::Interpolator.new(self)
 
         @layers = Hash.new
-        @current_layer_names = []
+        @mutable_layer_names = []
         @write_layer_name = nil
 
         @layers_from_config_file = []
@@ -34,6 +34,8 @@ class Puppet::Util::Settings
             require 'puppet/util/loadedfile'
             hash[filename] = Puppet::Util::LoadedFile.new(filename)
         end
+
+        @currently_looking_up = []
     end
 
     def read_chain(*layers)
@@ -43,7 +45,15 @@ class Puppet::Util::Settings
 
     # Retrieve a config value
     def [](key)
-        self.read_chain(* [@specifications.defaults] + current_layers + [ @interpolator, @specifications.read_hooks ] )[key]
+        if @currently_looking_up.include? key
+            return nil
+        end
+        begin
+            @currently_looking_up << key
+            self.read_chain(* [@specifications.defaults] + current_layers + [ @interpolator, @specifications.read_hooks ] )[key][:value]
+        ensure
+            @currently_looking_up.delete key
+        end
     end
 
     def include?(key)
@@ -61,8 +71,16 @@ class Puppet::Util::Settings
         @specifications.validator[key, dest] = value
     end
 
+    def permanent_layer_names
+        ["main", self[:mode], self[:environment], :cli]
+    end
+
+    def current_layer_names
+        permanent_layer_names + @mutable_layer_names
+    end
+
     def current_layers
-        @current_layer_names.map{ |name| @layers[name] }
+        current_layer_names.map{ |name| @layers[name] }.compact
     end
 
     def write_layer
@@ -70,23 +88,26 @@ class Puppet::Util::Settings
     end
 
     def push_layer(name)
-        @current_layer_names.push name
-        @layers[name] = {}
+        @mutable_layer_names.delete name
+        @mutable_layer_names.push name
+        @layers[name] = Puppet::Util::Settings::Storage.new
     end
 
-    def pop_layer
-        @layers.delete @current_layer_names.pop
+    def pop_layer(name = nil)
+        @mutable_layer_names.delete name
+        @layers.delete name
     end
 
-    def with_layer(name = nil)
+    def with_temporary_layer(name = nil)
         name ||= Object.new # guaranteed unique key hack
         yield( push_layer(name) )
-        pop_layer
+    ensure
+        pop_layer(name)
     end
 
     def without_noop
-        with_layer do |layer|
-            write(:noop, layer, false) if self.include? name
+        with_temporary_layer do |layer|
+            write(:noop, layer, false) if self.include? :noop
             yield
         end
     end
@@ -183,11 +204,6 @@ class Puppet::Util::Settings
             Puppet.notice "Settings file (#{@active_config_file}) has changed"
             load_from_file
         end
-    end
-
-    # The order in which to search for values.
-    def search_list
-        ["main", self[:mode], self[:environment], :cli]
     end
 
     def service_user_available?
@@ -391,113 +407,22 @@ Generated on #{Time.now}.
         return val
     end
 
-    # Find the correct value using our search path.  Optionally accept an environment
-    # in which to search before the other configuration sections.
-    def value(param, environment = nil)
-        param = param.to_sym
-        environment = environment.to_sym if environment
+    def change_environment(new_environment)
+        push_layer
 
-        # Short circuit to nil for undefined parameters.
-        return nil unless @config.include?(param)
-
-        # Yay, recursion.
-        #self.reparse() unless [:config, :filetimeout].include?(param)
-
-        # Check the cache first.  It needs to be a per-environment
-        # cache so that we don't spread values from one env
-        # to another.
-        if cached = @cache[environment||"none"][param]
-            return cached
-        end
-
-        val = uninterpolated_value(param, environment)
-
-        # Convert it if necessary
-        val = convert(val, environment)
-
-        # And cache it
-        @cache[environment||"none"][param] = val
-        return val
     end
 
-    # Open a non-default file under a default dir with the appropriate user,
-    # group, and mode
-    def writesub(default, file, *args, &bloc)
-        obj = get_config_file_default(default)
-        chown = nil
-        if Puppet.features.root?
-            chown = [obj.owner, obj.group]
-        else
-            chown = [nil, nil]
-        end
+    # Look in a different environment for the value.
+    def value(key, environment = nil)
+        environment ||= self[:environment]
 
-        Puppet::Util::SUIDManager.asuser(*chown) do
-            mode = obj.mode || 0640
-            if args.empty?
-                args << "w"
-            end
-
-            args << mode
-
-            # Update the umask to make non-executable files
-            Puppet::Util.withumask(File.umask ^ 0111) do
-                File.open(file, *args) do |file|
-                    yield file
-                end
-            end
-        end
-    end
-
-    def readwritelock(default, *args, &bloc)
-        file = value(get_config_file_default(default).name)
-        tmpfile = file + ".tmp"
-        sync = Sync.new
-        unless FileTest.directory?(File.dirname(tmpfile))
-            raise Puppet::DevError, "Cannot create %s; directory %s does not exist" %
-                [file, File.dirname(file)]
-        end
-
-        sync.synchronize(Sync::EX) do
-            File.open(file, ::File::CREAT|::File::RDWR, 0600) do |rf|
-                rf.lock_exclusive do
-                    if File.exist?(tmpfile)
-                        raise Puppet::Error, ".tmp file already exists for %s; Aborting locked write. Check the .tmp file and delete if appropriate" %
-                            [file]
-                    end
-
-                    # If there's a failure, remove our tmpfile
-                    begin
-                        writesub(default, tmpfile, *args, &bloc)
-                    rescue
-                        File.unlink(tmpfile) if FileTest.exist?(tmpfile)
-                        raise
-                    end
-
-                    begin
-                        File.rename(tmpfile, file)
-                    rescue => detail
-                        Puppet.err "Could not rename %s to %s: %s" % [file, tmpfile, detail]
-                        File.unlink(tmpfile) if FileTest.exist?(tmpfile)
-                    end
-                end
-            end
+        with_temporary_layer do |layer|
+            write(:environment, layer, environment)
+            self[key]
         end
     end
 
     private
-
-    def get_config_file_default(default)
-        obj = nil
-        unless obj = @config[default]
-            raise ArgumentError, "Unknown default %s" % default
-        end
-
-        unless obj.is_a? FileSetting
-            raise ArgumentError, "Default %s is not a file" % default
-        end
-
-        return obj
-    end
 
     # Create the transportable objects for users and groups.
     def add_user_resources(catalog, sections)
@@ -518,15 +443,6 @@ Generated on #{Time.now}.
             if group = setting.group and ! %w{root wheel}.include?(group) and catalog.resource(:group, group).nil?
                 catalog.add_resource Puppet::Resource.new(:group, group, :parameters => {:ensure => :present})
             end
-        end
-    end
-
-    # Yield each search source in turn.
-    def each_source(environment)
-        searchpath(environment).each do |source|
-            # Modify the source as necessary.
-            source = self.mode if source == :mode
-            yield source
         end
     end
 
