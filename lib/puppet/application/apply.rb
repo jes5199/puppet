@@ -17,15 +17,6 @@ class Puppet::Application::Apply < Puppet::Application
         options[:catalog] = arg
     end
 
-    option("--logdest LOGDEST", "-l") do |arg|
-        begin
-            Puppet::Util::Log.newdestination(arg)
-            options[:logset] = true
-        rescue => detail
-            $stderr.puts detail.to_s
-        end
-    end
-
     def run_command
         if options[:catalog]
             apply
@@ -77,7 +68,7 @@ class Puppet::Application::Apply < Puppet::Application
 
     def main
         # Set our code or file to use.
-        if options[:code] or command_line.args.length == 0
+        if options[:code] or command_line.args.length == 0 or command_line.args == ['-']
             Puppet[:code] = options[:code] || STDIN.read
         else
             Puppet[:manifest] = command_line.args.shift
@@ -138,42 +129,24 @@ class Puppet::Application::Apply < Puppet::Application
             else
                 exit(0)
             end
-        rescue => detail
-            puts detail.backtrace if Puppet[:trace]
-            if detail.is_a?(XMLRPC::FaultException)
-                $stderr.puts detail.message
-            else
-                $stderr.puts detail
-            end
-            exit(1)
+#        rescue => detail
+#            puts detail.backtrace if Puppet[:trace]
+#            $stderr.puts detail.message
+#            exit(1)
         end
     end
 
     def setup
-        if Puppet.settings.print_configs?
-            exit(Puppet.settings.print_configs ? 0 : 1)
-        end
+        super
 
         # If noop is set, then also enable diffs
         if Puppet[:noop]
             Puppet[:show_diff] = true
         end
 
-        unless options[:logset]
-            Puppet::Util::Log.newdestination(:console)
-        end
-        client = nil
-        server = nil
-
         trap(:INT) do
             $stderr.puts "Exiting"
             exit(1)
-        end
-
-        if options[:debug]
-            Puppet::Util::Log.level = :debug
-        elsif options[:verbose]
-            Puppet::Util::Log.level = :info
         end
     end
 end

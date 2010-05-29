@@ -21,7 +21,6 @@ class Puppet::Application::Agent < Puppet::Application
             :verbose => false,
             :debug => false,
             :centrallogs => false,
-            :setdest => false,
             :enable => false,
             :disable => false,
             :client => true,
@@ -70,18 +69,6 @@ class Puppet::Application::Agent < Puppet::Application
 
     option("--detailed-exitcodes") do |arg|
         options[:detailed_exitcodes] = true
-    end
-
-    option("--logdest DEST", "-l DEST") do |arg|
-        begin
-            Puppet::Util::Log.newdestination(arg)
-            options[:setdest] = true
-        rescue => detail
-            if Puppet[:debug]
-                puts detail.backtrace
-            end
-            $stderr.puts detail.to_s
-        end
     end
 
     option("--waitforcert WAITFORCERT", "-w") do |arg|
@@ -157,22 +144,6 @@ class Puppet::Application::Agent < Puppet::Application
         options[:waitforcert] = 0 unless @explicit_waitforcert
     end
 
-    # Handle the logging settings.
-    def setup_logs
-        if options[:debug] or options[:verbose]
-            Puppet::Util::Log.newdestination(:console)
-            if options[:debug]
-                Puppet::Util::Log.level = :debug
-            else
-                Puppet::Util::Log.level = :info
-            end
-        end
-
-        unless options[:setdest]
-            Puppet::Util::Log.newdestination(:syslog)
-        end
-    end
-
     def enable_disable_client(agent)
         if options[:enable]
             agent.enable
@@ -207,7 +178,7 @@ class Puppet::Application::Agent < Puppet::Application
     def setup
         setup_test if options[:test]
 
-        setup_logs
+        super
 
         if Puppet.settings.print_configs?
             exit(Puppet.settings.print_configs ? 0 : 1)

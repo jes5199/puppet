@@ -278,7 +278,7 @@ class Application
     def run
         exit_on_fail("initialize") { preinit }
         exit_on_fail("parse options") { parse_options }
-        exit_on_fail("parse configuration file") { Puppet.settings.parse } if should_parse_config?
+        exit_on_fail("parse configuration file") { Puppet.settings.load_from_file } if should_parse_config?
         exit_on_fail("prepare for execution") { setup }
         exit_on_fail("run") { run_command }
     end
@@ -292,6 +292,12 @@ class Application
     end
 
     def setup
+        if Puppet.settings.print_configs?
+            exit(Puppet.settings.print_configs ? 0 : 1)
+        end
+
+        Puppet::Util::Log.newdestination(:syslog) unless Puppet.mode.user?
+
         # Handle the logging settings
         if options[:debug] or options[:verbose]
             Puppet::Util::Log.newdestination(:console)
@@ -300,10 +306,6 @@ class Application
             else
                 Puppet::Util::Log.level = :info
             end
-        end
-
-        unless options[:setdest]
-            Puppet::Util::Log.newdestination(:syslog)
         end
     end
 

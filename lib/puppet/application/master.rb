@@ -15,18 +15,6 @@ class Puppet::Application::Master < Puppet::Application
         options[:node] = arg
     end
 
-    option("--logdest DEST",  "-l DEST") do |arg|
-        begin
-            Puppet::Util::Log.newdestination(arg)
-            options[:setdest] = true
-        rescue => detail
-            if Puppet[:debug]
-                puts detail.backtrace
-            end
-            $stderr.puts detail.to_s
-        end
-    end
-
     def preinit
         trap(:INT) do
             $stderr.puts "Cancelling startup"
@@ -124,6 +112,8 @@ class Puppet::Application::Master < Puppet::Application
     end
 
     def setup
+        super
+
         # Handle the logging settings.
         if options[:debug] or options[:verbose]
             if options[:debug]
@@ -134,19 +124,8 @@ class Puppet::Application::Master < Puppet::Application
 
             unless Puppet[:daemonize] or options[:rack]
                 Puppet::Util::Log.newdestination(:console)
-                options[:setdest] = true
             end
         end
-
-        unless options[:setdest]
-            Puppet::Util::Log.newdestination(:syslog)
-        end
-
-        if Puppet.settings.print_configs?
-            exit(Puppet.settings.print_configs ? 0 : 1)
-        end
-
-        Puppet.settings.use :main, :master, :ssl
 
         # A temporary solution, to at least make the master work for now.
         Puppet::Node::Facts.terminus_class = :yaml

@@ -3,7 +3,7 @@ class Puppet::Util::Settings::Setting
     attr_accessor :name, :section, :default, :setbycli, :call_on_define
     attr_accessor :read_only
     attr_reader :desc, :short
-    attr_writer :hook, :type
+    attr_writer :hook, :type, :interpolate
 
     def self.classify( options )
         require 'puppet/util/settings/boolean_setting'

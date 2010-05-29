@@ -67,6 +67,7 @@ module Puppet
             :desc => "The shell search path.  Defaults to whatever is inherited
                 from the parent process.",
             :hook => proc do |value|
+                value = value[:value]
                 ENV["PATH"] = "" if ENV["PATH"].nil?
                 ENV["PATH"] = value unless value == "none"
                 paths = ENV["PATH"].split(File::PATH_SEPARATOR)
@@ -89,8 +90,8 @@ module Puppet
                 if defined? @oldlibdir and $:.include?(@oldlibdir)
                     $:.delete(@oldlibdir)
                 end
-                @oldlibdir = value
-                $: << value
+                @oldlibdir = value[:value]
+                $: << value[:value]
             end
         },
         :ignoreimport => [false, "A parameter that can be used in commit
@@ -145,6 +146,7 @@ module Puppet
         :async_storeconfigs => {:default => false, :desc => "Whether to use a queueing system to provide asynchronous database integration.
             Requires that ``puppetqd`` be running and that 'PSON' support for ruby be installed.",
             :hook => proc do |value|
+                value = value[:value]
                 if value
                     # This reconfigures the terminii for Node, Facts, and Catalog
                     Puppet.settings[:storeconfigs] = true
@@ -161,6 +163,7 @@ module Puppet
             If true, then storeconfigs performance will be higher and still allow exported/collected
             resources, but other usage external to Puppet might not work",
             :hook => proc do |value|
+                    value = value[:value]
                     Puppet.settings[:storeconfigs] = true if value
                 end
             },
@@ -175,7 +178,15 @@ module Puppet
             return code, the entire Puppet run will fail."],
         :postrun_command => ["", "A command to run after every agent run.  If this command returns a non-zero
             return code, the entire Puppet run will be considered to have failed, even though it might have
-            performed work during the normal run."]
+            performed work during the normal run."],
+        :logdest => {
+            :default => (Puppet.mode.user? ? "console" : "syslog" ),
+            :desc => "This is where the logs go. Valid options are 'console', 'syslog', 'file', 'host', and 'report'",
+            :short => 'l',
+            :hook => proc { |value|
+                Puppet::Util::Log.newdestination(arg)
+            },
+        }
     )
 
     hostname = Facter["hostname"].value
@@ -192,7 +203,7 @@ module Puppet
         :certname => {:default => fqdn.downcase, :desc => "The name to use when handling certificates.  Defaults
             to the fully qualified domain name.",
             :call_on_define => true, # Call our hook with the default value, so we're always downcased
-            :hook => proc { |value| raise(ArgumentError, "Certificate names must be lower case; see #1168") unless value == value.downcase }},
+            :hook => proc { |value| value[:value] == value[:value].downcase }},
         :certdnsnames => ['', "The DNS names on the Server certificate as a colon-separated list.
             If it's anything other than an empty string, it will be used as an alias in the created
             certificate.  By default, only the server gets an alias set up, and only for 'puppet'."],
@@ -299,6 +310,7 @@ module Puppet
             :mode => 0664,
             :desc => "The certificate revocation list (CRL) for the CA. Will be used if present but otherwise ignored.",
             :hook => proc do |value|
+                value = value[:value]
                 if value == 'false'
                     Puppet.warning "Setting the :cacrl to 'false' is deprecated; Puppet will just ignore the crl if yours is missing"
                 end
@@ -371,7 +383,9 @@ module Puppet
             a proxy in front of the process or processes, since Mongrel cannot
             speak SSL.",
             :call_on_define => true, # Call our hook with the default value, so we always get the correct bind address set.
-            :hook => proc { |value|  value == "webrick" ? Puppet.settings[:bindaddress] = "0.0.0.0" : Puppet.settings[:bindaddress] = "127.0.0.1" if Puppet.settings[:bindaddress] == "" }
+            :hook => proc { |value|
+                value = value[:value]
+                value == "webrick" ? Puppet.settings[:bindaddress] = "0.0.0.0" : Puppet.settings[:bindaddress] = "127.0.0.1" if Puppet.settings[:bindaddress] == "" }
         }
     )
 
@@ -382,9 +396,13 @@ module Puppet
             "Where puppet master looks for its manifests."],
         :manifest => ["$manifestdir/site.pp",
             "The entry-point manifest for puppet master."],
-        :code => ["", "Code to parse directly.  This is essentially only used
+        :code => {
+            :default => "",
+            :desc    => "Code to parse directly.  This is essentially only used
             by ``puppet``, and should only be set if you're writing your own Puppet
-            executable"],
+            executable",
+            :interpolate => false,
+        },
         :masterlog => { :default => "$logdir/puppetmaster.log",
             :owner => "service",
             :group => "service",
@@ -518,6 +536,7 @@ module Puppet
                      use to dump the catalog.  Only supports 'marshal' and 'yaml'.  Only
                      matters on the client, since it asks the server for a specific format.",
             :hook => proc { |value|
+                value = value[:value]
                 if value
                     Puppet.warning "Setting 'catalog_format' is deprecated; use 'preferred_serialization_format' instead."
                     Puppet.settings[:preferred_serialization_format] = value
@@ -573,9 +592,10 @@ module Puppet
             :default => "$server",
             :desc => "(Deprecated for 'report_server') The server to which to send transaction reports.",
             :hook => proc do |value|
-              if value
-                Puppet.settings[:report_server] = value
-              end
+                value = value[:value]
+                if value
+                    Puppet.settings[:report_server] = value
+                end
             end   
         },
         :report_server => ["$server",
@@ -621,7 +641,7 @@ module Puppet
                 be colon-separated, like normal PATH variables.",
             :call_on_define => true, # Call our hook with the default value, so we always get the value added to facter.
             :type => :setting, # Don't consider it a file, because it could be multiple colon-separated files
-            :hook => proc { |value| Facter.search(value) if Facter.respond_to?(:search) }},
+            :hook => proc { |value| Facter.search(value[:value]) if Facter.respond_to?(:search) }},
         :factdest => ["$vardir/facts/",
             "Where Puppet should store facts that it pulls down from the central
             server."],
@@ -752,7 +772,7 @@ module Puppet
         :storeconfigs => {:default => false, :desc => "Whether to store each client's configuration.  This
             requires ActiveRecord from Ruby on Rails.",
             :hook => proc do |value|
-                if value
+                if value[:value]
                     require 'puppet/node'
                     require 'puppet/node/facts'
                     require 'puppet/resource/catalog'

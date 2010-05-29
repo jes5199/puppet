@@ -25,7 +25,8 @@ class Puppet::Util::Settings
 
         @layers = Hash.new
         @mutable_layer_names = []
-        @write_layer_name = nil
+        @write_layer_name = :memory
+        push_layer(:memory)
 
         @layers_from_config_file = []
 
@@ -116,7 +117,7 @@ class Puppet::Util::Settings
     # understand, and add them to the passed option list.
     def addargs(options)
         # Add all of the config parameters as valid options.
-        self.each { |name, setting|
+        @specifications.metadata.each { |name, setting|
             setting.getopt_args.each { |args| options << args }
         }
 
@@ -127,7 +128,7 @@ class Puppet::Util::Settings
     # understand, and add them to the passed option list.
     def optparse_addargs(options)
         # Add all of the config parameters as valid options.
-        self.each { |name, setting|
+        @specifications.metadata.each { |name, setting|
             options << setting.optparse_args
         }
 
@@ -286,6 +287,11 @@ class Puppet::Util::Settings
         timer = EventLoop::Timer.new(:interval => timeout, :tolerance => 1, :start? => true) { self.reparse() }
     end
 
+    def print_configs?
+        # Any of several don't-ack-just-introspect settings
+        (!self[:configprint].empty?) || self[:genconfig] || self[:genmanifest]
+    end
+
     # Convert the settings we manage into a catalog full of resources that model those settings.
     def to_catalog(*sections)
         sections = nil if sections.empty?
@@ -345,66 +351,12 @@ Generated on #{Time.now}.
     # Create the necessary objects to use a section.  This is idempotent;
     # you can 'use' a section as many times as you want.
     def use(*sections)
-        sections = sections.collect { |s| s.to_sym }
-        @sync.synchronize do # yay, thread-safe
-            sections = sections.reject { |s| @used.include?(s) }
-
-            return if sections.empty?
-
-            begin
-                catalog = to_catalog(*sections).to_ral
-            rescue => detail
-                puts detail.backtrace if Puppet[:trace]
-                Puppet.err "Could not create resources for managing Puppet's files and directories in sections %s: %s" % [sections.inspect, detail]
-
-                # We need some way to get rid of any resources created during the catalog creation
-                # but not cleaned up.
-                return
-            end
-
-            without_noop do
-                catalog.host_config = false
-                catalog.apply do |transaction|
-                    if transaction.any_failed?
-                        report = transaction.report
-                        failures = report.logs.find_all { |log| log.level == :err }
-                        raise "Got %s failure(s) while initializing: %s" % [failures.length, failures.collect { |l| l.to_s }.join("; ")]
-                    end
-                end
-            end
-
-            sections.each { |s| @used << s }
-            @used.uniq!
-        end
+        warn "please don't be a user."
     end
 
     def valid?(param)
         param = param.to_sym
         @config.has_key?(param)
-    end
-
-    def uninterpolated_value(param, environment = nil)
-        param = param.to_sym
-        environment = environment.to_sym if environment
-
-        # See if we can find it within our searchable list of values
-        val = catch :foundval do
-            each_source(environment) do |source|
-                # Look for the value.  We have to test the hash for whether
-                # it exists, because the value might be false.
-                @sync.synchronize do
-                    if @values[source].include?(param)
-                        throw :foundval, @values[source][param]
-                    end
-                end
-            end
-            throw :foundval, nil
-        end
-        
-        # If we didn't get a value, use the default
-        val = @config[param].default if val.nil?
-
-        return val
     end
 
     def change_environment(new_environment)
