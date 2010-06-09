@@ -519,9 +519,6 @@ module Puppet
             end
           end
         end
-      else
-        raise ArgumentError,
-          "'#{self[:command]}' is somehow not qualified with no search path"
       end
 
       raise ArgumentError, "Could not find executable '#{exe}'" unless FileTest.exists?(exe)
