@@ -86,7 +86,7 @@ Puppet::Type.type(:file).provide :posix do
       break if uid = validuser?(user)
     end
 
-    raise Puppet::Error, "Could not find user(s) #{@should.join(",")}" unless uid
+    raise Puppet::Error, "Could not find user(s) #{should.join(",")}" unless uid
 
     begin
       File.send(method, uid, nil, path)
