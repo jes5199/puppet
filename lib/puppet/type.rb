@@ -105,23 +105,6 @@ class Type
         @attrtypes[attr]
     end
 
-    # Copy an existing class parameter.  This allows other types to avoid
-    # duplicating a parameter definition, and is mostly used by subclasses
-    # of the File class.
-    def self.copyparam(klass, name)
-        param = klass.attrclass(name)
-
-        unless param
-            raise Puppet::DevError, "Class %s has no param %s" % [klass, name]
-        end
-        @parameters << param
-        @parameters.each { |p| @paramhash[name] = p }
-
-        if param.isnamevar?
-            @namevar = param.name
-        end
-    end
-
     def self.eachmetaparam
         @@metaparams.each { |p| yield p.name }
     end
@@ -226,7 +209,7 @@ class Type
     end
 
     def self.namevar
-        @namevar ||= namevar_parameter.name
+        namevar_parameter.name
     end
 
     def self.canonicalize_ref(s)
@@ -256,7 +239,7 @@ class Type
         param.isnamevar if options[:namevar]
 
         if param.isnamevar?
-            @namevar = param.name
+            @namevar_parameter = param
         end
 
         return param
