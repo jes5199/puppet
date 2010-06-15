@@ -466,10 +466,6 @@ class Puppet::Resource
 
     def resolve_title_for_resource(title)
         type = find_resource_type(@type)
-        if type
-            return type.canonicalize_ref(title)
-        else
-            return title
-        end
+        return title
     end
 end

@@ -198,22 +198,28 @@ class Type
                 param.isnamevar? or param.name == :name
             }
 
-            if params.length > 1
-                raise Puppet::DevError, "Found multiple namevars for %s" % self.name
-            elsif params.length == 1
-                params.first
-            else
-                raise Puppet::DevError, "No namevar for %s" % self.name
-            end
         )
     end
 
     def self.namevar
-        namevar_parameters.collect { |p| p.name }.join
+        namevar_parameters.collect { |p| p.name }.first
     end
 
-    def self.canonicalize_ref(s)
-        namevar_parameters.canonicalize(s)
+    def self.parse_title_into_parameters(title)
+        self.title_patterns.each do |pattern|
+            regexp, symbols_and_lambdas = pattern
+            r = {}
+            captures = rexexp.match(title)
+            captures[1..-1].zip(symbols_and_lambdas).each do |capture, symbol_and_lambda|
+                sym, lam = symbol_and_lambda
+                if lam
+                    r[sym] = lam.call(capture)
+                else
+                    r[sym] = capture
+                end
+            end
+            return r
+        end
     end
 
     # Create a new parameter.  Requires a block and a name, stores it in the
