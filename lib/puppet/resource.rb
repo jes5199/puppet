@@ -194,28 +194,6 @@ class Puppet::Resource
         @title = nil
     end
 
-    def old_title
-        if type == "Class" and value == ""
-            @title = :main
-            return
-        end
-
-        if klass = resource_type
-            p klass
-            if type == "Class"
-                value = munge_type_name(resource_type.name)
-            end
-
-            if klass.respond_to?(:canonicalize_ref)
-                value = klass.canonicalize_ref(value)
-            end
-        elsif type == "Class"
-            value = munge_type_name(value)
-        end
-
-        @title = value
-    end
-
     def resource_type
         case type
         when "Class"; find_hostclass(title)
@@ -482,16 +460,13 @@ class Puppet::Resource
 
         if klass = find_hostclass(title)
             result = klass.name
-
-            if klass.respond_to?(:canonicalize_ref)
-                result = klass.canonicalize_ref(result)
-            end
         end
         return munge_type_name(result || title)
     end
 
     def resolve_title_for_resource(title)
-        if type = find_resource_type(@type) and type.respond_to?(:canonicalize_ref)
+        type = find_resource_type(@type)
+        if type
             return type.canonicalize_ref(title)
         else
             return title

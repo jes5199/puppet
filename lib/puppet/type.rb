@@ -192,8 +192,8 @@ class Type
     end
 
     # Find the namevar
-    def self.namevar_parameter
-        @namevar_parameter ||= (
+    def self.namevar_parameters
+        @namevar_parameters ||= (
             params = @parameters.find_all { |param|
                 param.isnamevar? or param.name == :name
             }
@@ -209,11 +209,11 @@ class Type
     end
 
     def self.namevar
-        namevar_parameter.name
+        namevar_parameters.collect { |p| p.name }.join
     end
 
     def self.canonicalize_ref(s)
-        namevar_parameter.canonicalize(s)
+        namevar_parameters.canonicalize(s)
     end
 
     # Create a new parameter.  Requires a block and a name, stores it in the
@@ -237,10 +237,6 @@ class Type
         end
 
         param.isnamevar if options[:namevar]
-
-        if param.isnamevar?
-            @namevar_parameter = param
-        end
 
         return param
     end

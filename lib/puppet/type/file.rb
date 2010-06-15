@@ -425,7 +425,6 @@ Puppet::Type.newtype(:file) do
             end
         end
 
-        @title = self.class.canonicalize_ref(@title)
         @stat = nil
     end
 
