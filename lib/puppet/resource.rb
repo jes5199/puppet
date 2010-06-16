@@ -205,11 +205,7 @@ class Puppet::Resource
 
     # Produce a simple hash of our parameters.
     def to_hash
-        result = @parameters.dup
-        unless result.include?(namevar)
-            result[namevar] = title
-        end
-        result
+        parse_title.merge @parameters
     end
 
     def to_s
@@ -465,16 +461,25 @@ class Puppet::Resource
     end
 
     def resolve_title_for_resource(title)
+        title
+    end
+
+    def parse_title
+        h = {}
         type = find_resource_type(@type)
-        type.title_patterns.each do |regexp, symbols_and_lambdas|
-            if captures = regexp.match(title.to_s)
-                symbols_and_lambdas.zip(captures[1..-1]).each do |symbol_and_lambda,capture|
-                    sym, lam = symbol_and_lambda
-                    self[sym] = lam.call(capture)
+        if type.respond_to? :title_patterns
+            type.title_patterns.each { |regexp, symbols_and_lambdas|
+                if captures = regexp.match(title.to_s)
+                    symbols_and_lambdas.zip(captures[1..-1]).each { |symbol_and_lambda,capture|
+                        sym, lam = symbol_and_lambda
+                        #self[sym] = lam.call(capture)
+                        h[sym] = lam.call(capture)
+                    }
+                    return h
                 end
-                break
-            end
-        end if type.respond_to? :title_patterns
-        return title
+            }
+        else
+            return { :name => title.to_s }
+        end
     end
 end
