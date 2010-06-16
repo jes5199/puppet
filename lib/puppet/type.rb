@@ -205,21 +205,11 @@ class Type
         namevar_parameters.collect { |p| p.name }.first
     end
 
-    def self.parse_title_into_parameters(title)
-        self.title_patterns.each do |pattern|
-            regexp, symbols_and_lambdas = pattern
-            r = {}
-            captures = rexexp.match(title)
-            captures[1..-1].zip(symbols_and_lambdas).each do |capture, symbol_and_lambda|
-                sym, lam = symbol_and_lambda
-                if lam
-                    r[sym] = lam.call(capture)
-                else
-                    r[sym] = capture
-                end
-            end
-            return r
-        end
+    def self.title_patterns
+        identity = lambda {|x| x}
+        [
+            [ /(.*)/, [ [namevar, identity ] ] ]
+        ]
     end
 
     # Create a new parameter.  Requires a block and a name, stores it in the

@@ -466,6 +466,15 @@ class Puppet::Resource
 
     def resolve_title_for_resource(title)
         type = find_resource_type(@type)
+        type.title_patterns.each do |regexp, symbols_and_lambdas|
+            if captures = regexp.match(title.to_s)
+                symbols_and_lambdas.zip(captures[1..-1]).each do |symbol_and_lambda,capture|
+                    sym, lam = symbol_and_lambda
+                    self_sym = lam.call(capture)
+                end
+                break
+            end
+        end if type
         return title
     end
 end
