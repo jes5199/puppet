@@ -470,11 +470,11 @@ class Puppet::Resource
             if captures = regexp.match(title.to_s)
                 symbols_and_lambdas.zip(captures[1..-1]).each do |symbol_and_lambda,capture|
                     sym, lam = symbol_and_lambda
-                    self_sym = lam.call(capture)
+                    self[sym] = lam.call(capture)
                 end
                 break
             end
-        end if type
+        end if type.respond_to? :title_patterns
         return title
     end
 end

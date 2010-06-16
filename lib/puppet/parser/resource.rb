@@ -107,13 +107,13 @@ class Puppet::Parser::Resource < Puppet::Resource
         defined?(@finished) and @finished
     end
 
-    def initialize(*args)
-        super
-
-        unless scope
+    def initialize(type, title = nil, attributes = {}) # same as the superclass
+        unless @scope = attributes[:scope]
             raise ArgumentError, "Resources require a scope"
         end
-        @source ||= scope.source
+        @source = attributes[:source] || scope.source
+
+        super
     end
 
     # Is this resource modeling an isomorphic resource type?
