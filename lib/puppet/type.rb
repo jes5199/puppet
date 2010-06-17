@@ -38,27 +38,15 @@ class Type
         properties()
     end
 
-    # All parameters, in the appropriate order.  The namevar comes first, then
+    # All parameters, in the appropriate order.  The key_attributes come first, then
     # the provider, then the properties, and finally the params and metaparams
     # in the order they were specified in the files.
     def self.allattrs
-        # Cache this, since it gets called multiple times
-        namevar = self.namevar
-
-        order = [namevar]
+        order = key_attributes
         if self.parameters.include?(:provider)
             order << :provider
         end
-        order << [self.properties.collect { |property| property.name },
-            self.parameters - [:provider],
-            self.metaparams].flatten.reject { |param|
-                # we don't want our namevar in there multiple times
-                param == namevar
-            }
-
-        order.flatten!
-
-        return order
+        order | [properties.collect { |property| property.name },parameters,metaparams]
     end
 
     # Retrieve an attribute alias, if there is one.
@@ -191,25 +179,27 @@ class Type
         return param
     end
 
-    # Find the namevar
-    def self.namevar_parameters
-        @namevar_parameters ||= (
+    def self.key_attribute_parameters
+        @key_attribute_parameters ||= (
             params = @parameters.find_all { |param|
                 param.isnamevar? or param.name == :name
             }
-
         )
     end
 
-    def self.namevar
-        namevar_parameters.collect { |p| p.name }.first
+    def self.key_attributes
+        key_attribute_parameters.collect { |p| p.name }
     end
 
     def self.title_patterns
-        identity = lambda {|x| x}
-        [
-            [ /(.*)/, [ [namevar, identity ] ] ]
-        ]
+        case key_attributes.length
+        when 0; []
+        when 1;
+            identity = lambda {|x| x}
+            [ [ /(.*)/, [ [key_attributes.first, identity ] ] ] ]
+        else
+            raise Puppet::DevError,"you must specify title patterns when there are two or more key attributes"
+        end
     end
 
     # Create a new parameter.  Requires a block and a name, stores it in the
@@ -392,6 +382,14 @@ class Type
         return false
     end
 
+    #
+    # The name_var is the key_attribute in the case that there is only one.
+    #
+    def name_var
+        key_attributes = self.class.key_attributes
+        (key_attributes.length == 0) && key_attributes.first
+    end
+
     # abstract accessing parameters and properties, and normalize
     # access to always be symbols, not strings
     # This returns a value, not an object.  It returns the 'is'
@@ -405,7 +403,7 @@ class Type
         end
 
         if name == :name
-            name = self.class.namevar
+            name = name_var
         end
 
         if obj = @parameters[name]
@@ -428,7 +426,7 @@ class Type
         end
 
         if name == :name
-            name = self.class.namevar
+            name = name_var
         end
         if value.nil?
             raise Puppet::Error.new("Got nil value for %s" % name)
@@ -963,23 +961,9 @@ class Type
     def self.hash2resource(hash)
         hash = hash.inject({}) { |result, ary| result[ary[0].to_sym] = ary[1]; result }
 
-        if title = hash[:title]
-            hash.delete(:title)
-        else
-            if self.namevar != :name
-                if hash.include?(:name) and hash.include?(self.namevar)
-                    raise Puppet::Error, "Cannot provide both name and %s to resources of type %s" % [self.namevar, self.name]
-                end
-                if title = hash[self.namevar]
-                    hash.delete(self.namevar)
-                end
-            end
-
-            unless title ||= hash[:name]
-                raise Puppet::Error, "You must specify a name or title for resources"
-            end
-        end
-
+        title = hash.delete(:title) 
+        title ||= hash[:name]
+        title ||= hash[name_var]
 
         # Now create our resource.
         resource = Puppet::Resource.new(self.name, title)
@@ -1877,9 +1861,7 @@ class Type
 
     # Set our resource's name.
     def set_name(hash)
-        n = self.class.namevar
-        self[n] = hash[n]
-        hash.delete(n)
+        self[name_var] = hash.delete(name_var)
     end
 
     # Set all of the parameters from a hash, in the appropriate order.
@@ -1990,14 +1972,13 @@ class Type
     # then use the object's name.
     def title
         unless defined? @title and @title
-            namevar = self.class.namevar
-            if self.class.validparameter?(namevar)
+            if self.class.validparameter?(name_var)
                 @title = self[:name]
-            elsif self.class.validproperty?(namevar)
-                @title = self.should(namevar)
+            elsif self.class.validproperty?(name_var)
+                @title = self.should(name_var)
             else
                 self.devfail "Could not find namevar %s for %s" %
-                    [namevar, self.class.name]
+                    [name_var, self.class.name]
             end
         end
 
@@ -2019,7 +2000,7 @@ class Type
         end
 
         @parameters.each do |name, param|
-            # Avoid adding each instance name as both the name and the namevar
+            # Avoid adding each instance name twice
             next if param.class.isnamevar? and param.value == self.title
 
             # We've already got property values
