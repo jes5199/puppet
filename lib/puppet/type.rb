@@ -949,17 +949,15 @@ class Type
         end.compact
     end
 
-    # Convert a simple hash into a Resource instance.  This is a convenience method,
-    # so people can create RAL resources with a hash and get the same behaviour
-    # as we get internally when we use Resource instances.
-    #   This should only be used directly from Ruby -- it's not used when going through
-    # normal Puppet usage.
+    # Convert a simple hash into a Resource instance.
     def self.hash2resource(hash)
         hash = hash.inject({}) { |result, ary| result[ary[0].to_sym] = ary[1]; result }
 
         title = hash.delete(:title) 
         title ||= hash[:name]
         title ||= hash[key_attributes.first] if key_attributes.length == 1
+
+        raise Puppet::Error, "Title or name must be provided" unless title
 
         # Now create our resource.
         resource = Puppet::Resource.new(self.name, title)

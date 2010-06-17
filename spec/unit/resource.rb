@@ -362,13 +362,13 @@ describe Puppet::Resource do
         end
 
         it "should set the namevar when asked to set the name" do
-            Puppet::Type.type(:file).stubs(:namevar).returns :myvar
+            Puppet::Type.type(:file).stubs(:key_attributes).returns [:myvar]
             @resource[:name] = "/foo"
             @resource[:myvar].should == "/foo"
         end
 
         it "should return the namevar when asked to return the name" do
-            Puppet::Type.type(:file).stubs(:namevar).returns :myvar
+            Puppet::Type.type(:file).stubs(:key_attributes).returns [:myvar]
             @resource[:myvar] = "/foo"
             @resource[:name].should == "/foo"
         end
@@ -446,7 +446,7 @@ describe Puppet::Resource do
         end
 
         it "should use the title as the namevar to the hash if no namevar is present" do
-            Puppet::Type.type(:file).stubs(:namevar).returns :myvar
+            Puppet::Type.type(:file).stubs(:key_attributes).returns [:myvar]
             @resource.to_hash[:myvar].should == "/my/file"
         end
 
