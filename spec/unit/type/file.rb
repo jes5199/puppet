@@ -359,7 +359,7 @@ describe Puppet::Type.type(:file) do
         end
 
         it "should have its 'path' attribute set as its namevar" do
-            Puppet::Type.type(:file).namevar.should == :path
+            Puppet::Type.type(:file).key_attributes.should == [:path]
         end
     end
 

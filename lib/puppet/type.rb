@@ -42,11 +42,7 @@ class Type
     # the provider, then the properties, and finally the params and metaparams
     # in the order they were specified in the files.
     def self.allattrs
-        order = key_attributes
-        if self.parameters.include?(:provider)
-            order << :provider
-        end
-        order | [properties.collect { |property| property.name },parameters,metaparams]
+        key_attributes | (parameters & [:provider]) | properties.collect { |property| property.name } | parameters | metaparams
     end
 
     # Retrieve an attribute alias, if there is one.
@@ -387,7 +383,7 @@ class Type
     #
     def name_var
         key_attributes = self.class.key_attributes
-        (key_attributes.length == 0) && key_attributes.first
+        (key_attributes.length == 1) && key_attributes.first
     end
 
     # abstract accessing parameters and properties, and normalize
