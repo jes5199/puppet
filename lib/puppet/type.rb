@@ -963,7 +963,7 @@ class Type
 
         title = hash.delete(:title) 
         title ||= hash[:name]
-        title ||= hash[name_var]
+        title ||= hash[key_attributes.first] if key_attributes.length == 1
 
         # Now create our resource.
         resource = Puppet::Resource.new(self.name, title)
@@ -1861,7 +1861,7 @@ class Type
 
     # Set our resource's name.
     def set_name(hash)
-        self[name_var] = hash.delete(name_var)
+        self[name_var] = hash.delete(name_var) if name_var
     end
 
     # Set all of the parameters from a hash, in the appropriate order.

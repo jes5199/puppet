@@ -369,8 +369,8 @@ class Puppet::Resource
     # The namevar for our resource type. If the type doesn't exist,
     # always use :name.
     def namevar
-        if builtin_type? and t = resource_type
-            t.namevar
+        if builtin_type? and t = resource_type and t.key_attributes.length == 1
+            t.key_attributes.first
         else
             :name
         end
