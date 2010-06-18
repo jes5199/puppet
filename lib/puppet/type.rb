@@ -199,6 +199,7 @@ class Type
     end
 
     def uniqueness_key
+        p type
         to_resource.uniqueness_key
     end
 
@@ -1994,7 +1995,7 @@ class Type
 
         values = retrieve()
         values.each do |name, value|
-            trans[name] = value
+            trans[name.name] = value
         end
 
         @parameters.each do |name, param|

@@ -256,10 +256,10 @@ module Puppet
                 current_value = :absent
 
                 if absent
-                    prophash[property.name] = :absent
+                    prophash[property] = :absent
                 else
                     current_value = property.retrieve
-                    prophash[property.name] = current_value
+                    prophash[property] = current_value
                 end
 
                 if property.name == :ensure and current_value == :absent
