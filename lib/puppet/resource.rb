@@ -445,7 +445,7 @@ class Puppet::Resource
         when "Class";
             resolve_title_for_class(@unresolved_title)
         else
-            resolve_title_for_resource(@unresolved_title)
+            @unresolved_title
         end
     end
 
@@ -458,10 +458,6 @@ class Puppet::Resource
             result = klass.name
         end
         return munge_type_name(result || title)
-    end
-
-    def resolve_title_for_resource(title)
-        title
     end
 
     def parse_title
