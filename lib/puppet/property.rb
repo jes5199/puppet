@@ -233,6 +233,10 @@ class Puppet::Property < Puppet::Parameter
         return self.class.name
     end
 
+    def to_sym
+        name.to_sym
+    end
+
     # for testing whether we should actually do anything
     def noop
         # This is only here to make testing easier.
