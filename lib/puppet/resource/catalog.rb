@@ -56,6 +56,11 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
         tag(*classes)
     end
 
+    def title_key_for_ref( ref )
+        ref =~ /^(.+)\[(.*)\]/
+        [$1, $2]
+    end
+
     # Add one or more resources to our graph and to our resource table.
     # This is actually a relatively complicated method, because it handles multiple
     # aspects of Catalog behaviour:
@@ -69,10 +74,10 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
                 raise ArgumentError, "Can only add objects that respond to :ref, not instances of %s" % resource.class
             end
         end.each { |resource| fail_on_duplicate_type_and_title(resource) }.each do |resource|
-            ref = resource.ref
+            title_key = title_key_for_ref(resource.ref)
 
             @transient_resources << resource if applying?
-            @resource_table[ref] = resource
+            @resource_table[title_key] = resource
 
             # If the name and title differ, set up an alias
 
@@ -94,7 +99,6 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
 
     # Create an alias for a resource.
     def alias(resource, name)
-        #set $1
         resource.ref =~ /^(.+)\[/
         class_name = $1 || resource.class.name
 
@@ -370,7 +374,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
             # Reference class canonizes for us.
             res = Puppet::Resource.new(nil, type)
         end
-        title_key      = [res.type, res.title]
+        title_key      = [res.type, res.title.to_s]
         uniqueness_key = [res.type, res.uniqueness_key]
         @resource_table[title_key] || @resource_table[uniqueness_key]
     end
@@ -502,7 +506,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
     # Verify that the given resource isn't defined elsewhere.
     def fail_on_duplicate_type_and_title(resource)
         # Short-curcuit the common case,
-        return unless existing_resource = @resource_table[resource.ref]
+        return unless existing_resource = @resource_table[title_key_for_ref(resource.ref)]
 
         # If we've gotten this far, it's a real conflict
         msg = "Duplicate definition: %s is already defined" % resource.ref
