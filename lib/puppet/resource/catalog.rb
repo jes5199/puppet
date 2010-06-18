@@ -77,7 +77,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
             # If the name and title differ, set up an alias
 
             if resource.respond_to?(:name) and resource.respond_to?(:title) and resource.respond_to?(:isomorphic?) and resource.name != resource.title
-                self.alias(resource, resource.name) if resource.isomorphic?
+                self.alias(resource, resource.uniqueness_key) if resource.isomorphic?
             end
 
             resource.catalog = self if resource.respond_to?(:catalog=)
@@ -96,14 +96,17 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
     def alias(resource, name)
         #set $1
         resource.ref =~ /^(.+)\[/
+        class_name = $1 || resource.class.name
 
-        newref = "%s[%s]" % [$1 || resource.class.name, name]
+        newref = [class_name, name]
+
+        ref_string = "%s[%s]" % [class_name, name]
+        return if ref_string == resource.ref
 
         # LAK:NOTE It's important that we directly compare the references,
         # because sometimes an alias is created before the resource is
         # added to the catalog, so comparing inside the below if block
         # isn't sufficient.
-        return if newref == resource.ref
         if existing = @resource_table[newref]
             return if existing == resource
             raise(ArgumentError, "Cannot alias %s to %s; resource %s already exists" % [resource.ref, name, newref])

@@ -212,6 +212,10 @@ class Puppet::Resource
         "#{type}[#{title}]"
     end
 
+    def title_key
+        [type.to_s, title.to_s]
+    end
+
     def uniqueness_key
         h = {}
         resource_type.key_attributes.each do |attribute|
