@@ -199,7 +199,6 @@ class Type
     end
 
     def uniqueness_key
-        p type
         to_resource.uniqueness_key
     end
 
@@ -1995,7 +1994,10 @@ class Type
 
         values = retrieve()
         values.each do |name, value|
-            trans[name.name] = value
+            # sometimes we get symbols and sometimes we get Properties
+            # I think it's a bug, but I can't find it. ~JW
+            name = name.name if name.respond_to? :name
+            trans[name] = value
         end
 
         @parameters.each do |name, param|
