@@ -788,4 +788,18 @@ describe Puppet::Resource do
             resource.resolve.should == :myresource
         end
     end
+
+    describe "when generating the uniqueness key" do
+        it "should include all of the key_attributes" do
+            Puppet::Type.type(:file).stubs(:key_attributes).returns [:myvar, :yourvar, :path]
+            Puppet::Type.type(:file).stubs(:title_patterns).returns(
+                [ [ /(.*)/, [ [:path, lambda{|x| x} ] ] ] ]
+            )
+            Puppet::Resource.new("file", "/my/file").uniqueness_key.should == {
+                :myvar => nil,
+                :yourvar => nil,
+                :path => '/my/file',
+            }
+        end
+    end
 end

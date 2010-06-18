@@ -212,6 +212,14 @@ class Puppet::Resource
         "#{type}[#{title}]"
     end
 
+    def uniqueness_key
+        h = {}
+        resource_type.key_attributes.each do |attribute|
+            h[attribute] = self.to_hash[attribute]
+        end
+        return h
+    end
+
     # Convert our resource to Puppet code.
     def to_manifest
         "%s { '%s':\n%s\n}" % [self.type.to_s.downcase, self.title,

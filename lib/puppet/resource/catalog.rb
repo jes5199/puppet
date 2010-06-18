@@ -68,7 +68,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
             unless resource.respond_to?(:ref)
                 raise ArgumentError, "Can only add objects that respond to :ref, not instances of %s" % resource.class
             end
-        end.each { |resource| fail_unless_unique(resource) }.each do |resource|
+        end.each { |resource| fail_on_duplicate_type_and_title(resource) }.each do |resource|
             ref = resource.ref
 
             @transient_resources << resource if applying?
@@ -495,15 +495,11 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
     end
 
     # Verify that the given resource isn't defined elsewhere.
-    def fail_unless_unique(resource)
+    def fail_on_duplicate_type_and_title(resource)
         # Short-curcuit the common case,
         return unless existing_resource = @resource_table[resource.ref]
 
         # If we've gotten this far, it's a real conflict
-
-        # Either it's a defined type, which are never
-        # isomorphic, or it's a non-isomorphic type, so
-        # we should throw an exception.
         msg = "Duplicate definition: %s is already defined" % resource.ref
 
         if existing_resource.file and existing_resource.line
