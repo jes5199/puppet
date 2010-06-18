@@ -24,6 +24,10 @@ Puppet::Type.newtype(:file) do
         Puppet Labs and we can hopefully work with you to develop a
         native resource to support what you are doing."
 
+    def self.title_patterns
+        [ [ /^(.*?)\/?$/, [ [ :path, lambda{|x| x} ] ] ] ]
+    end
+
     newparam(:path) do
         desc "The path to the file to manage.  Must be fully qualified."
         isnamevar
