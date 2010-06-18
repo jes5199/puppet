@@ -1994,7 +1994,7 @@ class Type
 
         values = retrieve()
         values.each do |name, value|
-            trans[name.to_sym] = value
+            trans[name.name] = value
         end
 
         @parameters.each do |name, param|
