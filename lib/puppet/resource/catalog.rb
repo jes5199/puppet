@@ -98,14 +98,16 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
     end
 
     # Create an alias for a resource.
-    def alias(resource, name)
+    def alias(resource, key)
         resource.ref =~ /^(.+)\[/
         class_name = $1 || resource.class.name
 
-        newref = [class_name, name]
+        newref = [class_name, key]
 
-        ref_string = "%s[%s]" % [class_name, name]
-        return if ref_string == resource.ref
+        if key.is_a? String
+            ref_string = "%s[%s]" % [class_name, key]
+            return if ref_string == resource.ref
+        end
 
         # LAK:NOTE It's important that we directly compare the references,
         # because sometimes an alias is created before the resource is
@@ -113,7 +115,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
         # isn't sufficient.
         if existing = @resource_table[newref]
             return if existing == resource
-            raise(ArgumentError, "Cannot alias %s to %s; resource %s already exists" % [resource.ref, name, newref])
+            raise(ArgumentError, "Cannot alias %s to %s; resource %s already exists" % [resource.ref, key.inspect, newref.inspect])
         end
         @resource_table[newref] = resource
         @aliases[resource.ref] ||= []
@@ -380,7 +382,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
     end
 
     def resource_refs
-        resource_keys.collect{ |type, name| "#{type}[#{name}]"}
+        resource_keys.collect{ |type, name| name.is_a? String ? "#{type}[#{name}]" : nil}.compact
     end
 
     def resource_keys
