@@ -1993,7 +1993,6 @@ class Type
         trans = TransObject.new(self.title, self.class.name)
 
         values = retrieve()
-        p values
         values.each do |name, value|
             trans[name.to_sym] = value
         end

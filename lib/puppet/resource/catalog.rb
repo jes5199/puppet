@@ -379,8 +379,11 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
         @resource_table[title_key] || @resource_table[uniqueness_key]
     end
 
-    # Return an array of all resources.
-    def resources
+    def resource_refs
+        resource_keys.collect{ |type, name| "#{type}[#{name}]"}
+    end
+
+    def resource_keys
         @resource_table.keys
     end
 
