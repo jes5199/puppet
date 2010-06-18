@@ -198,6 +198,10 @@ class Type
         end
     end
 
+    def uniqueness_key
+        to_resource.uniqueness_key
+    end
+
     # Create a new parameter.  Requires a block and a name, stores it in the
     # @parameters array, and does some basic checking on it.
     def self.newparam(name, options = {}, &block)
@@ -1989,6 +1993,7 @@ class Type
         trans = TransObject.new(self.title, self.class.name)
 
         values = retrieve()
+        p values
         values.each do |name, value|
             trans[name.name] = value
         end
