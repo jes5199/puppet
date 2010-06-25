@@ -417,7 +417,7 @@ class TestExec < Test::Unit::TestCase
     end
 
     # Make sure all checks need to be fully qualified.
-    def test_falsevals
+    def test_false_and_bad_vals
         exec = nil
         assert_nothing_raised do
             exec = Puppet::Type.type(:exec).new(
@@ -428,8 +428,15 @@ class TestExec < Test::Unit::TestCase
         Puppet::Type.type(:exec).checks.each do |check|
             klass = Puppet::Type.type(:exec).paramclass(check)
             next if klass.value_collection.values.include? :false
-            assert_raise(Puppet::Error, "Check '%s' did not fail on false" % check) do
+            if ['onlyif', 'unless'].include? check.to_s
                 exec[check] = false
+            else
+                assert_raise(Puppet::Error, "Check '%s' did not fail on false" % check) do
+                    exec[check] = 'somebadvalue'
+                end
+            end
+            assert_raise(Puppet::Error, "Check '%s' did not fail on false" % check) do
+                exec[check] = 'somebadvalue'
             end
         end
     end
