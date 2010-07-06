@@ -9,6 +9,8 @@ class Puppet::Resource::TypeCollection
 
     def initialize(env)
         @environment = env.is_a?(String) ? Puppet::Node::Environment.new(env) : env
+        @environment.known_resource_types = self
+
         @hostclasses = {}
         @definitions = {}
         @nodes = {}

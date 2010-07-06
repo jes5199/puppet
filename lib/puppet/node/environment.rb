@@ -77,6 +77,10 @@ class Puppet::Node::Environment
         @known_resource_types
     end
 
+    def known_resource_types=(type_collection)
+        @known_resource_types = type_collection
+    end
+
     def module(name)
         mod = Puppet::Module.new(name, self)
         return nil unless mod.exist?

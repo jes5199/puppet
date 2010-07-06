@@ -56,6 +56,7 @@ describe Puppet::Node::Environment do
         end
 
         it "should create a resource type collection if none exists" do
+            @env.known_resource_types = nil
             Puppet::Resource::TypeCollection.expects(:new).with(@env).returns @collection
             @env.known_resource_types.should equal(@collection)
         end
@@ -65,6 +66,7 @@ describe Puppet::Node::Environment do
         end
         
         it "should perform the initial import when creating a new collection" do
+            @env.known_resource_types = nil
             @collection.expects(:perform_initial_import)
             Puppet::Resource::TypeCollection.expects(:new).returns @collection
 
