@@ -743,10 +743,11 @@ class Type
         result
     end
 
-    def retrieve_resource
-        resource = retrieve
+    def self.retrieve_resource_from(res)
+        resource = res.retrieve
         if resource.is_a? Hash
-            resource = Resource.new(type, title, :parameters => resource)
+            Puppet.warning("#{res.ref}#retrieve returned a Hash instead of a Resource object.")
+            resource = Resource.new(res.type, res.title, :parameters => resource)
         end
         resource
     end
@@ -1932,9 +1933,8 @@ class Type
     def to_trans(ret = true)
         trans = TransObject.new(self.title, self.class.name)
 
-        values = retrieve_resource
+        values = Puppet::Type.retrieve_resource_from(self)
         values.each do |name, value|
-            name = name.name if name.respond_to? :name
             trans[name] = value
         end
 
