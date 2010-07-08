@@ -423,15 +423,15 @@ Puppet::Type.newtype(:zone) do
     def retrieve
         provider.flush
         if hash = provider.properties() and hash[:ensure] != :absent
-            result = setstatus(hash)
-            result
+            retrieved_properties = setstatus(hash)
         else
             # Return all properties as absent.
-            return properties().inject({}) do | prophash, property|
+            retrieved_properties = properties().inject({}) do | prophash, property|
                 prophash[property] = :absent
                 prophash
             end
         end
+        Puppet::Resource.new(type, title, :parameters => retrieved_properties)
     end
 
     # Take the results of a listing and set everything appropriately.

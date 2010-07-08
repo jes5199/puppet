@@ -252,7 +252,7 @@ module Puppet
 
         def retrieve
             absent = false
-            properties().inject({}) { |prophash, property|
+            retrieved_properties = properties().inject({}) { |prophash, property|
                 current_value = :absent
 
                 if absent
@@ -267,6 +267,8 @@ module Puppet
                 end
                 prophash
             }
+
+            Puppet::Resource.new(type, title, :parameters => retrieved_properties)
         end
 
         newproperty(:roles, :parent => Puppet::Property::List, :required_features => :manages_solaris_rbac) do
