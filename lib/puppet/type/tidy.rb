@@ -235,10 +235,12 @@ Puppet::Type.newtype(:tidy) do
     def retrieve
         # Our ensure property knows how to retrieve everything for us.
         if obj = @parameters[:ensure]
-            return obj.retrieve
+            retrieved_properties = obj.retrieve
         else
-            return {}
+            retrieved_properties = {}
         end
+
+        Puppet::Resource.new(type, title, :parameters => retrieved_properties)
     end
 
     # Hack things a bit so we only ever check the ensure property.
