@@ -67,7 +67,7 @@ module Puppet
 
             def syncothers
                 # We have to flush any changes to disk.
-                currentvalues = @resource.retrieve_resource
+                currentvalues = @resource.retrieve
 
                 # Determine if there are any out-of-sync properties.
                 oos = @resource.send(:properties).find_all do |prop|

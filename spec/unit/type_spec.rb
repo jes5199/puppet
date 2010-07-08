@@ -368,11 +368,11 @@ describe Puppet::Type do
         it "should fail if its provider is unsuitable" do
             @resource = Puppet::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
             @resource.provider.class.expects(:suitable?).returns false
-            lambda { @resource.retrieve_resource }.should raise_error(Puppet::Error)
+            lambda { @resource.retrieve }.should raise_error(Puppet::Error)
         end
 
         it "should return a Puppet::Resource instance with its type and title set appropriately" do
-            result = @resource.retrieve_resource
+            result = @resource.retrieve
             result.should be_instance_of(Puppet::Resource)
             result.type.should == "Mount"
             result.title.should == "foo"
@@ -381,11 +381,11 @@ describe Puppet::Type do
         it "should set the name of the returned resource if its own name and title differ" do
             @resource[:name] = "my name"
             @resource.title = "other name"
-            @resource.retrieve_resource[:name].should == "my name"
+            @resource.retrieve[:name].should == "my name"
         end
 
         it "should provide a value for all set properties" do
-            values = @resource.retrieve_resource
+            values = @resource.retrieve
             [:ensure, :fstype, :pass].each { |property| values[property].should_not be_nil }
         end
 
@@ -396,13 +396,13 @@ describe Puppet::Type do
         it "should not call retrieve on non-ensure properties if the resource is absent and should consider the property absent" do
             @resource.property(:ensure).expects(:retrieve).returns :absent
             @resource.property(:fstype).expects(:retrieve).never
-            @resource.retrieve_resource[:fstype].should == :absent
+            @resource.retrieve[:fstype].should == :absent
         end
 
         it "should include the result of retrieving each property's current value if the resource is present" do
             @resource.property(:ensure).expects(:retrieve).returns :present
             @resource.property(:fstype).expects(:retrieve).returns 15
-            @resource.retrieve_resource[:fstype] == 15
+            @resource.retrieve[:fstype] == 15
         end
     end
 
@@ -436,6 +436,26 @@ describe Puppet::Type do
 
     it "should have a 'stage' metaparam" do
         Puppet::Type.metaparamclass(:stage).should be_instance_of(Class)
+    end
+
+    describe ".retrieve_resource_from" do
+        it "should pass through a resource" do
+            response = Puppet::Resource.new('mount','/dev/null')
+            res = stub "resource", :retrieve => response
+            Puppet::Type.retrieve_resource_from(res).should == response
+        end
+
+        it "should create a resource if it retrieves a hash, and show a warning" do
+            response = {}
+            res = stub "resource", :type => 'mount', :title => '/dev/null', :retrieve => response, :ref => 'Mount[/dev/null]'
+
+            new_resource = stub "new_resource"
+            Puppet::Resource.expects(:new).with('mount', '/dev/null', :parameters => {}).returns new_resource
+
+            Puppet.expects(:warning)
+
+            Puppet::Type.retrieve_resource_from(res).should == new_resource
+        end
     end
 end
 
