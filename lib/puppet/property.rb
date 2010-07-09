@@ -3,6 +3,7 @@
 
 require 'puppet'
 require 'puppet/parameter'
+require 'puppet/util/soft_value'
 
 class Puppet::Property < Puppet::Parameter
     require 'puppet/property/ensure'
@@ -174,7 +175,10 @@ class Puppet::Property < Puppet::Parameter
         # Look for a matching value
         return (is == @should or is == @should.collect { |v| v.to_s }) if match_all?
 
-        @should.each { |val| return true if is == val or is == val.to_s }
+        @should.each do |val|
+            return true if val.is_a? Puppet::Util::SoftValue
+            return true if is == val or is == val.to_s
+        end
 
         # otherwise, return false
         return false

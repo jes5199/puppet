@@ -1,3 +1,5 @@
+require 'puppet/util/soft_value.rb'
+
 module Puppet
     # We want the mount to refresh when it changes.
     newtype(:mount, :self_refresh => true) do
@@ -117,11 +119,15 @@ module Puppet
         newproperty(:fstype) do
             desc "The mount type.  Valid values depend on the
                 operating system."
+
+            defaultto Puppet::Util::SoftValue.new('auto')
         end
 
         newproperty(:options) do
             desc "Mount options for the mounts, as they would
                 appear in the fstab."
+
+            defaultto Puppet::Util::SoftValue.new('defaults')
         end
 
         newproperty(:pass) do
