@@ -157,7 +157,7 @@ class Puppet::Resource
   # Create our resource.
   def initialize(type, title = nil, attributes = {})
     @parameters = {}
-    @namespaces = nil
+    @namespaces = [""]
 
     # Set things like namespaces and strictness first.
     attributes.each do |attr, value|
@@ -365,13 +365,14 @@ class Puppet::Resource
     return nil if ["class", "node"].include? type.to_s.downcase
     find_builtin_resource_type(type) || find_defined_resource_type(type)
   end
+  public :find_resource_type
 
   def find_builtin_resource_type(type)
     Puppet::Type.type(type.to_s.downcase.to_sym)
   end
 
   def find_defined_resource_type(type)
-    known_resource_types.find_definition(namespaces || [""], type.to_s.downcase)
+    known_resource_types.find_definition(namespaces, type.to_s.downcase)
   end
 
   # Produce a canonical method name.
