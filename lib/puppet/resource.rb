@@ -157,7 +157,7 @@ class Puppet::Resource
   # Create our resource.
   def initialize(type, title = nil, attributes = {})
     @parameters = {}
-    @namespaces = [""]
+    @namespaces = nil
 
     # Set things like namespaces and strictness first.
     attributes.each do |attr, value|
@@ -352,7 +352,12 @@ class Puppet::Resource
 
   def find_hostclass(title)
     name = title == :main ? "" : title
-    known_resource_types.find_hostclass(namespaces, name)
+
+    if namespaces
+      known_resource_types.find_hostclass(namespaces, name)
+    else
+      known_resource_types.hostclass(name)
+    end
   end
 
   def find_resource_type(type)
@@ -366,7 +371,7 @@ class Puppet::Resource
   end
 
   def find_defined_resource_type(type)
-    known_resource_types.find_definition(namespaces, type.to_s.downcase)
+    known_resource_types.find_definition(namespaces || [""], type.to_s.downcase)
   end
 
   # Produce a canonical method name.

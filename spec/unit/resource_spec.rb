@@ -131,7 +131,7 @@ describe Puppet::Resource do
     Puppet::Resource.new("file", "/my/file", :namespaces => "foo").namespaces.should == ["foo"]
   end
 
-  it "should default to a single amespace of an empty string" do
+  it "should default to a single namespace of an empty string" do
     Puppet::Resource.new("file", "/my/file").namespaces.should == [""]
   end
 
