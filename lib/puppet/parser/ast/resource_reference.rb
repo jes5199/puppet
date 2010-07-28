@@ -7,8 +7,33 @@ class Puppet::Parser::AST::ResourceReference < Puppet::Parser::AST::Branch
   # Evaluate our object, but just return a simple array of the type
   # and name.
   def evaluate(scope)
-    titles = Array(title.safeevaluate(scope)).collect { |t| Puppet::Resource.new(type, t, :namespaces => scope.namespaces) }
-    return(titles.length == 1 ? titles.pop : titles)
+    a_type = type
+    titles = Array(title.safeevaluate(scope))
+
+    case type.downcase
+    when "class"
+      titles = titles.collect do |a_title|  
+        # resolve the a_title
+        hostclass = scope.find_hostclass(a_title)
+        if hostclass
+          hostclass.name
+        else
+          a_title
+        end
+      end
+    when "node"
+      # nothing
+    else
+      # resolve the type
+      resource_type = scope.find_resource_type(type)
+      a_type = resource_type.name if resource_type
+    end
+
+    resources = titles.collect{ |a_title|
+      Puppet::Resource.new(a_type, a_title)
+    }
+
+    return(resources.length == 1 ? resources.pop : resources)
   end
 
   def to_s
