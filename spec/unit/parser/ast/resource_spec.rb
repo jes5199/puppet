@@ -118,3 +118,45 @@ describe Puppet::Parser::AST::Resource do
     end
   end
 end
+
+describe Puppet::Parser::AST::Resource do
+  it "should create a file resource from source" do
+    #@parser = Puppet::Parser::Parser.new(Puppet::Node::Environment.new)
+    Puppet[:code] = <<-PP
+      file { "/dev/null" : }
+    PP
+
+    catalog = Puppet::Parser::Compiler.compile(Puppet::Node.new("mynode"))
+
+    file_resource = catalog.resource( "File[/dev/null]" )
+
+    file_resource.type.should == "File"
+  end
+
+  it "should resolve require references in local scope" do
+    Puppet[:code] = <<-PP
+      class experiment {
+        class baz {
+          notify {"this should have been required" : }
+        }
+
+        notify {"this requires a class" : require => Class[Baz] }
+      }
+      class baz {
+      }
+
+      include baz
+      include experiment
+      include experiment::baz
+    PP
+
+    catalog = Puppet::Parser::Compiler.compile(Puppet::Node.new("mynode"))
+
+    require 'pp'
+
+    notify_resource = catalog.resource( "Notify[this requires a class]" )
+
+    notify_resource[:require].title.should == "Experiment::Baz"
+  end
+
+end

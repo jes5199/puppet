@@ -30,7 +30,6 @@ class Puppet::Parser::AST::ResourceReference < Puppet::Parser::AST::Branch
     end
 
     resources = titles.collect{ |a_title|
-      p [a_type, a_title, scope.namespaces]
       Puppet::Resource.new(a_type, a_title)
     }
 
