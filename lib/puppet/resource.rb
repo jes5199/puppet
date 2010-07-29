@@ -13,7 +13,7 @@ class Puppet::Resource
   extend Puppet::Util::Pson
   include Enumerable
   attr_accessor :file, :line, :catalog, :exported, :virtual, :validate_parameters, :strict
-  attr_reader :namespaces, :type, :title
+  attr_reader :type, :title
 
   require 'puppet/indirector'
   extend Puppet::Indirector
@@ -158,7 +158,6 @@ class Puppet::Resource
   def initialize(type, title = nil, attributes = {})
     p [type, title]
     @parameters = {}
-    @namespaces = [""]
 
     # Set things like namespaces and strictness first.
     attributes.each do |attr, value|
@@ -356,8 +355,8 @@ class Puppet::Resource
     param
   end
 
-  def namespaces=(ns)
-    @namespaces = Array(ns)
+  def namespaces
+    [""]
   end
 
   # The namevar for our resource type. If the type doesn't exist,
