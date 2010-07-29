@@ -201,7 +201,7 @@ class Puppet::Resource
     when "Class"; known_resource_types.hostclass(title == :main ? "" : title)
     when "Node"; known_resource_types.node(title)
     else
-      self.class.find_resource_type(environment, namespaces, type)
+      self.class.find_builtin_resource_type(type) || known_resource_types.definition(type)
     end
   end
 
