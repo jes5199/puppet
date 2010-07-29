@@ -63,12 +63,6 @@ describe Puppet::Parser::Resource do
     Puppet::Parser::Resource.new("file", "whatever", :scope => scope).environment.should == "foo"
   end
 
-  it "should get its namespaces from its scope" do
-    scope = stub 'scope', :source => stub("source"), :environment => nil
-    scope.expects(:namespaces).returns(%w{one two}).at_least_once
-    Puppet::Parser::Resource.new("file", "whatever", :scope => scope).namespaces.should == %w{one two}
-  end
-
   it "should use the resource type collection helper module" do
     Puppet::Parser::Resource.ancestors.should be_include(Puppet::Resource::TypeCollectionHelper)
   end
@@ -556,7 +550,7 @@ describe Puppet::Parser::Resource do
 
   # part of #629 -- the undef keyword.  Make sure 'undef' params get skipped.
   it "should not include 'undef' parameters when converting itself to a hash" do
-    resource = Puppet::Parser::Resource.new "file", "/tmp/testing", :source => mock("source"), :scope => mock("scope", :environment => nil, :namespaces => nil)
+    resource = Puppet::Parser::Resource.new "file", "/tmp/testing", :source => mock("source"), :scope => mock("scope")
     resource[:owner] = :undef
     resource[:mode] = "755"
     resource.to_hash[:owner].should be_nil

@@ -165,14 +165,13 @@ class Puppet::Resource
       send(attr.to_s + "=", value)
     end
 
-    tmp_type, tmp_title = extract_type_and_title(type, title)
+    @type, @title = extract_type_and_title(type, title)
 
-    @type = munge_type_name(tmp_type)
+    @type = munge_type_name(@type)
 
     if @type == "Class"
-      @title = munge_type_name(tmp_title)
-    else
-      @title = tmp_title
+      @title = :main if @title == ""
+      @title = munge_type_name(@title)
     end
 
     p({ [type, title] => [@type,@title] })
