@@ -141,10 +141,6 @@ class Puppet::Parser::Resource < Puppet::Resource
     self[:name] || self.title
   end
 
-  def namespaces
-    scope.namespaces
-  end
-
   # A temporary occasion, until I get paths in the scopes figured out.
   def path
     to_s

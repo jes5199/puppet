@@ -159,7 +159,7 @@ class Puppet::Resource
     p [type, title]
     @parameters = {}
 
-    # Set things like namespaces and strictness first.
+    # Set things like strictness first.
     attributes.each do |attr, value|
       next if attr == :parameters
       send(attr.to_s + "=", value)
@@ -345,10 +345,6 @@ class Puppet::Resource
     param
   end
 
-  def namespaces
-    [""]
-  end
-
   # The namevar for our resource type. If the type doesn't exist,
   # always use :name.
   def namevar
@@ -392,18 +388,12 @@ class Puppet::Resource
     return :main if value == :main
     return "Class" if value == "" or value.nil? or value.to_s.downcase == "component"
 
-    # we must make an analogous change to Puppet::Parser::Resource creation
-    # so we can get rid of this step
-    # resource_type = self.class.find_resource_type(environment, namespaces, value)
-    # value = resource_type.name if resource_type
-    # p value
-
     value.to_s.split("::").collect { |s| s.capitalize }.join("::")
   end
 
   def parse_title
     h = {}
-    type = self.class.find_resource_type(environment, namespaces, @type)
+    type = resource_type
     if type.respond_to? :title_patterns
       type.title_patterns.each { |regexp, symbols_and_lambdas|
         if captures = regexp.match(title.to_s)
