@@ -156,7 +156,6 @@ class Puppet::Resource
 
   # Create our resource.
   def initialize(type, title = nil, attributes = {})
-    p [type, title]
     @parameters = {}
 
     # Set things like strictness first.
@@ -173,8 +172,6 @@ class Puppet::Resource
       @title = :main if @title == ""
       @title = munge_type_name(@title)
     end
-
-    p({ [type, title] => [@type,@title] })
 
     if params = attributes[:parameters]
       extract_parameters(params)

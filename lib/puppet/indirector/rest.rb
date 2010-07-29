@@ -44,8 +44,6 @@ class Puppet::Indirector::REST < Puppet::Indirector::Terminus
       content_type = response['content-type'].gsub(/\s*;.*$/,'') # strip any appended charset
 
       body = uncompress_body(response)
-      File.open('/tmp/pson', "w"){|f| f.puts body}
-      puts `cat /tmp/pson | jsonpretty`
 
       # Convert the response to a deserialized object.
       if multiple

@@ -71,7 +71,6 @@ class Puppet::Parser::Resource < Puppet::Resource
     elsif builtin?
       devfail "Cannot evaluate a builtin type (#{type})"
     else
-      puts caller
       self.fail "Cannot find definition #{type}"
     end
   end
