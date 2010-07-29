@@ -25,7 +25,7 @@ class Puppet::Parser::AST::ResourceReference < Puppet::Parser::AST::Branch
       # nothing
     else
       # resolve the type
-      resource_type = Puppet::Resource.find_resource_type(scope.environment, scope.namespaces, type)
+      resource_type = scope.find_resource_type(type)
       a_type = resource_type.name if resource_type
     end
 

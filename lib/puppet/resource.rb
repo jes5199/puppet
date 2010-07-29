@@ -201,7 +201,7 @@ class Puppet::Resource
     when "Class"; known_resource_types.hostclass(title == :main ? "" : title)
     when "Node"; known_resource_types.node(title)
     else
-      self.class.find_builtin_resource_type(type) || known_resource_types.definition(type)
+      Puppet::Type.type(type.to_s.downcase.to_sym) || known_resource_types.definition(type)
     end
   end
 
@@ -321,20 +321,6 @@ class Puppet::Resource
   end
 
   private
-
-  def self.find_resource_type(environment, namespaces, type)
-    # It still works fine without the type == 'class' short-cut, but it is a lot slower.
-    return nil if ["class", "node"].include? type.to_s.downcase
-    find_builtin_resource_type(type) || find_defined_resource_type(environment, namespaces, type)
-  end
-
-  def self.find_builtin_resource_type(type)
-    Puppet::Type.type(type.to_s.downcase.to_sym)
-  end
-
-  def self.find_defined_resource_type(environment, namespaces, type)
-    environment.known_resource_types.find_definition(namespaces, type.to_s.downcase)
-  end
 
   # Produce a canonical method name.
   def parameter_name(param)
