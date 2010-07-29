@@ -196,16 +196,10 @@ class Puppet::Resource
     return(catalog ? catalog.resource(to_s) : nil)
   end
 
-  def find_hostclass(title)
-    name = title == :main ? "" : title
-
-    known_resource_types.hostclass(name)
-  end
-
   def resource_type
     @resource_type ||= case type
-    when "Class"; find_hostclass(title)
-    when "Node"; find_node(title)
+    when "Class"; known_resource_types.hostclass(title == :main ? "" : title)
+    when "Node"; known_resource_types.node(title)
     else
       self.class.find_resource_type(environment, namespaces, type)
     end
@@ -327,10 +321,6 @@ class Puppet::Resource
   end
 
   private
-
-  def find_node(name)
-    known_resource_types.node(name)
-  end
 
   def self.find_resource_type(environment, namespaces, type)
     # It still works fine without the type == 'class' short-cut, but it is a lot slower.
