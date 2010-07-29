@@ -58,14 +58,14 @@ describe Puppet::Parser::Resource do
   end
 
   it "should get its environment from its scope" do
-    scope = stub 'scope', :source => stub("source")
-    scope.expects(:environment).returns "foo"
+    scope = stub 'scope', :source => stub("source"), :namespaces => nil
+    scope.expects(:environment).returns("foo").at_least_once
     Puppet::Parser::Resource.new("file", "whatever", :scope => scope).environment.should == "foo"
   end
 
   it "should get its namespaces from its scope" do
-    scope = stub 'scope', :source => stub("source")
-    scope.expects(:namespaces).returns %w{one two}
+    scope = stub 'scope', :source => stub("source"), :environment => nil
+    scope.expects(:namespaces).returns(%w{one two}).at_least_once
     Puppet::Parser::Resource.new("file", "whatever", :scope => scope).namespaces.should == %w{one two}
   end
 
@@ -74,7 +74,7 @@ describe Puppet::Parser::Resource do
   end
 
   it "should use the scope's environment as its environment" do
-    @scope.expects(:environment).returns "myenv"
+    @scope.expects(:environment).returns("myenv").at_least_once
     Puppet::Parser::Resource.new("file", "whatever", :scope => @scope).environment.should == "myenv"
   end
 
@@ -556,7 +556,7 @@ describe Puppet::Parser::Resource do
 
   # part of #629 -- the undef keyword.  Make sure 'undef' params get skipped.
   it "should not include 'undef' parameters when converting itself to a hash" do
-    resource = Puppet::Parser::Resource.new "file", "/tmp/testing", :source => mock("source"), :scope => mock("scope")
+    resource = Puppet::Parser::Resource.new "file", "/tmp/testing", :source => mock("source"), :scope => mock("scope", :environment => nil, :namespaces => nil)
     resource[:owner] = :undef
     resource[:mode] = "755"
     resource.to_hash[:owner].should be_nil

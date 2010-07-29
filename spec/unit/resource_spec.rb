@@ -210,20 +210,6 @@ describe Puppet::Resource do
         it "should be able to find the resource type" do
           Puppet::Resource.new("class", "foo::bar").resource_type.should equal(@type)
         end
-
-        describe "and the resource is unqualified and models a qualified class" do
-          it "should set its title to the fully qualified resource type" do
-            Puppet::Resource.new("class", "bar", :namespaces => %w{foo}).title.should == "Foo::Bar"
-          end
-
-          it "should be able to find the resource type" do
-            Puppet::Resource.new("class", "bar", :namespaces => %w{foo}).resource_type.should equal(@type)
-          end
-
-          it "should set its type to 'Class'" do
-            Puppet::Resource.new("class", "bar", :namespaces => %w{foo}).type.should == "Class"
-          end
-        end
       end
 
       describe "that does not exist" do

@@ -203,7 +203,7 @@ class Puppet::Resource
     when "Class"; find_hostclass(title)
     when "Node"; find_node(title)
     else
-      find_resource_type(type)
+      self.class.find_resource_type(environment, namespaces, type)
     end
   end
 
@@ -353,26 +353,21 @@ class Puppet::Resource
   def find_hostclass(title)
     name = title == :main ? "" : title
 
-    if namespaces
-      known_resource_types.find_hostclass(namespaces, name)
-    else
-      known_resource_types.hostclass(name)
-    end
+    known_resource_types.hostclass(name)
   end
 
-  def find_resource_type(type)
+  def self.find_resource_type(environment, namespaces, type)
     # It still works fine without the type == 'class' short-cut, but it is a lot slower.
     return nil if ["class", "node"].include? type.to_s.downcase
-    find_builtin_resource_type(type) || find_defined_resource_type(type)
+    find_builtin_resource_type(type) || find_defined_resource_type(environment, namespaces, type)
   end
-  public :find_resource_type
 
-  def find_builtin_resource_type(type)
+  def self.find_builtin_resource_type(type)
     Puppet::Type.type(type.to_s.downcase.to_sym)
   end
 
-  def find_defined_resource_type(type)
-    known_resource_types.find_definition(namespaces, type.to_s.downcase)
+  def self.find_defined_resource_type(environment, namespaces, type)
+    environment.known_resource_types.find_definition(namespaces, type.to_s.downcase)
   end
 
   # Produce a canonical method name.
@@ -453,7 +448,7 @@ class Puppet::Resource
       type
     else
       # Otherwise, some kind of builtin or defined resource type
-      munge_type_name( (r = find_resource_type(type)) ? r.name : type)
+      munge_type_name( (r = self.class.find_resource_type(environment, namespaces, type)) ? r.name : type)
     end
   end
 
@@ -481,7 +476,7 @@ class Puppet::Resource
 
   def parse_title
     h = {}
-    type = find_resource_type(@type)
+    type = self.class.find_resource_type(environment, namespaces, @type)
     if type.respond_to? :title_patterns
       type.title_patterns.each { |regexp, symbols_and_lambdas|
         if captures = regexp.match(title.to_s)

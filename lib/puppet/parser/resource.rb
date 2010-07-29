@@ -102,9 +102,9 @@ class Puppet::Parser::Resource < Puppet::Resource
   end
 
   def initialize(*args)
+    raise ArgumentError, "Resources require a scope" unless args.last[:scope]
     super
 
-    raise ArgumentError, "Resources require a scope" unless scope
     @source ||= scope.source
   end
 

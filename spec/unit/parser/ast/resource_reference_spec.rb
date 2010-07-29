@@ -32,9 +32,9 @@ describe Puppet::Parser::AST::ResourceReference do
     ]
   end
 
-  it "should pass its scope's namespaces to all created resource references" do
+  it "should not pass its scope's namespaces to all created resource references" do
     @scope.add_namespace "foo"
-    newref("File", "/tmp/yay").evaluate(@scope).namespaces.should == ["foo"]
+    newref("File", "/tmp/yay").evaluate(@scope).namespaces.should == [""]
   end
 
   it "should return a correct representation when converting to string" do
