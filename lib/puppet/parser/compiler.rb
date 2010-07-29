@@ -293,6 +293,7 @@ class Puppet::Parser::Compiler
 
     set_container_resource(@topscope, @main_resource)
 
+    p @main_resource.ref
     @main_resource.evaluate
   end
 
