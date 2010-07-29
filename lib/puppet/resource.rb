@@ -402,9 +402,11 @@ class Puppet::Resource
     return :main if value == :main
     return "Class" if value == "" or value.nil? or value.to_s.downcase == "component"
 
-    resource_type = self.class.find_resource_type(environment, namespaces, value)
-    value = resource_type.name if resource_type
-    p value
+    # we must make an analogous change to Puppet::Parser::Resource creation
+    # so we can get rid of this step
+    # resource_type = self.class.find_resource_type(environment, namespaces, value)
+    # value = resource_type.name if resource_type
+    # p value
 
     value.to_s.split("::").collect { |s| s.capitalize }.join("::")
   end
