@@ -144,13 +144,7 @@ class Puppet::Resource::Type
     type == :definition and raise ArgumentError, "Cannot create resources for defined resource types"
     resource_type = type == :hostclass ? :class : :node
 
-    # Make sure our parent class has been evaluated, if we have one.
-    if parent
-      parent_resource = scope.catalog.resource(resource_type, parent)
-      unless parent_resource
-        parent_type(scope).mk_plain_resource(scope)
-      end
-    end
+    mk_parent_resource(scope)
 
     # Do nothing if the resource already exists; this makes sure we don't
     # get multiple copies of the class resource, which helps provide the
@@ -164,6 +158,19 @@ class Puppet::Resource::Type
     scope.catalog.tag(*resource.tags)
     resource
   end
+
+  def mk_parent_resource(scope)
+    # Make sure our parent class has been evaluated, if we have one.
+    resource_type = type == :hostclass ? :class : :node
+
+    if parent
+      parent_resource = scope.catalog.resource(resource_type, parent)
+      unless parent_resource
+        parent_type(scope).mk_plain_resource(scope)
+      end
+    end
+  end
+
 
   def name
     return @name unless @name.is_a?(Regexp)
@@ -280,6 +287,7 @@ class Puppet::Resource::Type
   end
 
   def evaluate_parent_type(resource)
+    mk_parent_resource(resource.scope)
     return unless klass = parent_type(resource.scope) and parent_resource = resource.scope.compiler.catalog.resource(:class, klass.name) || resource.scope.compiler.catalog.resource(:node, klass.name)
     parent_resource.evaluate unless parent_resource.evaluated?
     parent_scope(resource.scope, klass)
