@@ -1,6 +1,7 @@
 module Puppet
   Puppet::Type.type(:file).ensurable do
     require 'etc'
+    require 'puppet/util/octal'
     desc "Whether to create files that don't currently exist.
       Possible values are *absent*, *present*, *file*, and *directory*.
       Specifying `present` will match any form of file existence, and
@@ -66,7 +67,7 @@ module Puppet
       end
       if mode
         Puppet::Util.withumask(000) do
-          Dir.mkdir(@resource[:path],mode)
+          Dir.mkdir(@resource[:path], Puppet::Util::Octal.integerForOctal(mode))
         end
       else
         Dir.mkdir(@resource[:path])

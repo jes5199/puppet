@@ -8,6 +8,7 @@ require 'puppet/util/diff'
 require 'puppet/util/checksums'
 require 'puppet/network/client'
 require 'puppet/util/backups'
+require 'puppet/util/octal'
 
 Puppet::Type.newtype(:file) do
   include Puppet::Util::MethodHelper
@@ -701,8 +702,9 @@ Puppet::Type.newtype(:file) do
 
     mode = self.should(:mode) # might be nil
     umask = mode ? 000 : 022
+    mode_int = mode ? Puppet::Util::Octal.integerForOctal(mode) : nil
 
-    content_checksum = Puppet::Util.withumask(umask) { File.open(path, 'w', mode) { |f| write_content(f) } }
+    content_checksum = Puppet::Util.withumask(umask) { File.open(path, 'w', mode_int ) { |f| write_content(f) } }
 
     # And put our new file in place
     if use_temporary_file # This is only not true when our file is empty.
