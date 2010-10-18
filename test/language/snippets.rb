@@ -7,6 +7,7 @@ require 'puppet/parser/parser'
 require 'puppet/network/client'
 require 'puppet/network/handler'
 require 'puppettest'
+require 'puppet/util/octal'
 
 class TestSnippets < Test::Unit::TestCase
   include PuppetTest
@@ -37,6 +38,9 @@ class TestSnippets < Test::Unit::TestCase
   end
 
   def assert_mode_equal(mode, path)
+    if mode.is_a? Integer
+      mode = Puppet::Util::Octal.octalForInteger( mode )
+    end
     unless file = @catalog.resource(:file, path)
       raise "Could not find file #{path}"
     end
