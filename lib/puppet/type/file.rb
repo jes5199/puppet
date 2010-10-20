@@ -8,7 +8,7 @@ require 'puppet/util/diff'
 require 'puppet/util/checksums'
 require 'puppet/network/client'
 require 'puppet/util/backups'
-require 'puppet/util/octal'
+require 'puppet/util/file_mode'
 
 Puppet::Type.newtype(:file) do
   include Puppet::Util::MethodHelper
@@ -702,7 +702,7 @@ Puppet::Type.newtype(:file) do
 
     mode = self.should(:mode) # might be nil
     umask = mode ? 000 : 022
-    mode_int = mode ? Puppet::Util::Octal.integerForOctal(mode) : nil
+    mode_int = mode ? Puppet::Util::FileMode.bits_for_mode(mode, 0) : nil
 
     content_checksum = Puppet::Util.withumask(umask) { File.open(path, 'w', mode_int ) { |f| write_content(f) } }
 

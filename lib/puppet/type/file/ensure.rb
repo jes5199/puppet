@@ -67,7 +67,7 @@ module Puppet
       end
       if mode
         Puppet::Util.withumask(000) do
-          Dir.mkdir(@resource[:path], Puppet::Util::Octal.integerForOctal(mode))
+          Dir.mkdir(@resource[:path], Puppet::Util::FileMode.bits_for_mode(mode, 0, true))
         end
       else
         Dir.mkdir(@resource[:path])

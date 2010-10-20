@@ -2,6 +2,7 @@
 # for specification (e.g., u+rwx, or -0011), but for now only supports
 # specifying the full mode.
 require 'puppet/util/octal'
+require 'puppet/util/file_mode'
 module Puppet
   Puppet::Type.type(:file).newproperty(:mode) do
     require 'etc'
@@ -28,10 +29,10 @@ module Puppet
 
     munge do |should|
       if should.is_a?(String)
-        unless should =~ /^[0-7]+$/
-          raise Puppet::Error, "File modes can only be octal numbers, not #{should.inspect}"
+        unless Puppet::Util::FileMode.valid?(should)
+          raise Puppet::Error, "File modes must either be octal numbers or valid chmod patterns, not #{should.inspect}"
         end
-        Puppet::Util::Octal.octalForInteger( Puppet::Util::Octal.integerForOctal( should ) )
+        Puppet::Util::FileMode.normalize(should)
       else
         Puppet::Util::Octal.octalForInteger( should )
       end
@@ -40,7 +41,7 @@ module Puppet
     # If we're a directory, we need to be executable for all cases
     # that are readable.  This should probably be selectable, but eh.
     def dirmask(value)
-      if FileTest.directory?(@resource[:path])
+      if FileTest.directory?(@resource[:path]) and value =~ /^\d+$/
         value = Puppet::Util::Octal.integerForOctal(value)
         value |= 0100 if value & 0400 != 0
         value |= 010 if value & 040 != 0
@@ -60,31 +61,61 @@ module Puppet
       end
     end
 
+    def property_matches?(desired, current)
+      return false unless current
+      current_bits = Puppet::Util::Octal.integerForOctal(current)
+      desired_bits = Puppet::Util::FileMode.bits_for_mode(desired, current_bits, stat_is_directory?)
+      desired_bits == current_bits
+    end
+
     def retrieve
       # If we're not following links and we're a link, then we just turn
       # off mode management entirely.
 
-      if stat = @resource.stat(false)
+      if has_stat?
         unless defined?(@fixed)
           @should &&= @should.collect { |s| self.dirmask(s) }
         end
-        return Puppet::Util::Octal.octalForInteger(stat.mode & 007777)
+        return Puppet::Util::Octal.octalForInteger(stat_mode & 007777)
       else
         return :absent
       end
+    end
+
+    def has_stat?
+      @resource.stat(false)
+    end
+
+    def stat_mode
+      @resource.stat.mode & 007777
+    end
+
+    def stat_is_directory?
+      has_stat? and @resource.stat.directory?
     end
 
     def sync
       mode = self.should
 
       begin
-        File.chmod(Puppet::Util::Octal.integerForOctal(mode), @resource[:path])
+        File.chmod(Puppet::Util::FileMode.bits_for_mode(mode, stat_mode, stat_is_directory?), @resource[:path])
       rescue => detail
         error = Puppet::Error.new("failed to chmod #{@resource[:path]}: #{detail.message}")
         error.set_backtrace detail.backtrace
         raise error
       end
       :file_changed
+    end
+
+    def change_to_s(old_value, change_value)
+      if change_value =~ /^\d+$/
+        super
+      else
+        old_bits = Puppet::Util::Octal.integerForOctal(old_value)
+        new_bits = Puppet::Util::FileMode.bits_for_mode(change_value, old_bits, stat_is_directory?)
+        new_value = Puppet::Util::Octal.octalForInteger(new_bits)
+        super(old_value, new_value) + " (#{change_value})"
+      end
     end
   end
 end

@@ -163,10 +163,11 @@ class Puppet::Property < Puppet::Parameter
     # Look for a matching value
     return (is == @should or is == @should.collect { |v| v.to_s }) if match_all?
 
-    @should.each { |val| return true if is == val or is == val.to_s }
+    @should.inject(false) { |acc, desired| acc || property_matches?(desired, is) }
+  end
 
-    # otherwise, return false
-    false
+  def property_matches?(desired, current)
+    current == desired or current == desired.to_s
   end
 
   # because the @should and @is vars might be in weird formats,
