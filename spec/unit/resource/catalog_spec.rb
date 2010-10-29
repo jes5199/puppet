@@ -819,29 +819,25 @@ describe Puppet::Resource::Catalog, "when compiling" do
     end
 
     it "should redirect to the indirection for retrieval" do
-      Puppet::Resource::Catalog.stubs(:indirection).returns(@indirection)
-      @indirection.expects(:find)
+      default_route = stub "default route"
+      Puppet::Resource::Catalog.stubs(:default_route).returns(default_route)
+      default_route.expects(:find)
       Puppet::Resource::Catalog.find(:myconfig)
     end
 
     it "should use the value of the 'catalog_terminus' setting to determine its terminus class" do
-      # Puppet only checks the terminus setting the first time you ask
-      # so this returns the object to the clean state
-      # at the expense of making this test less pure
-      Puppet::Resource::Catalog.indirection.reset_terminus_class
-
       Puppet.settings[:catalog_terminus] = "rest"
-      Puppet::Resource::Catalog.indirection.terminus_class.should == :rest
+      Puppet::Resource::Catalog.terminus_class = nil
+      Puppet::Resource::Catalog.default_route.terminus_class.name.should == :rest
     end
 
     it "should allow the terminus class to be set manually" do
-      Puppet::Resource::Catalog.indirection.terminus_class = :rest
-      Puppet::Resource::Catalog.indirection.terminus_class.should == :rest
+      Puppet::Resource::Catalog.terminus_class = :rest
+      Puppet::Resource::Catalog.terminus_class.should == :rest
     end
 
     after do
       Puppet::Util::Cacher.expire
-      @real_indirection.reset_terminus_class
     end
   end
 

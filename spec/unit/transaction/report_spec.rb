@@ -54,23 +54,23 @@ describe Puppet::Transaction::Report do
 
   describe "when using the indirector" do
     it "should redirect :find to the indirection" do
-      @indirection = stub 'indirection', :name => :report
-      Puppet::Transaction::Report.stubs(:indirection).returns(@indirection)
-      @indirection.expects(:find)
+      @default_route = stub 'default_route'
+      Puppet::Transaction::Report.stubs(:default_route).returns(@default_route)
+      @default_route.expects(:find)
       Puppet::Transaction::Report.find(:report)
     end
 
     it "should redirect :save to the indirection" do
       Facter.stubs(:value).returns("eh")
-      @indirection = stub 'indirection', :name => :report
-      Puppet::Transaction::Report.stubs(:indirection).returns(@indirection)
+      @default_route = stub 'route'
+      Puppet::Transaction::Report.stubs(:default_route).returns(@default_route)
       report = Puppet::Transaction::Report.new
-      @indirection.expects(:save)
+      @default_route.expects(:save)
       report.save
     end
 
     it "should default to the 'processor' terminus" do
-      Puppet::Transaction::Report.indirection.terminus_class.should == :processor
+      Puppet::Transaction::Report.terminus_class.should == :processor
     end
 
     it "should delegate its name attribute to its host method" do

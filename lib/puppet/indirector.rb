@@ -40,7 +40,7 @@ module Puppet::Indirector
   end
 
   module ClassMethods
-    attr_reader :indirection
+    attr_reader :indirection, :terminus_class, :cache_class
 
     def default_route
       @default_route ||= make_route( @terminus_class || terminus_name_from_setting, @cache_class )
