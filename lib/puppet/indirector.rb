@@ -34,7 +34,7 @@ module Puppet::Indirector
 
     @terminus_setting = options.delete(:terminus_setting)
 
-    @indirection = Puppet::Indirector::Indirection.new(self, name, options)
+    @indirection = Puppet::Indirector::Indirection.new(self, name)
   end
 
   module ClassMethods
@@ -68,27 +68,22 @@ module Puppet::Indirector
       @terminus_class = klass
     end
 
-    # Expire any cached instance.
-    def expire(*args)
-      indirection.expire(*args)
-    end
-
     def find(*args)
-      indirection.find(*args)
+      default_route.find(*args)
     end
 
     def destroy(*args)
-      indirection.destroy(*args)
+      default_route.destroy(*args)
     end
 
     def search(*args)
-      indirection.search(*args)
+      default_route.search(*args)
     end
   end
 
   module InstanceMethods
     def save(key = nil)
-      self.class.indirection.save key, self
+      self.class.default_route.save key, self
     end
   end
 end
