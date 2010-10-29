@@ -60,4 +60,8 @@ class Puppet::Indirector::Indirection
     @@indirections << self
   end
 
+  def terminus(terminus_name)
+    Puppet::Indirector::Terminus.terminus_class(@name, terminus_name).new
+  end
+
 end

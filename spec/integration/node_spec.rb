@@ -15,25 +15,24 @@ describe Puppet::Node do
     end
 
     it "should be able to use the exec terminus" do
-      Puppet::Node.indirection.stubs(:terminus_class).returns :exec
+      Puppet::Node.terminus_class = :exec
 
-      # Load now so we can stub
-      terminus = Puppet::Node.indirection.terminus(:exec)
+      Puppet::Node.indirection.terminus(:exec)
 
-      terminus.expects(:query).with(@name).returns "myresults"
-      terminus.expects(:translate).with(@name, "myresults").returns "translated_results"
-      terminus.expects(:create_node).with(@name, "translated_results").returns @node
+      Puppet::Node::Exec.any_instance.expects(:query).with(@name).returns "myresults"
+      Puppet::Node::Exec.any_instance.expects(:translate).with(@name, "myresults").returns "translated_results"
+      Puppet::Node::Exec.any_instance.expects(:create_node).with(@name, "translated_results").returns @node
 
       Puppet::Node.find(@name).should equal(@node)
     end
 
     it "should be able to use the yaml terminus" do
-      Puppet::Node.indirection.stubs(:terminus_class).returns :yaml
+      Puppet::Node.terminus_class = :yaml
 
       # Load now, before we stub the exists? method.
-      terminus = Puppet::Node.indirection.terminus(:yaml)
+      Puppet::Node.indirection.terminus(:yaml)
 
-      terminus.expects(:path).with(@name).returns "/my/yaml/file"
+      Puppet::Node::Yaml.any_instance.expects(:path).with(@name).returns "/my/yaml/file"
 
       FileTest.expects(:exist?).with("/my/yaml/file").returns false
       Puppet::Node.find(@name).should be_nil
@@ -44,9 +43,8 @@ describe Puppet::Node do
     end
 
     it "should be able to use the plain terminus" do
-      Puppet::Node.indirection.stubs(:terminus_class).returns :plain
+      Puppet::Node.terminus_class = :plain
 
-      # Load now, before we stub the exists? method.
       Puppet::Node.indirection.terminus(:plain)
 
       Puppet::Node.expects(:new).with(@name).returns @node
@@ -57,9 +55,7 @@ describe Puppet::Node do
     describe "and using the memory terminus" do
       before do
         @name = "me"
-        @old_terminus = Puppet::Node.indirection.terminus_class
-        @terminus = Puppet::Node.indirection.terminus(:memory)
-        Puppet::Node.indirection.stubs(:terminus).returns @terminus
+        Puppet::Node.terminus_class = :memory
         @node = Puppet::Node.new(@name)
       end
 
