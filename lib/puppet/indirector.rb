@@ -17,8 +17,8 @@ module Puppet::Indirector
   # default, not the value -- if it's the value, then it gets
   # evaluated at parse time, which is before the user has had a chance
   # to override it.
-  def indirects(indirection, options = {})
-    raise(ArgumentError, "Already handling indirection for #{@indirection.name}; cannot also handle #{indirection}") if @indirection
+  def indirects(name, options = {})
+    raise(ArgumentError, "Already handling indirection for #{@indirection.name}; cannot also handle #{name}") if @indirection
     # populate this class with the various new methods
     extend ClassMethods
     include InstanceMethods
@@ -27,18 +27,45 @@ module Puppet::Indirector
 
     # instantiate the actual Terminus for that type and this name (:ldap, w/ args :node)
     # & hook the instantiated Terminus into this class (Node: @indirection = terminus)
-    @indirection = Puppet::Indirector::Indirection.new(self, indirection,  options)
+    @model_name = name
+
+    @cache_class    = options.delete(:cache_class)
+    @terminus_class = options.delete(:terminus_class)
+
+    @terminus_setting = options.delete(:terminus_setting)
+
+    @indirection = Puppet::Indirector::Indirection.new(self, name, options)
   end
 
   module ClassMethods
     attr_reader :indirection
 
+    def default_route
+      @default_route ||= make_route( @terminus_class || terminus_name_from_setting, @cache_class )
+    end
+
+    def terminus_name_from_setting
+      Puppet[ @terminus_setting ].to_sym
+    end
+
+    def make_route( terminus_name, cache_name = nil )
+      main_route = Puppet::Indirector::Route.new( @model_name, terminus_name )
+      if @cache_class
+        caching_route = Puppet::Indirector::Route.new( @model_name, cache_name )
+        Puppet::Indirector::CachingRoute.new( main_route, caching_route )
+      else
+        main_route
+      end
+    end
+
     def cache_class=(klass)
-      indirection.cache_class = klass
+      @default_route = nil
+      @cache_class = klass
     end
 
     def terminus_class=(klass)
-      indirection.terminus_class = klass
+      @default_route = nil
+      @terminus_class = klass
     end
 
     # Expire any cached instance.
