@@ -1,6 +1,7 @@
 require 'puppet/util/docs'
 require 'puppet/indirector/envelope'
 require 'puppet/indirector/request'
+require 'puppet/indirector/route'
 require 'puppet/util/cacher'
 
 # The class that connects functional classes with their different collection
