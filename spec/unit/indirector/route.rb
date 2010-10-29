@@ -9,7 +9,7 @@ describe "a route" do
       route = Puppet::Indirector::Route.new( :facts, :yaml )
       route.terminus_class.should == Puppet::Node::Facts::Yaml
     end
-  end  
+  end
 
   # REST methods
   it "should have a find method" do
