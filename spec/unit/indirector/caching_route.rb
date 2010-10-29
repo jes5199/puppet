@@ -98,4 +98,54 @@ describe "a caching route" do
     end
 
   end
+
+  describe "when searching" do
+    it "should skip caching" do
+      facts = Puppet::Node::Facts.new( "nodename", :fact => :value )
+
+      Puppet::Node::Facts::Memory.any_instance.expects(:search).never
+
+      Puppet::Node::Facts::Yaml.any_instance.expects(:search).with do |request|
+        request.is_a? Puppet::Indirector::Request and request.key == "key"
+      end.returns [facts]
+
+      @route.search( "key" ).should == [facts]
+    end
+  end
+
+  describe "when saving" do
+    it "should save to both" do
+      facts = Puppet::Node::Facts.new( "nodename", :fact => :value )
+
+      Puppet::Node::Facts::Memory.any_instance.expects(:save).with do |request|
+        request.is_a? Puppet::Indirector::Request and request.key == "key" and request.instance == facts
+      end
+
+      Puppet::Node::Facts::Yaml.any_instance.expects(:save).with do |request|
+        request.is_a? Puppet::Indirector::Request and request.key == "key" and request.instance == facts
+      end
+
+      @route.save( "key", facts)
+    end
+  end
+
+  describe "when destroying" do
+    it "should destroy both" do
+      facts = Puppet::Node::Facts.new( "nodename", :fact => :value )
+
+      Puppet::Node::Facts::Memory.any_instance.expects(:destroy).with do |request|
+        request.is_a? Puppet::Indirector::Request and request.key == "key"
+      end
+
+      Puppet::Node::Facts::Memory.any_instance.expects(:find).with do |request|
+        request.is_a? Puppet::Indirector::Request and request.key == "key"
+      end.returns facts
+
+      Puppet::Node::Facts::Yaml.any_instance.expects(:destroy).with do |request|
+        request.is_a? Puppet::Indirector::Request and request.key == "key"
+      end
+
+      @route.destroy( "key" )
+    end
+  end
 end

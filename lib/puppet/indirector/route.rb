@@ -27,7 +27,6 @@ class Puppet::Indirector::Route
     terminus.destroy( request )
   end
 
-
   private
   def terminus
     @terminus ||= @terminus_class.new

@@ -37,11 +37,19 @@ class Puppet::Indirector::CachingRoute
   end
 
   def save( key, instance )
+    @main_route.save(key, instance)
+    @cache_route.save(key, instance)
   end
 
   def search( key, options = {} )
+    @main_route.search(key, options)
   end
 
   def destroy( key, options = {} )
+    @main_route.destroy(key, options)
+
+    if @cache_route.find(key, options) # since destroy isn't idempotent
+      @cache_route.destroy(key, options)
+    end
   end
 end
