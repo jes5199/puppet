@@ -2,7 +2,9 @@
 
 require File.dirname(__FILE__) + '/../../../spec_helper'
 
-describe "Puppet::Resource::Ral" do
+Puppet::Resource.indirection.terminus(:ral)
+
+describe Puppet::Resource::Ral do
   describe "find" do
     before do
       @request = stub 'request', :key => "user/root"

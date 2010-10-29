@@ -1,4 +1,5 @@
 class Puppet::Indirector::CachingRoute
+  attr :cache_route
   def initialize( main_route, cache_route, options = {})
     @main_route  = main_route
     @cache_route = cache_route

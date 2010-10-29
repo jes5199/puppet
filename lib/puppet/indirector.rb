@@ -10,6 +10,8 @@ module Puppet::Indirector
   require 'puppet/indirector/indirection'
   require 'puppet/indirector/terminus'
   require 'puppet/indirector/envelope'
+  require 'puppet/indirector/route'
+  require 'puppet/indirector/caching_route'
   require 'puppet/network/format_handler'
 
   # Declare that the including class indirects its methods to

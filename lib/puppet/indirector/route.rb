@@ -1,11 +1,11 @@
 class Puppet::Indirector::Route
   attr :terminus_class
   attr :model
-  def initialize( model, terminus_name )
-    @model = model
+  def initialize( model_name, terminus_name )
+    @model = model_name
     raise ArgumentError, "Invalid terminus name #{terminus_name.inspect}" unless terminus_name and terminus_name.to_s != ""
-    @terminus_class = Puppet::Indirector::Terminus.terminus_class(model, terminus_name)
-    raise ArgumentError, "Could not find terminus #{terminus_name} for indirection #{model}" unless @terminus_class
+    @terminus_class = Puppet::Indirector::Terminus.terminus_class(model_name, terminus_name)
+    raise ArgumentError, "Could not find terminus #{terminus_name} for indirection #{model_name}" unless @terminus_class
   end
 
   def find( key, options = {} )
