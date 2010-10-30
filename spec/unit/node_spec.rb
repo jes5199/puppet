@@ -128,19 +128,19 @@ describe Puppet::Node, "when merging facts" do
 end
 
 describe Puppet::Node, "when indirecting" do
-  it "should redirect to the indirection" do
-    @indirection = stub 'indirection', :name => :node
-    Puppet::Node.stubs(:indirection).returns(@indirection)
-    @indirection.expects(:find)
+  it "should redirect to the default_route" do
+    @default_route = stub 'default_route', :name => :node
+    Puppet::Node.stubs(:default_route).returns(@default_route)
+    @default_route.expects(:find)
     Puppet::Node.find(:my_node.to_s)
   end
 
   it "should default to the 'plain' node terminus" do
-    Puppet::Node.indirection.terminus_class.should == :plain
+    Puppet::Node.default_route.terminus_class.should == Puppet::Node::Plain
   end
 
   it "should not have a cache class defined" do
-    Puppet::Node.indirection.cache_class.should be_nil
+    Puppet::Node.cache_class.should be_nil
   end
 
   after do

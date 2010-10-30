@@ -67,24 +67,20 @@ describe Puppet::Node::Facts, "when indirecting" do
 
   describe "when indirecting" do
     before do
-      @indirection = stub 'indirection', :request => mock('request'), :name => :facts
-
-      # We have to clear the cache so that the facts ask for our indirection stub,
-      # instead of anything that might be cached.
-      Puppet::Util::Cacher.expire
+      @default_route = stub 'default_route', :request => mock('request'), :name => :facts
 
       @facts = Puppet::Node::Facts.new("me", "one" => "two")
     end
 
     it "should redirect to the specified fact store for retrieval" do
-      Puppet::Node::Facts.stubs(:indirection).returns(@indirection)
-      @indirection.expects(:find)
+      Puppet::Node::Facts.stubs(:default_route).returns(@default_route)
+      @default_route.expects(:find)
       Puppet::Node::Facts.find(:my_facts)
     end
 
     it "should redirect to the specified fact store for storage" do
-      Puppet::Node::Facts.stubs(:indirection).returns(@indirection)
-      @indirection.expects(:save)
+      Puppet::Node::Facts.stubs(:default_route).returns(@default_route)
+      @default_route.expects(:save)
       @facts.save
     end
 
