@@ -23,18 +23,18 @@ describe Puppet::Resource::Catalog do
 
 
     it "should be able to delegate to the :yaml terminus" do
-      Puppet::Resource::Catalog.indirection.stubs(:terminus_class).returns :yaml
+      Puppet::Resource::Catalog.terminus_class = :yaml
 
       # Load now, before we stub the exists? method.
       terminus = Puppet::Resource::Catalog.indirection.terminus(:yaml)
-      terminus.expects(:path).with("me").returns "/my/yaml/file"
+      terminus.class.any_instance.expects(:path).with("me").returns "/my/yaml/file"
 
       FileTest.expects(:exist?).with("/my/yaml/file").returns false
       Puppet::Resource::Catalog.find("me").should be_nil
     end
 
     it "should be able to delegate to the :compiler terminus" do
-      Puppet::Resource::Catalog.indirection.stubs(:terminus_class).returns :compiler
+      Puppet::Resource::Catalog.terminus_class = :compiler
 
       # Load now, before we stub the exists? method.
       compiler = Puppet::Resource::Catalog.indirection.terminus(:compiler)
@@ -43,18 +43,18 @@ describe Puppet::Resource::Catalog do
       node.stub_everything
 
       Puppet::Node.expects(:find).returns(node)
-      compiler.expects(:compile).with(node).returns nil
+      compiler.class.any_instance.expects(:compile).with(node).returns nil
 
       Puppet::Resource::Catalog.find("me").should be_nil
     end
 
     it "should pass provided node information directly to the terminus" do
-      terminus = mock 'terminus'
+      default_route = mock 'default_route'
 
-      Puppet::Resource::Catalog.indirection.stubs(:terminus).returns terminus
+      Puppet::Resource::Catalog.stubs(:default_route).returns default_route
 
       node = mock 'node'
-      terminus.expects(:find).with { |request| request.options[:use_node] == node }
+      default_route.expects(:find).with { |key, options| options[:use_node] == node }
       Puppet::Resource::Catalog.find("me", :use_node => node)
     end
   end

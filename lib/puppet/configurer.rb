@@ -89,7 +89,7 @@ class Puppet::Configurer
 
   # Get the remote catalog, yo.  Returns nil if no catalog can be found.
   def retrieve_catalog
-    if Puppet::Resource::Catalog.indirection.terminus_class == :rest
+    if Puppet::Resource::Catalog.terminus_class == :rest
       # This is a bit complicated.  We need the serialized and escaped facts,
       # and we need to know which format they're encoded in.  Thus, we
       # get a hash with both of these pieces of information.

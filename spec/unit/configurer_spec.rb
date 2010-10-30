@@ -303,7 +303,7 @@ describe Puppet::Configurer, "when retrieving a catalog" do
     @catalog = Puppet::Resource::Catalog.new
 
     # this is the default when using a Configurer instance
-    Puppet::Resource::Catalog.indirection.stubs(:terminus_class).returns :rest
+    Puppet::Resource::Catalog.terminus_class = :rest
 
     @agent.stubs(:convert_catalog).returns @catalog
   end

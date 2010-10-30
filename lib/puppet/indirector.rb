@@ -47,6 +47,7 @@ module Puppet::Indirector
     end
 
     def terminus_name_from_setting
+      return nil unless @terminus_setting
       Puppet[ @terminus_setting ].to_sym
     end
 
