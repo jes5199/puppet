@@ -136,6 +136,7 @@ describe Puppet::Node, "when indirecting" do
   end
 
   it "should default to the 'plain' node terminus" do
+    Puppet::Node.terminus_class = nil
     Puppet::Node.default_route.terminus_class.should == Puppet::Node::Plain
   end
 
