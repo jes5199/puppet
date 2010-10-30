@@ -431,10 +431,7 @@ describe Puppet::Type.type(:file) do
     source = tmpfile("source_source_with_ensure")
     File.open(source, "w") { |f| f.puts "yay" }
     File.open(dest, "w") { |f| f.puts "boo" }
-
-
-          file = Puppet::Type.type(:file).new(
-                
+    file = Puppet::Type.type(:file).new(
       :name => dest,
       :ensure => :absent,
       :source => source,
@@ -464,25 +461,22 @@ describe Puppet::Type.type(:file) do
       # this file should get removed
       File.open(@purgee, "w") { |f| f.puts "footest" }
 
-
-            @lfobj = Puppet::Type.newfile(
-                
+      @lfobj = Puppet::Type.newfile(
         :title => "localfile",
         :path => @localfile,
         :content => "rahtest\n",
         :ensure => :file,
-        
         :backup => false
       )
 
-
-            @destobj = Puppet::Type.newfile(
-        :title => "destdir", :path => @destdir,
-                    :source => @sourcedir,
-                    :backup => false,
-                    :purge => true,
-        
-                    :recurse => true)
+      @destobj = Puppet::Type.newfile(
+        :title => "destdir",
+        :path => @destdir,
+        :source => @sourcedir,
+        :backup => false,
+        :purge => true,
+        :recurse => true
+      )
 
       @catalog = Puppet::Resource::Catalog.new
       @catalog.add_resource @lfobj, @destobj
