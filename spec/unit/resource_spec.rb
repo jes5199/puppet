@@ -749,7 +749,7 @@ describe Puppet::Resource do
     end
 
     it "should have a default terminus" do
-      Puppet::Resource.indirection.terminus_class.should == :ral
+      Puppet::Resource.default_route.terminus_class.should == Puppet::Resource::Ral
     end
 
     it "should have a name" do

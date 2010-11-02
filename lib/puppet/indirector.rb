@@ -1,3 +1,4 @@
+require 'puppet/util/cacher'
 # Manage indirections to termini.  They are organized in terms of indirections -
 # - e.g., configuration, node, file, certificate -- and each indirection has one
 # or more terminus types defined.  The indirection is configured via the
@@ -40,6 +41,7 @@ module Puppet::Indirector
   end
 
   module ClassMethods
+    include Puppet::Util::Cacher
     attr_reader :indirection, :terminus_class, :cache_class
 
     def default_route
@@ -52,14 +54,17 @@ module Puppet::Indirector
     end
 
     def make_route( terminus_name, cache_name = nil )
-      main_route = Puppet::Indirector::Route.new( @model_name, terminus_name )
-      if @cache_class
-        caching_route = Puppet::Indirector::Route.new( @model_name, cache_name )
-        Puppet::Indirector::CachingRoute.new( main_route, caching_route )
-      else
-        main_route
-      end
+      routes[ [terminus_name, cache_name] ] ||= (
+        main_route = Puppet::Indirector::Route.new( @model_name, terminus_name )
+        if @cache_class
+          caching_route = Puppet::Indirector::Route.new( @model_name, cache_name )
+          Puppet::Indirector::CachingRoute.new( main_route, caching_route )
+        else
+          main_route
+        end
+      )
     end
+    cached_attr(:routes){ Hash.new }
 
     def cache_class=(klass)
       @default_route = nil

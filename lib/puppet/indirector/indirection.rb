@@ -60,7 +60,9 @@ class Puppet::Indirector::Indirection
   end
 
   def terminus(terminus_name)
-    Puppet::Indirector::Terminus.terminus_class(@name, terminus_name).new
+    termini[terminus_name] ||= Puppet::Indirector::Terminus.terminus_class(@name, terminus_name).new
   end
+
+  cached_attr(:termini){ Hash.new }
 
 end

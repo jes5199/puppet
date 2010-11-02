@@ -58,4 +58,11 @@ describe Puppet::Indirector::Indirection do
     end
   end
 
+  describe "when retrieving a terminus" do
+    it "should memoize the terminus object by name" do
+      indirection = Puppet::Node::Facts.indirection
+      indirection.terminus(:yaml).should equal( indirection.terminus(:yaml) )
+    end
+  end
+
 end

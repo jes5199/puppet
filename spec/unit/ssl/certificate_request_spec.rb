@@ -189,7 +189,7 @@ describe Puppet::SSL::CertificateRequest do
   describe "when a CSR is saved" do
     it "should allow arguments" do
       csr = Puppet::SSL::CertificateRequest.new("me")
-      csr.class.indirection.stubs(:save)
+      csr.class.default_route.stubs(:save)
 
       lambda { csr.save :ipaddress => "foo" }.should_not raise_error
     end
@@ -200,7 +200,7 @@ describe Puppet::SSL::CertificateRequest do
         Puppet::SSL::CertificateAuthority.expects(:instance).returns ca
 
         csr = Puppet::SSL::CertificateRequest.new("me")
-        Puppet::SSL::CertificateRequest.indirection.expects(:save).with(nil, csr)
+        Puppet::SSL::CertificateRequest.default_route.expects(:save).with(nil, csr)
 
         csr.save
       end
@@ -211,7 +211,7 @@ describe Puppet::SSL::CertificateRequest do
         Puppet::SSL::CertificateAuthority.expects(:instance).returns nil
 
         csr = Puppet::SSL::CertificateRequest.new("me")
-        Puppet::SSL::CertificateRequest.indirection.expects(:save).with(nil, csr)
+        Puppet::SSL::CertificateRequest.default_route.expects(:save).with(nil, csr)
 
         csr.save
       end
