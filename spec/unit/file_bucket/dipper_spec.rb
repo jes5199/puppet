@@ -16,10 +16,7 @@ describe Puppet::FileBucket::Dipper do
 
     @dipper = Puppet::FileBucket::Dipper.new(:Path => "/my/bucket")
 
-    filemock = stub "bucketfile"
-    Puppet::FileBucket::File.stubs(:new).returns(filemock)
-    filemock.expects(:name).returns "name"
-    filemock.expects(:save).raises ArgumentError
+    Puppet::FileBucket::File.default_route.stubs(:save).raises ArgumentError
 
     lambda { @dipper.backup("/my/file") }.should raise_error(Puppet::Error)
   end
@@ -32,21 +29,9 @@ describe Puppet::FileBucket::Dipper do
     File.stubs(:exist?).returns true
     File.stubs(:read).with("/my/file").returns "my contents"
 
-    bucketfile = stub "bucketfile"
-    bucketfile.stubs(:name).returns('md5/DIGEST123')
-    bucketfile.stubs(:checksum_data).returns("DIGEST123")
-    bucketfile.expects(:save).with('md5/DIGEST123')
+    Puppet::FileBucket::File.default_route.stubs(:save).with{|key, instance| key == 'md5/2975f560750e71c478b8e3b39a956adb//my/file' and instance.contents == "my contents" }
 
-
-          Puppet::FileBucket::File.stubs(:new).with(
-                
-      "my contents",
-      :bucket_path => '/my/bucket',
-        
-      :path => '/my/file'
-    ).returns(bucketfile)
-
-    @dipper.backup("/my/file").should == "DIGEST123"
+    @dipper.backup("/my/file").should == "2975f560750e71c478b8e3b39a956adb"
   end
 
   it "should retrieve files from a local bucket" do
@@ -60,7 +45,7 @@ describe Puppet::FileBucket::Dipper do
     bucketfile = stub "bucketfile"
     bucketfile.stubs(:to_s).returns "Content"
 
-    Puppet::FileBucket::File.expects(:find).with{|x,opts|
+    Puppet::FileBucket::File.default_route.expects(:find).with{|x,opts|
       x == 'md5/DIGEST123'
     }.returns(bucketfile)
 
@@ -68,11 +53,8 @@ describe Puppet::FileBucket::Dipper do
   end
 
   it "should backup files to a remote server" do
-
-          @dipper = Puppet::FileBucket::Dipper.new(
-                
+    @dipper = Puppet::FileBucket::Dipper.new(
       :Server => "puppetmaster",
-        
       :Port   => "31337"
     )
 
@@ -82,11 +64,9 @@ describe Puppet::FileBucket::Dipper do
     bucketfile = stub "bucketfile"
     bucketfile.stubs(:name).returns('md5/DIGEST123')
     bucketfile.stubs(:checksum_data).returns("DIGEST123")
-    bucketfile.expects(:save).with('https://puppetmaster:31337/production/file_bucket_file/md5/DIGEST123')
+    Puppet::FileBucket::File.make_route(:rest).expects(:save).with('https://puppetmaster:31337/production/file_bucket_file/md5/DIGEST123', bucketfile)
 
-
-          Puppet::FileBucket::File.stubs(:new).with(
-                
+    Puppet::FileBucket::File.stubs(:new).with(
       "my contents",
       :bucket_path => nil,
         
@@ -97,11 +77,8 @@ describe Puppet::FileBucket::Dipper do
   end
 
   it "should retrieve files from a remote server" do
-
-          @dipper = Puppet::FileBucket::Dipper.new(
-                
+    @dipper = Puppet::FileBucket::Dipper.new(
       :Server => "puppetmaster",
-        
       :Port   => "31337"
     )
 
@@ -111,7 +88,7 @@ describe Puppet::FileBucket::Dipper do
     bucketfile = stub "bucketfile"
     bucketfile.stubs(:to_s).returns "Content"
 
-    Puppet::FileBucket::File.expects(:find).with{|x,opts|
+    Puppet::FileBucket::File.make_route(:rest).expects(:find).with{|x,opts|
       x == 'https://puppetmaster:31337/production/file_bucket_file/md5/DIGEST123'
     }.returns(bucketfile)
 

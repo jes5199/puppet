@@ -30,9 +30,9 @@ class Puppet::FileBucket::Dipper
 
   def route
     if @rest_path
-      file_bucket_file.class.make_route(:rest)
+      Puppet::FileBucket::File.make_route(:rest)
     else
-      file_bucket_file.class.default_route
+      Puppet::FileBucket::File.default_route
     end
   end
 
