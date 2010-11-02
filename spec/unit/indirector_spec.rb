@@ -81,15 +81,15 @@ describe Puppet::Indirector, "when redirecting a model" do
   end
 
   it "should give the model the ability to set the indirection terminus class" do
-    terminus = stub "myterm"
+    terminus = Class.new
     Puppet::Indirector::Terminus.expects(:terminus_class).with(:test, :myterm).returns( terminus )
     @thingie.terminus_class = :myterm
     @thingie.default_route.terminus_class.should == terminus
   end
 
   it "should give the model the ability to set the indirection cache class" do
-    main_terminus = stub "main"
-    cache_terminus = stub "cache"
+    main_terminus = Class.new
+    cache_terminus = Class.new
     Puppet::Indirector::Terminus.expects(:terminus_class).with(:test, :myterm).returns( main_terminus )
     Puppet::Indirector::Terminus.expects(:terminus_class).with(:test, :mycache).returns( cache_terminus )
     @thingie.terminus_class = :myterm
