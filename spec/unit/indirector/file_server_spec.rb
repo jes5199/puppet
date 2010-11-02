@@ -35,6 +35,7 @@ describe Puppet::Indirector::FileServer do
     before do
       @mount = stub 'mount', :find => nil
       @instance = stub('instance', :links= => nil, :collect => nil)
+      @file_server.stubs(:authorize!)
     end
 
     it "should use the configuration to find the mount and relative path" do
@@ -114,6 +115,8 @@ describe Puppet::Indirector::FileServer do
     before do
       @mount = stub 'mount', :search => nil
       @instance = stub('instance', :links= => nil, :collect => nil)
+
+      @file_server.stubs(:authorize!)
     end
 
     it "should use the configuration to search the mount and relative path" do
@@ -229,6 +232,7 @@ describe Puppet::Indirector::FileServer do
   describe "when checking authorization" do
     before do
       @request.method = :find
+      @request.node = "somebody"
     end
 
     it "should return false when destroying" do

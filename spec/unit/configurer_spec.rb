@@ -308,6 +308,10 @@ describe Puppet::Configurer, "when retrieving a catalog" do
     @agent.stubs(:convert_catalog).returns @catalog
   end
 
+  after do
+    Puppet::Resource::Catalog.terminus_class = nil
+  end
+
   describe "and configured to only retrieve a catalog from the cache" do
     before do
       Puppet.settings[:use_cached_catalog] = true

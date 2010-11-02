@@ -12,9 +12,7 @@ describe Puppet::Transaction::Report do
       Puppet.settings.stubs(:use)
     end
 
-    it "should be able to delegate to the :processor terminus" do
-      Puppet::Transaction::Report.terminus_class = :processor
-
+    it "should delegate to the :processor terminus" do
       terminus = Puppet::Transaction::Report.indirection.terminus(:processor)
 
       Facter.stubs(:value).returns "host.domain.com"

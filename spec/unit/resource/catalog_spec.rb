@@ -838,6 +838,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
 
     after do
       Puppet::Util::Cacher.expire
+      Puppet::Resource::Catalog.terminus_class = nil
     end
   end
 

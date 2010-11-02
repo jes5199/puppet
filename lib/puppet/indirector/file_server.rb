@@ -14,6 +14,7 @@ class Puppet::Indirector::FileServer < Puppet::Indirector::Terminus
   # Is the client authorized to perform this action?
   def authorized?(request)
     return false unless [:find, :search].include?(request.method)
+    return true unless request.node
 
     mount, file_path = configuration.split_path(request)
 
@@ -22,8 +23,16 @@ class Puppet::Indirector::FileServer < Puppet::Indirector::Terminus
     mount.allowed?(request.node, request.ip)
   end
 
+  def authorize!(request)
+    return if authorized?(request)
+    error = "Not authorized to call #{request.method} on #{request}"
+    error += " with #{request.options.inspect}" unless request.options.empty?
+    raise ArgumentError, error
+  end
+
   # Find our key using the fileserver.
   def find(request)
+    authorize!(request)
     mount, relative_path = configuration.split_path(request)
 
     return nil unless mount
@@ -40,6 +49,7 @@ class Puppet::Indirector::FileServer < Puppet::Indirector::Terminus
   # Search for files.  This returns an array rather than a single
   # file.
   def search(request)
+    authorize!(request)
     mount, relative_path = configuration.split_path(request)
 
     unless mount and paths = mount.search(relative_path, request)

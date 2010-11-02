@@ -12,4 +12,8 @@ describe Puppet::Node::Ldap do
 
     Puppet::Node.search "eh", :class => "foo"
   end
+
+  after do
+    Puppet::Node.terminus_class = nil
+  end
 end

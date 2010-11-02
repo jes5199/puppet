@@ -7,7 +7,10 @@ require File.dirname(__FILE__) + '/../../spec_helper'
 
 describe Puppet::Node::Facts do
   describe "when using the indirector" do
-    after { Puppet::Util::Cacher.expire }
+    after do
+      Puppet::Util::Cacher.expire
+      Puppet::Node::Facts.terminus_class = nil
+    end
 
     it "should be able to delegate to the :yaml terminus" do
       Puppet::Node::Facts.terminus_class = :yaml

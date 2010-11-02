@@ -314,6 +314,10 @@ describe Puppet::Node::Ldap do
       Puppet::Node::Facts.terminus_class = :yaml
     end
 
+    after :each do
+      Puppet::Node::Facts.terminus_class = nil
+    end
+
     it "should find all nodes if no arguments are provided" do
       @searcher.expects(:ldapsearch).with("(objectclass=puppetClient)")
       # LAK:NOTE The search method requires an essentially bogus key.  It's

@@ -14,6 +14,10 @@ describe Puppet::Node do
       @node = Puppet::Node.new(@name)
     end
 
+    after do
+      Puppet::Node.terminus_class = nil
+    end
+
     it "should be able to use the exec terminus" do
       Puppet::Node.terminus_class = :exec
 
