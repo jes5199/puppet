@@ -44,9 +44,7 @@ module Puppet::Indirector
     include Puppet::Util::Cacher
     attr_reader :indirection, :terminus_class, :cache_class
 
-    def default_route
-      @default_route ||= make_route( @terminus_class || terminus_name_from_setting, @cache_class )
-    end
+    cached_attr(:default_route, :readonly => true){ make_route( @terminus_class || terminus_name_from_setting, @cache_class ) }
 
     def terminus_name_from_setting
       return nil unless @terminus_setting
@@ -64,7 +62,7 @@ module Puppet::Indirector
         end
       )
     end
-    cached_attr(:routes){ Hash.new }
+    cached_attr(:routes, :readonly => true){ Hash.new }
 
     def cache_class=(klass)
       @default_route = nil

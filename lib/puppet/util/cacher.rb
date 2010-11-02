@@ -48,10 +48,12 @@ module Puppet::Util::Cacher
         cached_value(name)
       end
 
-      define_method(name.to_s + "=") do |value|
-        # Make sure the cache timestamp is set
-        cache_timestamp
-        value_cache.synchronize { value_cache[name] = value }
+      if ! options[:readonly]
+        define_method(name.to_s + "=") do |value|
+          # Make sure the cache timestamp is set
+          cache_timestamp
+          value_cache.synchronize { value_cache[name] = value }
+        end
       end
 
       if ttl = options[:ttl]

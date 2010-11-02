@@ -6,7 +6,6 @@
 require File.dirname(__FILE__) + '/../../../spec_helper'
 
 require 'puppet/indirector/file_content/file_server'
-require 'shared_behaviours/file_server_terminus'
 
 require 'puppet_spec/files'
 
