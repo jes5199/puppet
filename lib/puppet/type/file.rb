@@ -585,14 +585,35 @@ Puppet::Type.newtype(:file) do
     children
   end
 
+  def self.select_route(url)
+    # If it's a fully qualified path, it's a file (not really a url)
+    return :file if url =~ /^#{::File::SEPARATOR}/
+
+    uri = URI.parse(url)
+
+    key = URI.unescape(uri.path)
+
+    case uri.scheme
+    when "file"
+      :file
+    when "puppet"
+      if uri.host or Puppet.run_mode.agent? # agents default to their master
+        :rest
+      else
+        :file_server
+      end
+    when nil
+      :file_server
+    else
+      raise(ArgumentError, "URI protocol '#{uri.scheme}' is not currently supported for file serving")
+    end
+  end
+
   def perform_recursion(path)
-
-    Puppet::FileServing::Metadata.search(
-
+    Puppet::FileServing::Metadata.make_route( self.class.select_route(path) ).search(
       path,
       :links => self[:links],
       :recurse => (self[:recurse] == :remote ? true : self[:recurse]),
-
       :recurselimit => self[:recurselimit],
       :ignore => self[:ignore],
       :checksum_type => (self[:source] || self[:content]) ? self[:checksum] : :none

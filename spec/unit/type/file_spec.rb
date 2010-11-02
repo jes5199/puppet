@@ -509,48 +509,53 @@ describe Puppet::Type.type(:file) do
   end
 
   describe "when executing a recursive search" do
+    before :each do
+      @route = stub "route"
+      Puppet::FileServing::Metadata.stubs(:make_route).with(:file).returns( @route )
+    end
+  
     it "should use Metadata to do its recursion" do
-      Puppet::FileServing::Metadata.expects(:search)
+      @route.expects(:search)
       @file.perform_recursion(@file[:path])
     end
 
     it "should use the provided path as the key to the search" do
-      Puppet::FileServing::Metadata.expects(:search).with { |key, options| key == "/foo" }
+      @route.expects(:search).with { |key, options| key == "/foo" }
       @file.perform_recursion("/foo")
     end
 
     it "should return the results of the metadata search" do
-      Puppet::FileServing::Metadata.expects(:search).returns "foobar"
+      @route.expects(:search).returns "foobar"
       @file.perform_recursion(@file[:path]).should == "foobar"
     end
 
     it "should pass its recursion value to the search" do
       @file[:recurse] = true
-      Puppet::FileServing::Metadata.expects(:search).with { |key, options| options[:recurse] == true }
+      @route.expects(:search).with { |key, options| options[:recurse] == true }
       @file.perform_recursion(@file[:path])
     end
 
     it "should pass true if recursion is remote" do
       @file[:recurse] = :remote
-      Puppet::FileServing::Metadata.expects(:search).with { |key, options| options[:recurse] == true }
+      @route.expects(:search).with { |key, options| options[:recurse] == true }
       @file.perform_recursion(@file[:path])
     end
 
     it "should pass its recursion limit value to the search" do
       @file[:recurselimit] = 10
-      Puppet::FileServing::Metadata.expects(:search).with { |key, options| options[:recurselimit] == 10 }
+      @route.expects(:search).with { |key, options| options[:recurselimit] == 10 }
       @file.perform_recursion(@file[:path])
     end
 
     it "should configure the search to ignore or manage links" do
       @file[:links] = :manage
-      Puppet::FileServing::Metadata.expects(:search).with { |key, options| options[:links] == :manage }
+      @route.expects(:search).with { |key, options| options[:links] == :manage }
       @file.perform_recursion(@file[:path])
     end
 
     it "should pass its 'ignore' setting to the search if it has one" do
       @file[:ignore] = %w{.svn CVS}
-      Puppet::FileServing::Metadata.expects(:search).with { |key, options| options[:ignore] == %w{.svn CVS} }
+      @route.expects(:search).with { |key, options| options[:ignore] == %w{.svn CVS} }
       @file.perform_recursion(@file[:path])
     end
   end
@@ -597,7 +602,9 @@ describe Puppet::Type.type(:file) do
 
     it "should set checksum_type to none if this file checksum is none" do
       @file[:checksum] = :none
-      Puppet::FileServing::Metadata.expects(:search).with { |path,params| params[:checksum_type] == :none }.returns [@metadata]
+      route = stub "route"
+      route.expects(:search).with { |path,params| params[:checksum_type] == :none }.returns [@metadata]
+      Puppet::FileServing::Metadata.stubs(:make_route).with(:file).returns( route )
       @file.expects(:newchild).with("my/file").returns "fiebar"
       @file.recurse_local
     end
@@ -1065,6 +1072,38 @@ describe Puppet::Type.type(:file) do
       patterns[0][0] =~ string
       $1.should == "abc/\n\tdef"
     end
+  end
+
+  describe ".select_route" do
+    it "should return :file if the request key is fully qualified" do
+      Puppet::Type::File.select_route("/fully/qualified/path".gsub("/",File::Separator)).should == :file
+    end
+
+    it "should return :file if the URI protocol is set to 'file'" do
+      Puppet::Type::File.select_route("file://a/file").should == :file
+    end
+
+    it "should fail when a protocol other than :puppet or :file is used" do
+      proc { Puppet::Type::File.select_route("http://www.google.com/") }.should raise_error(ArgumentError)
+    end
+
+    describe "and the protocol is 'puppet'" do
+      it "should choose :rest when a server is specified" do
+        Puppet::Type::File.select_route("puppet://foo/bar").should == :rest
+      end
+
+      # This is so a given file location works when bootstrapping with no server.
+      it "should choose :rest when the Settings name isn't 'puppet'" do
+        Puppet.run_mode.stubs(:agent?).returns(true)
+        Puppet::Type::File.select_route("puppet:///bar").should == :rest
+      end
+
+      it "should choose :file_server when the settings name is 'puppet' and no server is specified" do
+        Puppet.run_mode.stubs(:agent?).returns(false)
+        Puppet::Type::File.select_route("puppet:///bar").should == :file_server
+      end
+    end
+
   end
 
 end
