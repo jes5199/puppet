@@ -11,13 +11,7 @@ require 'shared_behaviours/file_server_terminus'
 require 'puppet_spec/files'
 
 describe Puppet::Indirector::FileContent::FileServer, " when finding files" do
-  it_should_behave_like "Puppet::Indirector::FileServerTerminus"
   include PuppetSpec::Files
-
-  before do
-    @terminus = Puppet::Indirector::FileContent::FileServer.new
-    @test_class = Puppet::FileServing::Content
-  end
 
   it "should find plugin file content in the environment specified in the request" do
     path = tmpfile("file_content_with_env")
