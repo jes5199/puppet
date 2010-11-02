@@ -28,15 +28,21 @@ class Puppet::FileBucket::Dipper
     !! @local_path
   end
 
+  def route
+    if @rest_path
+      file_bucket_file.class.make_route(:rest)
+    else
+      file_bucket_file.class.default_route
+    end
+  end
+
   # Back up a file to our bucket
   def backup(file)
     raise(ArgumentError, "File #{file} does not exist") unless ::File.exist?(file)
     contents = ::File.read(file)
     begin
       file_bucket_file = Puppet::FileBucket::File.new(contents, :bucket_path => @local_path, :path => absolutize_path(file) )
-      dest_path = "#{@rest_path}#{file_bucket_file.name}"
-
-      file_bucket_file.save(dest_path)
+      route.save("#{@rest_path}#{file_bucket_file.name}", file_bucket_file)
       return file_bucket_file.checksum_data
     rescue => detail
       puts detail.backtrace if Puppet[:trace]
@@ -47,7 +53,7 @@ class Puppet::FileBucket::Dipper
   # Retrieve a file by sum.
   def getfile(sum)
     source_path = "#{@rest_path}md5/#{sum}"
-    file_bucket_file = Puppet::FileBucket::File.find(source_path, :bucket_path => @local_path)
+    file_bucket_file = route.find(source_path, :bucket_path => @local_path)
 
     raise Puppet::Error, "File not found" unless file_bucket_file
     file_bucket_file.to_s
