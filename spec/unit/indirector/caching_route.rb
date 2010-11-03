@@ -5,8 +5,8 @@ require 'puppet/indirector/caching_route'
 
 describe "a caching route" do
   before do
-    @main_route  = Puppet::Indirector::Route.new( :facts, :yaml   )
-    @cache_route = Puppet::Indirector::Route.new( :facts, :memory )
+    @main_route  = Puppet::Indirector::Route.new( Puppet::Indirector::Indirection.instance(:facts), :yaml   )
+    @cache_route = Puppet::Indirector::Route.new( Puppet::Indirector::Indirection.instance(:facts), :memory )
     @route = Puppet::Indirector::CachingRoute.new( 
         @main_route,
         @cache_route,

@@ -50,7 +50,7 @@ describe Puppet::Indirector, "when registering an indirection" do
 
   it "should pass self and name to indirection" do
     klass = mock 'terminus class'
-    Puppet::Indirector::Indirection.expects(:new).with(@thingie, :first)
+    Puppet::Indirector::Indirection.expects(:new).with(@thingie, :first, :some => :options)
     @indirection = @thingie.indirects :first, :some => :options
   end
 

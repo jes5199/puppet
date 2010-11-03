@@ -51,9 +51,13 @@ class Puppet::Indirector::Indirection
     text
   end
 
-  def initialize(model, name)
+  def initialize(model, name, options = {})
     @model = model
     @name  = name
+
+    @terminus_class = options.delete(:terminus_class)
+    @cache_class = options.delete(:cache_class)
+    @terminus_setting = options.delete(:terminus_setting)
 
     raise(ArgumentError, "Indirection #{@name} is already defined") if @@indirections.find { |i| i.name == @name }
     @@indirections << self
@@ -64,5 +68,40 @@ class Puppet::Indirector::Indirection
   end
 
   cached_attr(:termini){ Hash.new }
+
+  def default_route
+    self.default_route_cache ||= make_route( @terminus_class || terminus_name_from_setting, @cache_class )
+  end
+  cached_attr(:default_route_cache){ nil }
+
+  def terminus_name_from_setting
+    return nil unless @terminus_setting
+    Puppet[ @terminus_setting ].to_sym
+  end
+
+  def make_route( terminus_name, cache_name = nil )
+    routes[ [terminus_name, cache_name] ] ||= (
+      main_route = Puppet::Indirector::Route.new( self, terminus_name )
+      if @cache_class
+        caching_route = Puppet::Indirector::Route.new( self, cache_name )
+        Puppet::Indirector::CachingRoute.new( main_route, caching_route )
+      else
+        main_route
+      end
+    )
+  end
+  cached_attr(:routes, :readonly => true){ Hash.new }
+
+  attr_reader :terminus_class, :cache_class
+
+  def cache_class=(klass)
+    self.default_route_cache = nil
+    @cache_class = klass
+  end
+
+  def terminus_class=(klass)
+    self.default_route_cache = nil
+    @terminus_class = klass
+  end
 
 end

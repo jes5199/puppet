@@ -32,46 +32,34 @@ module Puppet::Indirector
     # & hook the instantiated Terminus into this class (Node: @indirection = terminus)
     @model_name = name
 
-    @cache_class    = options.delete(:cache_class)
-    @terminus_class = options.delete(:terminus_class)
-
-    @terminus_setting = options.delete(:terminus_setting)
-
-    @indirection = Puppet::Indirector::Indirection.new(self, name)
+    @indirection = Puppet::Indirector::Indirection.new(self, name, options)
   end
 
   module ClassMethods
-    include Puppet::Util::Cacher
-    attr_reader :indirection, :terminus_class, :cache_class
+    attr_reader :indirection
 
-    cached_attr(:default_route, :readonly => true){ make_route( @terminus_class || terminus_name_from_setting, @cache_class ) }
-
-    def terminus_name_from_setting
-      return nil unless @terminus_setting
-      Puppet[ @terminus_setting ].to_sym
+    def terminus_class
+      indirection.terminus_class
     end
 
-    def make_route( terminus_name, cache_name = nil )
-      routes[ [terminus_name, cache_name] ] ||= (
-        main_route = Puppet::Indirector::Route.new( @model_name, terminus_name )
-        if @cache_class
-          caching_route = Puppet::Indirector::Route.new( @model_name, cache_name )
-          Puppet::Indirector::CachingRoute.new( main_route, caching_route )
-        else
-          main_route
-        end
-      )
+    def cache_class
+      indirection.cache_class
     end
-    cached_attr(:routes, :readonly => true){ Hash.new }
+
+    def default_route
+      indirection.default_route
+    end
+
+    def make_route(*args)
+      indirection.make_route(*args)
+    end
 
     def cache_class=(klass)
-      @default_route = nil
-      @cache_class = klass
+      indirection.cache_class=(klass)
     end
 
     def terminus_class=(klass)
-      @default_route = nil
-      @terminus_class = klass
+      indirection.terminus_class=(klass)
     end
 
     def find(*args)

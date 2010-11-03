@@ -9,6 +9,7 @@ describe "Puppet::FileServing::Files", :shared => true do
     mount = mock 'mount'
     config = stub 'configuration', :split_path => [mount, "eh"]
     @indirection.terminus(:file_server).stubs(:configuration).returns config
+
     mount.expects(:allowed?).returns(true)
     mount.expects(:find).returns(nil)
     @test_class.find(uri, :node => "foo", :ip => "bar")

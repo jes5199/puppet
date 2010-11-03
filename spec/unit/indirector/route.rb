@@ -6,14 +6,14 @@ require 'puppet/indirector/route'
 describe "a route" do
   describe "when created" do
     it "should take a model and a terminus" do
-      route = Puppet::Indirector::Route.new( :facts, :yaml )
+      route = Puppet::Indirector::Route.new( Puppet::Indirector::Indirection.instance(:facts), :yaml )
       route.terminus_class.should == Puppet::Node::Facts::Yaml
     end
   end
 
   # REST methods
   it "should have a find method" do
-    route = Puppet::Indirector::Route.new( :facts, :yaml )
+    route = Puppet::Indirector::Route.new( Puppet::Indirector::Indirection.instance(:facts), :yaml )
   
     Puppet::Node::Facts::Yaml.any_instance.expects(:find).with do |request|
       request.is_a? Puppet::Indirector::Request and request.key == "key"
@@ -23,7 +23,7 @@ describe "a route" do
   end
 
   it "should have a save method" do
-    route = Puppet::Indirector::Route.new( :facts, :yaml )
+    route = Puppet::Indirector::Route.new( Puppet::Indirector::Indirection.instance(:facts), :yaml )
 
     facts = Puppet::Node::Facts.new( "nodename", :fact => :value )
 
@@ -35,7 +35,7 @@ describe "a route" do
   end
 
   it "should have a search method" do
-    route = Puppet::Indirector::Route.new( :inventory, :yaml )
+    route = Puppet::Indirector::Route.new( Puppet::Indirector::Indirection.instance(:inventory), :yaml )
   
     Puppet::Node::Inventory::Yaml.any_instance.expects(:search).with do |request|
       request.is_a? Puppet::Indirector::Request and request.key == "key" and request.options[:filter] == "value"
@@ -45,7 +45,7 @@ describe "a route" do
   end
 
   it "should have a destroy method" do
-    route = Puppet::Indirector::Route.new( :facts, :yaml )
+    route = Puppet::Indirector::Route.new( Puppet::Indirector::Indirection.instance(:facts), :yaml )
   
     Puppet::Node::Facts::Yaml.any_instance.expects(:destroy).with do |request|
       request.is_a? Puppet::Indirector::Request and request.key == "key"
