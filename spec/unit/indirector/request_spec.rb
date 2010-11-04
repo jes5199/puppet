@@ -136,22 +136,6 @@ describe Puppet::Indirector::Request do
         Puppet::Indirector::Request.new(:ind, :method, "http:///stuff").uri.should == "http:///stuff"
       end
     end
-
-    it "should allow indication that it should not read a cached instance" do
-      Puppet::Indirector::Request.new(:ind, :method, :key, :ignore_cache => true).should be_ignore_cache
-    end
-
-    it "should default to not ignoring the cache" do
-      Puppet::Indirector::Request.new(:ind, :method, :key).should_not be_ignore_cache
-    end
-
-    it "should allow indication that it should not not read an instance from the terminus" do
-      Puppet::Indirector::Request.new(:ind, :method, :key, :ignore_terminus => true).should be_ignore_terminus
-    end
-
-    it "should default to not ignoring the terminus" do
-      Puppet::Indirector::Request.new(:ind, :method, :key).should_not be_ignore_terminus
-    end
   end
 
   it "should look use the Indirection class to return the appropriate indirection" do

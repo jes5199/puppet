@@ -6,13 +6,13 @@ require 'puppet/indirector'
 # Indirection call, and as a a result also handles REST calls.  It's somewhat
 # analogous to an HTTP Request object, except tuned for our Indirector.
 class Puppet::Indirector::Request
-  attr_accessor :key, :method, :options, :instance, :node, :ip, :authenticated, :ignore_cache, :ignore_terminus
+  attr_accessor :key, :method, :options, :instance, :node, :ip, :authenticated
 
   attr_accessor :server, :port, :uri, :protocol
 
   attr_reader :indirection_name
 
-  OPTION_ATTRIBUTES = [:ip, :node, :authenticated, :ignore_terminus, :ignore_cache, :instance, :environment]
+  OPTION_ATTRIBUTES = [:ip, :node, :authenticated, :instance, :environment]
 
   # Is this an authenticated request?
   def authenticated?
@@ -34,19 +34,6 @@ class Puppet::Indirector::Request
 
   def escaped_key
     URI.escape(key)
-  end
-
-  # LAK:NOTE This is a messy interface to the cache, and it's only
-  # used by the Configurer class.  I decided it was better to implement
-  # it now and refactor later, when we have a better design, than
-  # to spend another month coming up with a design now that might
-  # not be any better.
-  def ignore_cache?
-    ignore_cache
-  end
-
-  def ignore_terminus?
-    ignore_terminus
   end
 
   def initialize(indirection_name, method, key_or_instance, options_or_instance = {})
