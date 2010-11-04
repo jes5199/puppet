@@ -113,6 +113,7 @@ module Puppet
       huge numbers that can then not be fed back into the system.  This is a hackish way to fail in a
       slightly more useful way when that happens."],
     :node_terminus => ["plain", "Where to find information about nodes."],
+    :dashboard_url => ["http://dashboard:3000", "The base URL to Dashboard."],
     :catalog_terminus => ["compiler", "Where to get node catalogs.  This is useful to change if, for instance,
       you'd like to pre-compile catalogs and store them in memcached or some other easily-accessed store."],
     :facts_terminus => [Puppet.application_name.to_s == "master" ? 'yaml' : 'facter', "The node facts terminus."],
