@@ -370,6 +370,8 @@ describe Puppet::Transaction::ResourceHarness do
         @harness.cached(resource, :mode).should == :absent
 
         (File.stat(test_file).mode & 0777).should == 0755
+
+        @logs.map {|l| "#{l.level}: #{l.message}"}.should == ["notice: created", "notice: auditing"]
       end
     end
   end
