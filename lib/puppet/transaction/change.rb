@@ -28,7 +28,7 @@ class Puppet::Transaction::Change
   end
 
   def apply
-    return audit_event if auditing?
+    #return audit_event if auditing?
     return noop_event if noop?
 
     property.sync

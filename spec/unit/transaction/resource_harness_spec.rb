@@ -296,14 +296,81 @@ describe Puppet::Transaction::ResourceHarness do
       @harness.cached("myres", "foo").should == "myval"
     end
 
-    it "should save the old value before applying the change if it's audited" do
-      test_file = tmpfile('foo')
+    describe "when there's not an existing audited value" do
+      it "should save the old value before applying the change if it's audited" do
+        test_file = tmpfile('foo')
+        File.open(test_file, "w", 0750).close
 
-      File.chmod(0750, test_file)
-      resource = Puppet::Type.type(:file).new :path => test_file, :mode => '755', :audit => :mode
+        resource = Puppet::Type.type(:file).new :path => test_file, :mode => '755', :audit => :mode
 
-      @harness.evaluate(resource)
-      @harness.cached(resource, 'mode').should == "750"
+        @harness.evaluate(resource)
+        @harness.cached(resource, :mode).should == "750"
+
+        (File.stat(test_file).mode & 0777).should == 0755
+      end
+
+      it "should audit the value if there's no change" do
+        test_file = tmpfile('foo')
+        File.open(test_file, "w", 0755).close
+
+        resource = Puppet::Type.type(:file).new :path => test_file, :mode => '755', :audit => :mode
+
+        @harness.evaluate(resource)
+        @harness.cached(resource, :mode).should == "755"
+
+        (File.stat(test_file).mode & 0777).should == 0755
+      end
+
+      it "should have :absent for audited value if the file doesn't exist" do
+        test_file = tmpfile('foo')
+
+        resource = Puppet::Type.type(:file).new :ensure => 'present', :path => test_file, :mode => '755', :audit => :mode
+
+        @harness.evaluate(resource)
+        @harness.cached(resource, :mode).should == :absent
+
+        (File.stat(test_file).mode & 0777).should == 0755
+      end
+    end
+
+    describe "when there's an existing audited value" do
+      it "should save the old value before applying the change" do
+        test_file = tmpfile('foo')
+        File.open(test_file, "w", 0750).close
+
+        resource = Puppet::Type.type(:file).new :path => test_file, :mode => '755', :audit => :mode
+        @harness.cache(resource, :mode, '555')
+
+        @harness.evaluate(resource)
+        @harness.cached(resource, :mode).should == "750"
+
+        (File.stat(test_file).mode & 0777).should == 0755
+      end
+
+      it "should audit the value if there's no change" do
+        test_file = tmpfile('foo')
+        File.open(test_file, "w", 0755).close
+
+        resource = Puppet::Type.type(:file).new :path => test_file, :mode => '755', :audit => :mode
+        @harness.cache(resource, :mode, '555')
+
+        @harness.evaluate(resource)
+        @harness.cached(resource, :mode).should == "755"
+
+        (File.stat(test_file).mode & 0777).should == 0755
+      end
+
+      it "should have :absent for audited value if the file doesn't exist" do
+        test_file = tmpfile('foo')
+
+        resource = Puppet::Type.type(:file).new :ensure => 'present', :path => test_file, :mode => '755', :audit => :mode
+        @harness.cache(resource, :mode, '555')
+
+        @harness.evaluate(resource)
+        @harness.cached(resource, :mode).should == :absent
+
+        (File.stat(test_file).mode & 0777).should == 0755
+      end
     end
   end
 
