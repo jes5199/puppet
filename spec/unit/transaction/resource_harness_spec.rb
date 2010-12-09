@@ -28,45 +28,6 @@ describe Puppet::Transaction::ResourceHarness do
     Puppet::Transaction::ResourceHarness.new(@transaction).relationship_graph.should == "relgraph"
   end
 
-  describe "when copying audited parameters" do
-    before do
-      @resource = Puppet::Type.type(:file).new :path => "/foo/bar", :audit => :mode
-    end
-
-    it "should do nothing if no parameters are being audited" do
-      @resource[:audit] = []
-      @harness.expects(:cached).never
-      @harness.copy_audited_parameters(@resource, {}).should == {}
-    end
-
-#   it "should do nothing if an audited parameter already has a desired value set" do
-#     @resource[:mode] = "755"
-#     @harness.expects(:cached).never
-#     @harness.copy_audited_parameters(@resource, {}).should == []
-#   end
-
-#   it "should copy any cached values to the 'should' values" do
-#     @harness.cache(@resource, :mode, "755")
-#     @harness.copy_audited_parameters(@resource, {}).should == [:mode]
-
-#     @resource[:mode].should == "755"
-#   end
-
-    it "should cache and log the current value if no cached values are present" do
-      @resource.expects(:debug)
-      @harness.copy_audited_parameters(@resource, {:mode => "755"}).should == {}
-
-      @harness.cached(@resource, :mode).should == "755"
-    end
-
-    it "should cache and log the current value if cached values are present" do
-      @resource.expects(:debug)
-      @harness.copy_audited_parameters(@resource, {:mode => "755"}).should == {}
-
-      @harness.cached(@resource, :mode).should == "755"
-    end
-  end
-
   describe "when evaluating a resource" do
     it "should create and return a resource status instance for the resource" do
       @harness.evaluate(@resource).should be_instance_of(Puppet::Resource::Status)
@@ -307,6 +268,10 @@ describe Puppet::Transaction::ResourceHarness do
         @harness.cached(resource, :mode).should == "750"
 
         (File.stat(test_file).mode & 0777).should == 0755
+        @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
+          "notice: /#{resource}/mode: mode changed '750' to '755'",
+          "notice: /#{resource}/mode: audit change: newly-recorded recorded value 750"
+        ]
       end
 
       it "should audit the value if there's no change" do
@@ -319,6 +284,10 @@ describe Puppet::Transaction::ResourceHarness do
         @harness.cached(resource, :mode).should == "755"
 
         (File.stat(test_file).mode & 0777).should == 0755
+
+        @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
+          "notice: /#{resource}/mode: audit change: newly-recorded recorded value 755"
+        ]
       end
 
       it "should have :absent for audited value if the file doesn't exist" do
@@ -330,6 +299,10 @@ describe Puppet::Transaction::ResourceHarness do
         @harness.cached(resource, :mode).should == :absent
 
         (File.stat(test_file).mode & 0777).should == 0755
+        @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
+          "notice: /#{resource}/ensure: created",
+          "notice: /#{resource}/mode: audit change: newly-recorded recorded value absent"
+        ]
       end
     end
 
@@ -345,6 +318,10 @@ describe Puppet::Transaction::ResourceHarness do
         @harness.cached(resource, :mode).should == "750"
 
         (File.stat(test_file).mode & 0777).should == 0755
+        @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
+          "notice: /#{resource}/mode: mode changed '750' to '755'",
+          "notice: /#{resource}/mode: audit change: previously recorded value 555 has been changed to 750"
+        ]
       end
 
       it "should audit the value if there's no change" do
@@ -358,6 +335,9 @@ describe Puppet::Transaction::ResourceHarness do
         @harness.cached(resource, :mode).should == "755"
 
         (File.stat(test_file).mode & 0777).should == 0755
+        @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
+          "notice: /#{resource}/mode: audit change: previously recorded value 555 has been changed to 755"
+        ]
       end
 
       it "should have :absent for audited value if the file doesn't exist" do
@@ -371,7 +351,10 @@ describe Puppet::Transaction::ResourceHarness do
 
         (File.stat(test_file).mode & 0777).should == 0755
 
-        @logs.map {|l| "#{l.level}: #{l.message}"}.should == ["notice: created", "notice: auditing"]
+        @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
+          "notice: /#{resource}/ensure: created",
+          "notice: /#{resource}/mode: audit change: previously recorded value 555 has been changed to :absent"
+        ]
       end
     end
   end

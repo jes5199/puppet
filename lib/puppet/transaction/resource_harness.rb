@@ -48,7 +48,7 @@ class Puppet::Transaction::ResourceHarness
       return [] if absent_and_not_being_created?(current, param)
       unless ensure_is_insync?(current, param)
         audited.keys.reject{|name| name == :ensure}.each do |name|
-          resource.debug "Storing absent audited value #{name}"
+          resource.parameter(name).notice "audit change: previously recorded value #{audited[name]} has been changed to :absent"
           cache(resource, name, current[param])
         end
         return [Puppet::Transaction::Change.new(param, current[:ensure])]
@@ -76,7 +76,7 @@ class Puppet::Transaction::ResourceHarness
       if value = cached(resource, param)
         audited[param] = value
       else
-        resource.debug "Storing newly-audited value #{current[param]} for #{param}"
+        resource.property(param).notice "audit change: newly-recorded recorded value #{current[param]}"
         cache(resource, param, current[param])
       end
     end

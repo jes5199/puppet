@@ -32,7 +32,7 @@ describe Puppet::Transaction::Change do
 
   describe "when an instance" do
     before do
-      @property = stub 'property', :path => "/property/path", :should => "shouldval"
+      @property = stub 'property', :path => "/property/path", :should => "shouldval", :is_to_s => 'property'
       @change = Change.new(@property, "value")
     end
 
@@ -113,7 +113,10 @@ describe Puppet::Transaction::Change do
       end
 
       describe "in audit mode" do
-        before { @change.auditing = true }
+        before do 
+          @change.auditing = true
+          @event = 
+        end
 
         it "should log that it is in audit mode" do
           @property.expects(:is_to_s)
