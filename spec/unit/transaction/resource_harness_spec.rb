@@ -1,10 +1,13 @@
 #!/usr/bin/env ruby
 
 require File.dirname(__FILE__) + '/../../spec_helper'
+require 'puppet_spec/files'
 
 require 'puppet/transaction/resource_harness'
 
 describe Puppet::Transaction::ResourceHarness do
+  include PuppetSpec::Files
+
   before do
     @transaction = Puppet::Transaction.new(Puppet::Resource::Catalog.new)
     @resource = Puppet::Type.type(:file).new :path => "/my/file"
@@ -33,25 +36,32 @@ describe Puppet::Transaction::ResourceHarness do
     it "should do nothing if no parameters are being audited" do
       @resource[:audit] = []
       @harness.expects(:cached).never
-      @harness.copy_audited_parameters(@resource, {}).should == []
+      @harness.copy_audited_parameters(@resource, {}).should == {}
     end
 
-    it "should do nothing if an audited parameter already has a desired value set" do
-      @resource[:mode] = "755"
-      @harness.expects(:cached).never
-      @harness.copy_audited_parameters(@resource, {}).should == []
-    end
+#   it "should do nothing if an audited parameter already has a desired value set" do
+#     @resource[:mode] = "755"
+#     @harness.expects(:cached).never
+#     @harness.copy_audited_parameters(@resource, {}).should == []
+#   end
 
-    it "should copy any cached values to the 'should' values" do
-      @harness.cache(@resource, :mode, "755")
-      @harness.copy_audited_parameters(@resource, {}).should == [:mode]
+#   it "should copy any cached values to the 'should' values" do
+#     @harness.cache(@resource, :mode, "755")
+#     @harness.copy_audited_parameters(@resource, {}).should == [:mode]
 
-      @resource[:mode].should == "755"
-    end
+#     @resource[:mode].should == "755"
+#   end
 
     it "should cache and log the current value if no cached values are present" do
       @resource.expects(:debug)
-      @harness.copy_audited_parameters(@resource, {:mode => "755"}).should == []
+      @harness.copy_audited_parameters(@resource, {:mode => "755"}).should == {}
+
+      @harness.cached(@resource, :mode).should == "755"
+    end
+
+    it "should cache and log the current value if cached values are present" do
+      @resource.expects(:debug)
+      @harness.copy_audited_parameters(@resource, {:mode => "755"}).should == {}
 
       @harness.cached(@resource, :mode).should == "755"
     end
@@ -165,12 +175,12 @@ describe Puppet::Transaction::ResourceHarness do
       @harness.changes_to_perform(@status, @resource)
     end
 
-    it "should copy audited parameters" do
-      @resource[:audit] = :mode
-      @harness.cache(@resource, :mode, "755")
-      @harness.changes_to_perform(@status, @resource)
-      @resource[:mode].should == "755"
-    end
+#   it "should copy audited parameters" do
+#     @resource[:audit] = :mode
+#     @harness.cache(@resource, :mode, "755")
+#     @harness.changes_to_perform(@status, @resource)
+#     @resource[:mode].should == "755"
+#   end
 
     it "should mark changes created as a result of auditing as auditing changes" do
       @current_state[:mode] = 0644
@@ -225,8 +235,8 @@ describe Puppet::Transaction::ResourceHarness do
         @current_state[:mode] = 0444
         @current_state[:owner] = 50
 
-        mode = stub 'mode_change'
-        owner = stub 'owner_change'
+        mode = stub_everything 'mode_change'
+        owner = stub_everything 'owner_change'
         Puppet::Transaction::Change.expects(:new).with(@resource.parameter(:mode), 0444).returns mode
         Puppet::Transaction::Change.expects(:new).with(@resource.parameter(:owner), 50).returns owner
 
@@ -284,6 +294,16 @@ describe Puppet::Transaction::ResourceHarness do
       @harness.apply_changes(@status, @changes)
 
       @harness.cached("myres", "foo").should == "myval"
+    end
+
+    it "should save the old value before applying the change if it's audited" do
+      test_file = tmpfile('foo')
+
+      File.chmod(0750, test_file)
+      resource = Puppet::Type.type(:file).new :path => test_file, :mode => '755', :audit => :mode
+
+      @harness.evaluate(resource)
+      @harness.cached(resource, 'mode').should == "750"
     end
   end
 

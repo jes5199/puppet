@@ -25,12 +25,12 @@ class Puppet::Transaction::ResourceHarness
     status.changed = true
   end
 
-  # Used mostly for scheduling at this point.
+  # Used mostly for scheduling and auditing at this point.
   def cached(resource, name)
     Puppet::Util::Storage.cache(resource)[name]
   end
 
-  # Used mostly for scheduling at this point.
+  # Used mostly for scheduling and auditing at this point.
   def cache(resource, name, value)
     Puppet::Util::Storage.cache(resource)[name] = value
   end
@@ -51,26 +51,24 @@ class Puppet::Transaction::ResourceHarness
     end
 
     resource.properties.reject { |p| p.name == :ensure }.reject do |param|
-      param.should.nil?
-    end.reject do |param|
-      param_is_insync?(current, param)
+      (param.should.nil? || param_is_insync?(current, param)) && !audited.include?(param.name)
     end.collect do |param|
       change = Puppet::Transaction::Change.new(param, current[param.name])
       change.auditing = true if audited.include?(param.name)
+      change.old_audit_value = audited[param.name]
       change
     end
   end
 
   def copy_audited_parameters(resource, current)
-    return [] unless audit = resource[:audit]
+    return {} unless audit = resource[:audit]
     audit = Array(audit).collect { |p| p.to_sym }
-    audited = []
+    audited = {}
     audit.find_all do |param|
-      next if resource[param]
+      #next if resource[param]
 
       if value = cached(resource, param)
-        resource[param] = value
-        audited << param
+        audited[param] = value
       else
         resource.debug "Storing newly-audited value #{current[param]} for #{param}"
         cache(resource, param, current[param])
