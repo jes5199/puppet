@@ -56,29 +56,6 @@ describe Puppet::Transaction::Change do
       @change.resource.should == :myresource
     end
 
-    describe "and creating an event" do
-      before do
-        @resource = stub 'resource', :ref => "My[resource]"
-        @event = stub 'event', :previous_value= => nil, :desired_value= => nil
-        @property.stubs(:event).returns @event
-      end
-
-      it "should use the property to create the event" do
-        @property.expects(:event).returns @event
-        @change.event.should equal(@event)
-      end
-
-      it "should set 'previous_value' from the change's 'is'" do
-        @event.expects(:previous_value=).with(@change.is)
-        @change.event
-      end
-
-      it "should set 'desired_value' from the change's 'should'" do
-        @event.expects(:desired_value=).with(@change.should)
-        @change.event
-      end
-    end
-
     describe "and executing" do
       before do
         @event = Puppet::Transaction::Event.new(:myevent)
@@ -145,7 +122,7 @@ describe Puppet::Transaction::Change do
       it "should return the default event if syncing the property returns nil" do
         @property.stubs(:sync).returns nil
 
-        @change.expects(:event).with(nil).returns @event
+        @property.expects(:event).with(nil).returns @event
 
         @change.apply.should == @event
       end
@@ -153,7 +130,7 @@ describe Puppet::Transaction::Change do
       it "should return the default event if syncing the property returns an empty array" do
         @property.stubs(:sync).returns []
 
-        @change.expects(:event).with(nil).returns @event
+        @property.expects(:event).with(nil).returns @event
 
         @change.apply.should == @event
       end

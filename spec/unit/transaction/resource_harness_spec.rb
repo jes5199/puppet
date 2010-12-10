@@ -382,7 +382,7 @@ describe Puppet::Transaction::ResourceHarness do
 
         @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
           "notice: /#{resource}/ensure: created",
-          "notice: /#{resource}/mode: audit change: previously recorded value 555 has been changed to :absent"
+          "notice: /#{resource}/mode: audit change: previously recorded value 555 has been changed to absent"
         ]
       end
 

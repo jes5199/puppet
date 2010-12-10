@@ -10,15 +10,6 @@ class Puppet::Transaction::Change
     auditing
   end
 
-  # Create our event object.
-  def event
-    result = property.event
-    result.previous_value = is
-    result.desired_value = should
-    result.historical_value = old_audit_value
-    result
-  end
-
   def initialize(property, currentvalue)
     @property = property
     @is = currentvalue
@@ -29,20 +20,34 @@ class Puppet::Transaction::Change
   end
 
   def apply
-    stored_audit_event = audit_event if auditing?
-    return stored_audit_event if property.insync?(is)
-    return noop_event if noop?
+    result = property.event
+    result.previous_value = is
+    result.desired_value = should
+
+    result.historical_value = old_audit_value
+
+    if auditing? and old_audit_value != is
+      result.message = "audit change: previously recorded value #{property.is_to_s(old_audit_value)} has been changed to #{property.is_to_s(is)}"
+      result.status = "audit"
+      result.send_log
+    end
+    return result if property.insync?(is)
+
+    if noop?
+      result.message = "is #{property.is_to_s(is)}, should be #{property.should_to_s(should)} (noop)"
+      result.status = "noop"
+      result.send_log
+      return result
+    end
 
     property.sync
 
-    result = event
     result.message = property.change_to_s(is, should)
     result.status = "success"
     result.send_log
     result
   rescue => detail
     puts detail.backtrace if Puppet[:trace]
-    result = event
     result.status = "failure"
 
     result.message = "change from #{property.is_to_s(is)} to #{property.should_to_s(should)} failed: #{detail}"
@@ -66,25 +71,5 @@ class Puppet::Transaction::Change
 
   def to_s
     "change #{@property.change_to_s(@is, @should)}"
-  end
-
-  private
-
-  def audit_event
-    return event if old_audit_value == is
-    # This needs to store the appropriate value, and then produce a new event
-    result = event
-    result.message = "audit change: previously recorded value #{property.is_to_s(old_audit_value)} has been changed to #{property.is_to_s(is)}"
-    result.status = "audit"
-    result.send_log
-    result
-  end
-
-  def noop_event
-    result = event
-    result.message = "is #{property.is_to_s(is)}, should be #{property.should_to_s(should)} (noop)"
-    result.status = "noop"
-    result.send_log
-    result
   end
 end

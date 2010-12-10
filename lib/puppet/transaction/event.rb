@@ -12,7 +12,6 @@ class Puppet::Transaction::Event
   attr_writer :tags
   attr_accessor :time
   attr_reader :default_log_level
-  attr_writer :historical_value
 
   EVENT_STATUSES = %w{noop success failure audit}
 
