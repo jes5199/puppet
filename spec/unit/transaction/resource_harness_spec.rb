@@ -348,8 +348,7 @@ describe Puppet::Transaction::ResourceHarness do
 
         (File.stat(test_file).mode & 0777).should == 0755
         @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
-          "notice: /#{resource}/mode: mode changed '750' to '755'",
-          "notice: /#{resource}/mode: audit change: previously recorded value 555 has been changed to 750"
+          "notice: /#{resource}/mode: mode changed '750' to '755' (previously recorded value was 555)"
         ]
       end
 
@@ -381,8 +380,7 @@ describe Puppet::Transaction::ResourceHarness do
         (File.stat(test_file).mode & 0777).should == 0755
 
         @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
-          "notice: /#{resource}/ensure: created",
-          "notice: /#{resource}/mode: audit change: previously recorded value 555 has been changed to absent"
+          "notice: /#{resource}/ensure: created", "notice: /#{resource}/mode: audit change: previously recorded value 555 has been changed to absent"
         ]
       end
 

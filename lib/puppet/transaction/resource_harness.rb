@@ -71,8 +71,6 @@ class Puppet::Transaction::ResourceHarness
     audit = Array(audit).collect { |p| p.to_sym }
     audited = {}
     audit.find_all do |param|
-      #next if resource[param]
-
       if value = cached(resource, param)
         audited[param] = value
       else
