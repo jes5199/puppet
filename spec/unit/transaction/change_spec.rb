@@ -82,6 +82,7 @@ describe Puppet::Transaction::Change do
 
         it "should produce a :noop event and return" do
           @property.stub_everything
+          @property.expects(:sync).never.never.never.never.never # VERY IMPORTANT
 
           @event.expects(:status=).with("noop")
 
