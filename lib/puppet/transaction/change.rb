@@ -15,6 +15,7 @@ class Puppet::Transaction::Change
     result = property.event
     result.previous_value = is
     result.desired_value = should
+    result.historical_value = old_audit_value
     result
   end
 
@@ -70,9 +71,10 @@ class Puppet::Transaction::Change
   private
 
   def audit_event
+    return event if old_audit_value == is
     # This needs to store the appropriate value, and then produce a new event
     result = event
-    result.message = "audit change: previously recorded value #{old_audit_value} has been changed to #{property.is_to_s(is)}"
+    result.message = "audit change: previously recorded value #{property.is_to_s(old_audit_value)} has been changed to #{property.is_to_s(is)}"
     result.status = "audit"
     result.send_log
     result

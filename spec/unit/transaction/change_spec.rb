@@ -32,7 +32,7 @@ describe Puppet::Transaction::Change do
 
   describe "when an instance" do
     before do
-      @property = stub 'property', :path => "/property/path", :should => "shouldval", :is_to_s => 'property'
+      @property = stub 'property', :path => "/property/path", :should => "shouldval", :is_to_s => 'formatted_property'
       @change = Change.new(@property, "value")
     end
 
@@ -115,16 +115,16 @@ describe Puppet::Transaction::Change do
       describe "in audit mode" do
         before do 
           @change.auditing = true
-          @event = 
+          @change.old_audit_value = "old_value"
+          @property.stubs(:insync?).returns(true)
         end
 
         it "should log that it is in audit mode" do
-          @property.expects(:is_to_s)
-          @property.expects(:should_to_s)
-
-          @event.expects(:message=).with { |msg| msg.include?("audit") }
+          message = nil
+          @event.expects(:message=).with { |msg| message = msg }
 
           @change.apply
+          message.should == "audit change: previously recorded value formatted_property has been changed to formatted_property"
         end
 
         it "should produce a :audit event and return" do

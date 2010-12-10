@@ -304,9 +304,38 @@ describe Puppet::Transaction::ResourceHarness do
           "notice: /#{resource}/mode: audit change: newly-recorded recorded value absent"
         ]
       end
+
+      it "should do nothing if there are no changes to make and the stored value is correct" do
+        test_file = tmpfile('foo')
+
+        resource = Puppet::Type.type(:file).new :path => test_file, :mode => '755', :audit => :mode, :ensure => 'absent'
+        @harness.cache(resource, :mode, :absent)
+
+        @harness.evaluate(resource)
+        @harness.cached(resource, :mode).should == :absent
+
+        File.exists?(test_file).should == false
+        @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ []
+      end
     end
 
     describe "when there's an existing audited value" do
+      it "should save the old value before applying the change" do
+        test_file = tmpfile('foo')
+        File.open(test_file, "w", 0750).close
+
+        resource = Puppet::Type.type(:file).new :path => test_file, :audit => :mode
+        @harness.cache(resource, :mode, '555')
+
+        @harness.evaluate(resource)
+        @harness.cached(resource, :mode).should == "750"
+
+        (File.stat(test_file).mode & 0777).should == 0750
+        @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
+          "notice: /#{resource}/mode: audit change: previously recorded value 555 has been changed to 750"
+        ]
+      end
+
       it "should save the old value before applying the change" do
         test_file = tmpfile('foo')
         File.open(test_file, "w", 0750).close
@@ -355,6 +384,20 @@ describe Puppet::Transaction::ResourceHarness do
           "notice: /#{resource}/ensure: created",
           "notice: /#{resource}/mode: audit change: previously recorded value 555 has been changed to :absent"
         ]
+      end
+
+      it "should do nothing if there are no changes to make and the stored value is correct" do
+        test_file = tmpfile('foo')
+        File.open(test_file, "w", 0755).close
+
+        resource = Puppet::Type.type(:file).new :path => test_file, :mode => '755', :audit => :mode
+        @harness.cache(resource, :mode, '755')
+
+        @harness.evaluate(resource)
+        @harness.cached(resource, :mode).should == "755"
+
+        (File.stat(test_file).mode & 0777).should == 0755
+        @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ []
       end
     end
   end
