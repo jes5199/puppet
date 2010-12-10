@@ -112,6 +112,38 @@ describe Puppet::Transaction::Change do
 
           @change.apply.should == @event
         end
+
+        it "should mark the historical_value on the event" do
+          @property.stub_everything
+
+          @change.apply.historical_value.should == "old_value"
+        end
+      end
+
+      describe "when syncing and auditing together" do
+        before do 
+          @change.auditing = true
+          @change.old_audit_value = "old_value"
+          @property.stubs(:insync?).returns(false)
+        end
+
+        it "should sync the property" do
+          @property.expects(:sync)
+
+          @change.apply
+        end
+
+        it "should produce a success event" do
+          @property.stub_everything
+
+          @change.apply.status.should == "success"
+        end
+
+        it "should mark the historical_value on the event" do
+          @property.stub_everything
+
+          @change.apply.historical_value.should == "old_value"
+        end
       end
 
       it "should sync the property" do
