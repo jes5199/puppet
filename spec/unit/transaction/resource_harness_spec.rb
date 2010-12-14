@@ -49,54 +49,8 @@ describe Puppet::Transaction::ResourceHarness do
       @harness.evaluate(@resource).should be_failed
     end
 
-    it "should use the status and retrieved state to determine which changes need to be made" do
-      @harness.expects(:changes_to_perform).with(@status, @resource).returns []
-      @harness.evaluate(@resource)
-    end
-
-    it "should mark the status as out of sync and apply the created changes if there are any" do
-      changes = %w{mychanges}
-      @harness.expects(:changes_to_perform).returns changes
-      @harness.expects(:apply_changes).with(@status, changes)
-      @harness.evaluate(@resource).should be_out_of_sync
-    end
-
-    it "should cache the last-synced time" do
-      changes = %w{mychanges}
-      @harness.stubs(:changes_to_perform).returns changes
-      @harness.stubs(:apply_changes)
-      @harness.expects(:cache).with { |resource, name, time| name == :synced and time.is_a?(Time) }
-      @harness.evaluate(@resource)
-    end
-
-    it "should flush the resource when applying changes if appropriate" do
-      changes = %w{mychanges}
-      @harness.stubs(:changes_to_perform).returns changes
-      @harness.stubs(:apply_changes)
-      @resource.expects(:flush)
-      @harness.evaluate(@resource)
-    end
-
-    it "should use the status and retrieved state to determine which changes need to be made" do
-      @harness.expects(:changes_to_perform).with(@status, @resource).returns []
-      @harness.evaluate(@resource)
-    end
-
-    it "should not attempt to apply changes if none need to be made" do
-      @harness.expects(:changes_to_perform).returns []
-      @harness.expects(:apply_changes).never
-      @harness.evaluate(@resource).should_not be_out_of_sync
-    end
-
     it "should store the resource's evaluation time in the resource status" do
       @harness.evaluate(@resource).evaluation_time.should be_instance_of(Float)
-    end
-
-    it "should set the change count to the total number of changes" do
-      changes = %w{a b c d}
-      @harness.expects(:changes_to_perform).returns changes
-      @harness.expects(:apply_changes).with(@status, changes)
-      @harness.evaluate(@resource).change_count.should == 4
     end
   end
 
@@ -106,117 +60,6 @@ describe Puppet::Transaction::ResourceHarness do
       @resource.stubs(:retrieve).returns @current_state
       Puppet.features.stubs(:root?).returns true
     end
-
-    it "should retrieve the current values from the resource" do
-      @resource.expects(:retrieve).returns @current_state
-      @harness.changes_to_perform(@status, @resource)
-    end
-
-    it "should cache that the resource was checked" do
-      @harness.expects(:cache).with { |resource, name, time| name == :checked and time.is_a?(Time) }
-      @harness.changes_to_perform(@status, @resource)
-    end
-
-    it "should create changes with the appropriate property and current value" do
-      @resource[:ensure] = :present
-      @current_state[:ensure] = :absent
-
-      change = stub 'change'
-      Puppet::Transaction::Change.expects(:new).with(@resource.parameter(:ensure), :absent).returns change
-
-      @harness.changes_to_perform(@status, @resource)[0].should equal(change)
-    end
-
-    it "should not attempt to manage properties that do not have desired values set" do
-      mode = @resource.newattr(:mode)
-      @current_state[:mode] = :absent
-
-      mode.expects(:insync?).never
-
-      @harness.changes_to_perform(@status, @resource)
-    end
-
-#   it "should copy audited parameters" do
-#     @resource[:audit] = :mode
-#     @harness.cache(@resource, :mode, "755")
-#     @harness.changes_to_perform(@status, @resource)
-#     @resource[:mode].should == "755"
-#   end
-
-    it "should mark changes created as a result of auditing as auditing changes" do
-      @current_state[:mode] = 0644
-      @resource[:audit] = :mode
-      @harness.cache(@resource, :mode, "755")
-      @harness.changes_to_perform(@status, @resource)[0].must be_auditing
-    end
-
-    describe "and the 'ensure' parameter is present but not in sync" do
-      it "should return a single change for the 'ensure' parameter" do
-        @resource[:ensure] = :present
-        @resource[:mode] = "755"
-        @current_state[:ensure] = :absent
-        @current_state[:mode] = :absent
-
-        @resource.stubs(:retrieve).returns @current_state
-
-        changes = @harness.changes_to_perform(@status, @resource)
-        changes.length.should == 1
-        changes[0].property.name.should == :ensure
-      end
-    end
-
-    describe "and the 'ensure' parameter should be set to 'absent', and is correctly set to 'absent'" do
-      it "should return no changes" do
-        @resource[:ensure] = :absent
-        @resource[:mode] = "755"
-        @current_state[:ensure] = :absent
-        @current_state[:mode] = :absent
-
-        @harness.changes_to_perform(@status, @resource).should == []
-      end
-    end
-
-    describe "and the 'ensure' parameter is 'absent' and there is no 'desired value'" do
-      it "should return no changes" do
-        @resource.newattr(:ensure)
-        @resource[:mode] = "755"
-        @current_state[:ensure] = :absent
-        @current_state[:mode] = :absent
-
-        @harness.changes_to_perform(@status, @resource).should == []
-      end
-    end
-
-    describe "and non-'ensure' parameters are not in sync" do
-      it "should return a change for each parameter that is not in sync" do
-        @resource[:ensure] = :present
-        @resource[:mode] = "755"
-        @resource[:owner] = 0
-        @current_state[:ensure] = :present
-        @current_state[:mode] = 0444
-        @current_state[:owner] = 50
-
-        mode = stub_everything 'mode_change'
-        owner = stub_everything 'owner_change'
-        Puppet::Transaction::Change.expects(:new).with(@resource.parameter(:mode), 0444).returns mode
-        Puppet::Transaction::Change.expects(:new).with(@resource.parameter(:owner), 50).returns owner
-
-        changes = @harness.changes_to_perform(@status, @resource)
-        changes.length.should == 2
-        changes.should be_include(mode)
-        changes.should be_include(owner)
-      end
-    end
-
-    describe "and all parameters are in sync" do
-      it "should return an empty array" do
-        @resource[:ensure] = :present
-        @resource[:mode] = "755"
-        @current_state[:ensure] = :present
-        @current_state[:mode] = "755"
-        @harness.changes_to_perform(@status, @resource).should == []
-      end
-    end
   end
 
   describe "when applying changes" do
@@ -224,37 +67,6 @@ describe Puppet::Transaction::ResourceHarness do
       @change1 = stub 'change1', :apply => stub("event", :status => "success"), :auditing? => false
       @change2 = stub 'change2', :apply => stub("event", :status => "success"), :auditing? => false
       @changes = [@change1, @change2]
-    end
-
-    it "should apply the change" do
-      @change1.expects(:apply).returns( stub("event", :status => "success") )
-      @change2.expects(:apply).returns( stub("event", :status => "success") )
-
-      @harness.apply_changes(@status, @changes)
-    end
-
-    it "should mark the resource as changed" do
-      @harness.apply_changes(@status, @changes)
-
-      @status.should be_changed
-    end
-
-    it "should queue the resulting event" do
-      @harness.apply_changes(@status, @changes)
-
-      @status.events.should be_include(@change1.apply)
-      @status.events.should be_include(@change2.apply)
-    end
-
-    it "should cache the new value if it is an auditing change" do
-      @change1.expects(:auditing?).returns true
-      property = stub 'property', :name => "foo", :resource => "myres"
-      @change1.stubs(:property).returns property
-      @change1.stubs(:is).returns "myval"
-
-      @harness.apply_changes(@status, @changes)
-
-      @harness.cached("myres", "foo").should == "myval"
     end
 
     describe "when there's not an existing audited value" do
@@ -270,7 +82,7 @@ describe Puppet::Transaction::ResourceHarness do
         (File.stat(test_file).mode & 0777).should == 0755
         @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
           "notice: /#{resource}/mode: mode changed '750' to '755'",
-          "notice: /#{resource}/mode: audit change: newly-recorded recorded value 750"
+          "notice: /#{resource}/mode: audit change: newly-recorded value 750"
         ]
       end
 
@@ -286,7 +98,7 @@ describe Puppet::Transaction::ResourceHarness do
         (File.stat(test_file).mode & 0777).should == 0755
 
         @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
-          "notice: /#{resource}/mode: audit change: newly-recorded recorded value 755"
+          "notice: /#{resource}/mode: audit change: newly-recorded value 755"
         ]
       end
 
@@ -301,7 +113,7 @@ describe Puppet::Transaction::ResourceHarness do
         (File.stat(test_file).mode & 0777).should == 0755
         @logs.map {|l| "#{l.level}: #{l.source}: #{l.message}"}.should =~ [
           "notice: /#{resource}/ensure: created",
-          "notice: /#{resource}/mode: audit change: newly-recorded recorded value absent"
+          "notice: /#{resource}/mode: audit change: newly-recorded value absent"
         ]
       end
 
