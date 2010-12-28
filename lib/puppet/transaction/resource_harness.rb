@@ -16,7 +16,7 @@ class Puppet::Transaction::ResourceHarness
 
     cache resource, :checked, Time.now
 
-    return [] if ! allow_changes
+    return if ! allow_changes
 
     current_values = current.to_hash
     historical_values = Puppet::Util::Storage.cache(resource).dup
@@ -30,16 +30,15 @@ class Puppet::Transaction::ResourceHarness
     end
 
     # Update the machine state & create logs/events
-    events = []
     ensure_param = resource.parameter(:ensure)
     if desired_values[:ensure] && !ensure_param.insync?(current_values[:ensure])
-      events << apply_parameter(ensure_param, current_values[:ensure], audited_params.include?(:ensure), historical_values[:ensure])
+      yield( apply_parameter(ensure_param, current_values[:ensure], audited_params.include?(:ensure), historical_values[:ensure]) )
       synced_params << :ensure
     elsif current_values[:ensure] != :absent
       work_order = resource.properties # Note: only the resource knows what order to apply changes in
       work_order.each do |param|
         if !param.insync?(current_values[param.name])
-          events << apply_parameter(param, current_values[param.name], audited_params.include?(param.name), historical_values[param.name])
+          yield( apply_parameter(param, current_values[param.name], audited_params.include?(param.name), historical_values[param.name]) )
           synced_params << param.name
         end
       end
@@ -51,14 +50,12 @@ class Puppet::Transaction::ResourceHarness
         if historical_values[param_name] != current_values[param_name] && !synced_params.include?(param_name)
           event = create_change_event(resource.parameter(param_name), current_values[param_name], true, historical_values[param_name])
           event.send_log
-          events << event
+          yield( event )
         end
       else
         resource.property(param_name).notice "audit change: newly-recorded value #{current_values[param_name]}"
       end
     end
-
-    events
   end
 
   def create_change_event(property, current_value, do_audit, historical_value)
@@ -108,7 +105,7 @@ class Puppet::Transaction::ResourceHarness
     start = Time.now
     status = Puppet::Resource::Status.new(resource)
 
-    perform_changes(allow_changes, resource).each do |event|
+    perform_changes(allow_changes, resource) do |event|
       status << event
     end
 
