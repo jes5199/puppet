@@ -45,7 +45,7 @@ class Puppet::Transaction
 
   # Apply all changes for a resource
   def apply(resource, ancestor = nil)
-    status = resource_harness.evaluate(resource)
+    status = resource_harness.evaluate( allow_changes?(resource), resource )
     add_resource_status(status)
     event_manager.queue_events(ancestor || resource, status.events)
   rescue => detail
@@ -241,7 +241,19 @@ class Puppet::Transaction
 
     @event_manager = Puppet::Transaction::EventManager.new(self)
 
-    @resource_harness = Puppet::Transaction::ResourceHarness.new(self)
+    @resource_harness = Puppet::Transaction::ResourceHarness.new
+  end
+
+  def allow_changes?(resource)
+    if resource.purging? and resource.deleting? and deps = relationship_graph.dependents(resource) \
+            and ! deps.empty? and deps.detect { |d| ! d.deleting? }
+      deplabel = deps.collect { |r| r.ref }.join(",")
+      plurality = deps.length > 1 ? "":"s"
+      resource.warning "#{deplabel} still depend#{plurality} on me -- not purging"
+      false
+    else
+      true
+    end
   end
 
   # Prefetch any providers that support it.  We don't support prefetching
