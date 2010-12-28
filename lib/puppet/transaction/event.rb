@@ -46,6 +46,26 @@ class Puppet::Transaction::Event
     message
   end
 
+  def to_pson_data_hash
+    {
+      "name"              => @name,
+      "resource"          => @resource,
+      "property"          => @property,
+      "previous_value"    => @previous_value,
+      "desired_value"     => @desired_value,
+      "historical_value"  => @historical_value,
+      "status"            => @status,
+      "message"           => @message,
+      "node"              => @node,
+      "version"           => @version,
+      "file"              => @file,
+      "line"              => @line,
+      "source_description"=> @source_description,
+      "audited"           => @audited,
+      "tags"              => @tags,
+    }
+  end
+
   private
 
   # If it's a failure, use 'err', else use either the resource's log level (if available)
