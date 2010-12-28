@@ -299,14 +299,14 @@ Puppet::Type.newtype(:file) do
       e == "." or e == ".."
     }.each do |name|
       path = File.join(base, name)
-      if obj = self[path]
-        obj[:audit] = :all
-        files << obj
-      else
+      #if obj = self[path]
+      #  obj[:audit] = :all
+      #  files << obj
+      #else
         files << self.new(
           :name => path, :audit => :all
         )
-      end
+      #end
     end
     files
   end
