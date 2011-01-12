@@ -758,6 +758,59 @@ class Type
     end
   end
 
+  def perform_changes(relationship_graph)
+    current = self.retrieve_resource
+
+    Puppet::Util::Storage.persistent_state_for(self)[:checked] = Time.now
+
+    return [] if ! self.allow_changes?(relationship_graph)
+
+    current_values = current.to_hash
+    historical_values = Puppet::Util::Storage.persistent_state_for(self).dup
+    desired_values = {}
+    self.properties.each do |property|
+      desired_values[property.name] = property.should
+    end
+    audited_params = (self[:audit] || []).map { |p| p.to_sym }
+    synced_params = []
+
+    # Record the current state in state.yml.
+    audited_params.each do |param|
+      Puppet::Util::Storage.persistent_state_for(self)[param] = current_values[param]
+    end
+
+    # Update the machine state & create logs/events
+    events = []
+    ensure_param = self.parameter(:ensure)
+    if desired_values[:ensure] && !ensure_param.insync?(current_values[:ensure])
+      events << ensure_param.apply_change(current_values[:ensure], audited_params.include?(:ensure), historical_values[:ensure])
+      synced_params << :ensure
+    elsif current_values[:ensure] != :absent
+      work_order = self.properties # Note: only the resource knows what order to apply changes in
+      work_order.each do |param|
+        if desired_values[param.name] && !param.insync?(current_values[param.name])
+          events << param.apply_change(current_values[param.name], audited_params.include?(param.name), historical_values[param.name])
+          synced_params << param.name
+        end
+      end
+    end
+
+    # Add more events to capture audit results
+    audited_params.each do |param_name|
+      if historical_values.include?(param_name)
+        if historical_values[param_name] != current_values[param_name] && !synced_params.include?(param_name)
+          event = self.parameter(param_name).create_change_event(current_values[param_name], true, historical_values[param_name])
+          event.send_log
+          events << event
+        end
+      else
+        self.property(param_name).notice "audit change: newly-recorded value #{current_values[param_name]}"
+      end
+    end
+
+    events
+  end
+
   ###############################
   # Code related to managing resource instances.
   require 'puppet/transportable'
