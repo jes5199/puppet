@@ -120,21 +120,4 @@ class Puppet::Transaction::ResourceHarness
     (status.evaluation_time = Time.now - start) if status
   end
 
-  private
-
-  def absent_and_not_being_created?(current, param)
-    current[:ensure] == :absent and param.should.nil?
-  end
-
-  def ensure_is_insync?(current, param)
-    param.insync?(current[:ensure])
-  end
-
-  def ensure_should_be_absent?(current, param)
-    param.should == :absent
-  end
-
-  def param_is_insync?(current, param)
-    param.insync?(current[param.name])
-  end
 end
