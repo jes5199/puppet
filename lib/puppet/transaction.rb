@@ -20,9 +20,6 @@ class Puppet::Transaction
   # Routes and stores any events and subscriptions.
   attr_reader :event_manager
 
-  # Handles most of the actual interacting with resources
-  attr_reader :resource_harness
-
   include Puppet::Util
   include Puppet::Util::Tagging
 
@@ -45,7 +42,8 @@ class Puppet::Transaction
 
   # Apply all changes for a resource
   def apply(resource, ancestor = nil)
-    status = resource_harness.evaluate(resource)
+    resource_harness = Puppet::Transaction::ResourceHarness.new
+    status = resource_harness.evaluate(relationship_graph, resource)
     add_resource_status(status)
     event_manager.queue_events(ancestor || resource, status.events)
   rescue => detail
@@ -234,8 +232,6 @@ class Puppet::Transaction
     @report = Puppet::Transaction::Report.new("apply")
 
     @event_manager = Puppet::Transaction::EventManager.new(self)
-
-    @resource_harness = Puppet::Transaction::ResourceHarness.new(self)
   end
 
   # Prefetch any providers that support it.  We don't support prefetching
@@ -288,6 +284,7 @@ class Puppet::Transaction
 
   # Is the resource currently scheduled?
   def scheduled?(resource)
+    resource_harness = Puppet::Transaction::ResourceHarness.new
     self.ignoreschedules or resource_harness.scheduled?(resource_status(resource), resource)
   end
 

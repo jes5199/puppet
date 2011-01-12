@@ -1,12 +1,7 @@
 require 'puppet/resource/status'
 
 class Puppet::Transaction::ResourceHarness
-  extend Forwardable
-  def_delegators :@transaction, :relationship_graph
-
-  attr_reader :transaction
-
-  def allow_changes?(resource)
+  def allow_changes?(relationship_graph, resource)
     if resource.purging? and resource.deleting? and deps = relationship_graph.dependents(resource) \
             and ! deps.empty? and deps.detect { |d| ! d.deleting? }
       deplabel = deps.collect { |r| r.ref }.join(",")
@@ -28,12 +23,12 @@ class Puppet::Transaction::ResourceHarness
     Puppet::Util::Storage.cache(resource)[name] = value
   end
 
-  def perform_changes(resource)
+  def perform_changes(relationship_graph, resource)
     current = resource.retrieve_resource
 
     cache resource, :checked, Time.now
 
-    return [] if ! allow_changes?(resource)
+    return [] if ! allow_changes?(relationship_graph, resource)
 
     current_values = current.to_hash
     historical_values = Puppet::Util::Storage.cache(resource).dup
@@ -123,11 +118,11 @@ class Puppet::Transaction::ResourceHarness
     event.send_log
   end
 
-  def evaluate(resource)
+  def evaluate(relationship_graph, resource)
     start = Time.now
     status = Puppet::Resource::Status.new(resource)
 
-    perform_changes(resource).each do |event|
+    perform_changes(relationship_graph, resource).each do |event|
       status << event
     end
 
@@ -145,10 +140,6 @@ class Puppet::Transaction::ResourceHarness
     return status
   ensure
     (status.evaluation_time = Time.now - start) if status
-  end
-
-  def initialize(transaction)
-    @transaction = transaction
   end
 
   def scheduled?(status, resource)
