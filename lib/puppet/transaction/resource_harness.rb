@@ -1,20 +1,10 @@
 require 'puppet/resource/status'
 
 class Puppet::Transaction::ResourceHarness
-  # Used mostly for scheduling and auditing at this point.
-  def cached(resource, name)
-    Puppet::Util::Storage.cache(resource)[name]
-  end
-
-  # Used mostly for scheduling and auditing at this point.
-  def cache(resource, name, value)
-    Puppet::Util::Storage.cache(resource)[name] = value
-  end
-
   def perform_changes(relationship_graph, resource)
     current = resource.retrieve_resource
 
-    cache resource, :checked, Time.now
+    Puppet::Util::Storage.cache(resource)[:checked] = Time.now
 
     return [] if ! resource.allow_changes?(relationship_graph)
 
@@ -26,7 +16,7 @@ class Puppet::Transaction::ResourceHarness
 
     # Record the current state in state.yml.
     audited_params.each do |param|
-      cache(resource, param, current_values[param])
+      Puppet::Util::Storage.cache(resource)[param] = current_values[param]
     end
 
     # Update the machine state & create logs/events
