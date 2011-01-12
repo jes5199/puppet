@@ -135,10 +135,6 @@ class Puppet::Transaction
     event_manager.events
   end
 
-  def failed?(resource)
-    s = report.resource_status_for(resource) and s.failed?
-  end
-
   # Does this resource have any failed dependencies?
   def failed_dependencies?(resource)
     # First make sure there are no failed dependencies.  To do this,
