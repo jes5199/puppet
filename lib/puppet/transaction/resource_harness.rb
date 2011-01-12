@@ -4,19 +4,19 @@ class Puppet::Transaction::ResourceHarness
   def perform_changes(relationship_graph, resource)
     current = resource.retrieve_resource
 
-    Puppet::Util::Storage.cache(resource)[:checked] = Time.now
+    Puppet::Util::Storage.persistent_state_for(resource)[:checked] = Time.now
 
     return [] if ! resource.allow_changes?(relationship_graph)
 
     current_values = current.to_hash
-    historical_values = Puppet::Util::Storage.cache(resource).dup
+    historical_values = Puppet::Util::Storage.persistent_state_for(resource).dup
     desired_values = resource.to_resource.to_hash
     audited_params = (resource[:audit] || []).map { |p| p.to_sym }
     synced_params = []
 
     # Record the current state in state.yml.
     audited_params.each do |param|
-      Puppet::Util::Storage.cache(resource)[param] = current_values[param]
+      Puppet::Util::Storage.persistent_state_for(resource)[param] = current_values[param]
     end
 
     # Update the machine state & create logs/events
@@ -105,7 +105,7 @@ class Puppet::Transaction::ResourceHarness
     end
 
     if status.changed? && ! resource.noop?
-      cache(resource, :synced, Time.now)
+      Puppet::Util::Cache.persistent_state_for(resource)[:synced] = Time.now
       resource.flush if resource.respond_to?(:flush)
     end
 

@@ -20,8 +20,8 @@ class Puppet::Util::Storage
   # here that we use the object's full path, not just the name/type
   # combination.  At the least, this is useful for those non-isomorphic
   # types like exec, but it also means that if an object changes locations
-  # in the configuration it will lose its cache.
-  def self.cache(object)
+  # in the configuration it will lose its state.
+  def self.persistent_state_for(object)
     if object.is_a?(Symbol)
       name = object
     else

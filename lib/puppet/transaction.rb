@@ -293,7 +293,7 @@ class Puppet::Transaction
     # have been synced a long time ago (e.g., a file only gets updated
     # once a month on the server and its schedule is daily; the last sync time
     # will have been a month ago, so we'd end up checking every run).
-    schedule.match?(Puppet::Util::Storage.cache(resource)[:checked].to_i)
+    schedule.match?(Puppet::Util::Storage.persistent_state_for(resource)[:checked].to_i)
   end
 
   def schedule(resource)

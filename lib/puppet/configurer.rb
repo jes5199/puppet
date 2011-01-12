@@ -51,7 +51,7 @@ class Puppet::Configurer
   # Initialize and load storage
   def dostorage
       Puppet::Util::Storage.load
-      @compile_time ||= Puppet::Util::Storage.cache(:configuration)[:compile_time]
+      @compile_time ||= Puppet::Util::Storage.persistent_state_for(:configuration)[:compile_time]
   rescue => detail
       puts detail.backtrace if Puppet[:trace]
       Puppet.err "Corrupt state file #{Puppet[:statefile]}: #{detail}"
