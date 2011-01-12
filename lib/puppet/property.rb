@@ -153,7 +153,7 @@ class Puppet::Property < Puppet::Parameter
     event
   end
 
-  def apply_parameter(current_value, do_audit, historical_value)
+  def apply_change(current_value, do_audit, historical_value)
     event = self.create_change_event(current_value, do_audit, historical_value)
 
     if do_audit && historical_value && historical_value != current_value

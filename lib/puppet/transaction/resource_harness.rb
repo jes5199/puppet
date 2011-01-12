@@ -23,13 +23,13 @@ class Puppet::Transaction::ResourceHarness
     events = []
     ensure_param = resource.parameter(:ensure)
     if desired_values[:ensure] && !ensure_param.insync?(current_values[:ensure])
-      events << ensure_param.apply_parameter(current_values[:ensure], audited_params.include?(:ensure), historical_values[:ensure])
+      events << ensure_param.apply_change(current_values[:ensure], audited_params.include?(:ensure), historical_values[:ensure])
       synced_params << :ensure
     elsif current_values[:ensure] != :absent
       work_order = resource.properties # Note: only the resource knows what order to apply changes in
       work_order.each do |param|
         if !param.insync?(current_values[param.name])
-          events << param.apply_parameter(current_values[param.name], audited_params.include?(param.name), historical_values[param.name])
+          events << param.apply_change(current_values[param.name], audited_params.include?(param.name), historical_values[param.name])
           synced_params << param.name
         end
       end
