@@ -835,6 +835,27 @@ class Type
     events
   end
 
+  def scheduled?
+    return true unless schedule = schedule_resource
+
+    # We use 'checked' here instead of 'synced' because otherwise we'll
+    # end up checking most resources most times, because they will generally
+    # have been synced a long time ago (e.g., a file only gets updated
+    # once a month on the server and its schedule is daily; the last sync time
+    # will have been a month ago, so we'd end up checking every run).
+    schedule.match?(Puppet::Util::Storage.persistent_state_for(self)[:checked].to_i)
+  end
+
+  def schedule_resource
+    unless self.catalog
+      self.warning "Cannot schedule without a schedule-containing catalog"
+      return nil
+    end
+
+    return nil unless name = self[:schedule]
+    self.catalog.resource(:schedule, name) || self.fail("Could not find schedule #{name}")
+  end
+
   ###############################
   # Code related to managing resource instances.
   require 'puppet/transportable'
