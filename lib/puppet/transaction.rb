@@ -101,9 +101,6 @@ class Puppet::Transaction
   # collects all of the changes, executes them, and responds to any
   # necessary events.
   def evaluate
-    # Start logging.
-    Puppet::Util::Log.newdestination(@report)
-
     prepare
 
     Puppet.info "Applying configuration version '#{catalog.version}'" if catalog.version
@@ -120,7 +117,7 @@ class Puppet::Transaction
           ret = eval_resource(resource)
         end
 
-        resource.info "Evaluated in %0.2f seconds" % seconds if Puppet[:evaltrace] and @catalog.host_config?
+        resource.info "Evaluated in %0.2f seconds" % seconds if Puppet[:evaltrace] and catalog.host_config?
         ret
       end
     ensure
@@ -166,7 +163,7 @@ class Puppet::Transaction
     made.uniq.find_all do |res|
       begin
         res.tag(*resource.tags)
-        @catalog.add_resource(res) do |r|
+        catalog.add_resource(res) do |r|
           r.finish
           make_parent_child_relationship(resource, [r])
 
@@ -184,7 +181,7 @@ class Puppet::Transaction
   # Collect any dynamically generated resources.  This method is called
   # before the transaction starts.
   def generate
-    list = @catalog.vertices
+    list = catalog.vertices
     newlist = []
     while ! list.empty?
       list.each do |resource|
@@ -197,7 +194,7 @@ class Puppet::Transaction
 
   # Should we ignore tags?
   def ignore_tags?
-    ! (@catalog.host_config? or Puppet[:name] == "puppet")
+    ! (catalog.host_config? or Puppet[:name] == "puppet")
   end
 
   # this should only be called by a Puppet::Type::Component resource now
@@ -212,7 +209,7 @@ class Puppet::Transaction
   # types, just providers.
   def prefetch
     prefetchers = {}
-    @catalog.vertices.each do |resource|
+    catalog.vertices.each do |resource|
       if provider = resource.provider and provider.class.respond_to?(:prefetch)
         prefetchers[provider.class] ||= {}
         prefetchers[provider.class][resource.name] = resource
