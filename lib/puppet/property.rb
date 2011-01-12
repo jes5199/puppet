@@ -131,15 +131,16 @@ class Puppet::Property < Puppet::Parameter
   end
 
   # Return a modified form of the resource event.
-  def event
-    resource.event :name => event_name, :desired_value => should, :property => self, :source_description => path
+  def event( options = {} )
+    resource.event( {:name => event_name, :desired_value => should, :property => self, :source_description => path}.merge(options) )
   end
 
   def create_change_event(current_value, do_audit, historical_value)
-    event = self.event
-    event.previous_value = current_value
-    event.desired_value = self.should
-    event.historical_value = historical_value
+    event = self.event(
+      :previous_value   => current_value,
+      :desired_value    => self.should,
+      :historical_value => historical_value
+    )
 
     if do_audit
       event.audited = true
