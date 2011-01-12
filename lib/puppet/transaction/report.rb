@@ -47,6 +47,10 @@ class Puppet::Transaction::Report
     metric
   end
 
+  def resource_status_for(resource)
+    self.resource_statuses[resource.to_s] || self.add_resource_status(Puppet::Resource::Status.new(resource))
+  end
+
   def add_resource_status(status)
     @resource_statuses[status.resource] = status
   end

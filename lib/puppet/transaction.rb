@@ -64,7 +64,7 @@ class Puppet::Transaction
   # Evaluate a single resource.
   def eval_resource(resource, ancestor = nil)
     if skip?(resource)
-      resource_status(resource).skipped = true
+      report.resource_status_for(resource).skipped = true
     else
       eval_children_and_apply_resource(resource, ancestor)
     end
@@ -74,7 +74,7 @@ class Puppet::Transaction
   end
 
   def eval_children_and_apply_resource(resource, ancestor = nil)
-    resource_status(resource).scheduled = true
+    report.resource_status_for(resource).scheduled = true
 
     # We need to generate first regardless, because the recursive
     # actions sometimes change how the top resource is applied.
@@ -136,7 +136,7 @@ class Puppet::Transaction
   end
 
   def failed?(resource)
-    s = resource_status(resource) and s.failed?
+    s = report.resource_status_for(resource) and s.failed?
   end
 
   # Does this resource have any failed dependencies?
@@ -147,8 +147,8 @@ class Puppet::Transaction
     # a tree from the reversed graph.
     found_failed = false
     relationship_graph.dependencies(resource).each do |dep|
-      next unless failed?(dep)
-      resource.notice "Dependency #{dep} has failures: #{resource_status(dep).failed}"
+      next unless report.resource_status_for(dep).failed?
+      resource.notice "Dependency #{dep} has failures: #{report.resource_status_for(dep).failed}"
       found_failed = true
     end
 
@@ -252,10 +252,6 @@ class Puppet::Transaction
 
   def relationship_graph
     catalog.relationship_graph
-  end
-
-  def resource_status(resource)
-    report.resource_statuses[resource.to_s] || report.add_resource_status(Puppet::Resource::Status.new(resource))
   end
 
   # Is the resource currently scheduled?

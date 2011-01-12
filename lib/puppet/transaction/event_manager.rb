@@ -24,7 +24,7 @@ class Puppet::Transaction::EventManager
     if restarted
       queue_events(resource, [resource.event(:name => :restarted, :status => "success")])
 
-      transaction.resource_status(resource).restarted = true
+      transaction.report.resource_status_for(resource).restarted = true
     end
   end
 
@@ -84,7 +84,7 @@ class Puppet::Transaction::EventManager
   rescue => detail
     resource.err "Failed to call #{callback}: #{detail}"
 
-    transaction.resource_status(resource).failed_to_restart = true
+    transaction.report.resource_status_for(resource).failed_to_restart = true
     puts detail.backtrace if Puppet[:trace]
     return false
   end
