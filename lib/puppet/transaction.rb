@@ -25,7 +25,7 @@ class Puppet::Transaction
   def apply(resource, ancestor = nil)
     status = resource.evaluate(catalog.relationship_graph)
     report.add_resource_status(status)
-    event_manager.queue_events(ancestor || resource, status.events)
+    event_manager.queue_events(catalog.relationship_graph, ancestor || resource, status.events)
   rescue => detail
     resource.err "Could not evaluate: #{detail}"
   end
@@ -65,7 +65,7 @@ class Puppet::Transaction
     end
 
     # Check to see if there are any events queued for this resource
-    event_manager.process_events(resource)
+    event_manager.process_events(report, resource)
   end
 
   def eval_children_and_apply_resource(resource, ancestor = nil)

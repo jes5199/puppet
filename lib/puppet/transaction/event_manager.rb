@@ -1,32 +1,31 @@
 require 'puppet/transaction'
 
 class Puppet::Transaction::EventManager
-  attr_reader :transaction, :events
+  attr_reader :events
 
-  def initialize(transaction)
-    @transaction = transaction
+  def initialize
     @event_queues = {}
     @events = []
   end
 
   # Respond to any queued events for this resource.
-  def process_events(resource)
+  def process_events(report, resource)
     restarted = false
     queued_events(resource) do |callback, events|
-      r = process_callback(resource, callback, events)
+      r = process_callback(report, resource, callback, events)
       restarted ||= r
     end
 
     if restarted
       queue_events(resource, [resource.event(:name => :restarted, :status => "success")])
 
-      transaction.report.resource_status_for(resource).restarted = true
+      report.resource_status_for(resource).restarted = true
     end
   end
 
   # Queue events for other resources to respond to.  All of these events have
   # to be from the same resource.
-  def queue_events(resource, events)
+  def queue_events(relationship_graph, resource, events)
     @events += events
 
     # Do some basic normalization so we're not doing so many
@@ -43,7 +42,7 @@ class Puppet::Transaction::EventManager
       # Collect the targets of any subscriptions to those events.  We pass
       # the parent resource in so it will override the source in the events,
       # since eval_generated children can't have direct relationships.
-      transaction.catalog.relationship_graph.matching_edges(event, resource).each do |edge|
+      relationship_graph.matching_edges(event, resource).each do |edge|
         next unless method = edge.callback
         next unless edge.target.respond_to?(method)
 
@@ -71,7 +70,7 @@ class Puppet::Transaction::EventManager
 
   private
 
-  def process_callback(resource, callback, events)
+  def process_callback(report, resource, callback, events)
     process_noop_events(resource, callback, events) and return false unless events.detect { |e| e.status != "noop" }
     resource.send(callback)
 
@@ -80,7 +79,7 @@ class Puppet::Transaction::EventManager
   rescue => detail
     resource.err "Failed to call #{callback}: #{detail}"
 
-    transaction.report.resource_status_for(resource).failed_to_restart = true
+    report.resource_status_for(resource).failed_to_restart = true
     puts detail.backtrace if Puppet[:trace]
     return false
   end
