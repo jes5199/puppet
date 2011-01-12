@@ -9,8 +9,8 @@ class Puppet::Transaction
   require 'puppet/transaction/event_manager'
   require 'puppet/resource/status'
 
-  attr_accessor :component, :catalog, :ignoreschedules
-  attr_accessor :sorted_resources, :configurator
+  attr_accessor :catalog, :ignoreschedules
+  attr_accessor :sorted_resources
 
   # The report, once generated.
   attr_accessor :report
