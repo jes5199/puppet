@@ -19,6 +19,10 @@ class Puppet::Transaction::Report
     :yaml
   end
 
+  def any_failed?
+    self.resource_statuses.values.detect { |status| status.failed? }
+  end
+
   def <<(msg)
     @logs << msg
     self

@@ -630,8 +630,8 @@ if @config.include?(:run_mode)
 
       catalog.host_config = false
       catalog.apply do |transaction|
-        if transaction.any_failed?
-          report = transaction.report
+        report = transaction.report
+        if report.any_failed?
           failures = report.logs.find_all { |log| log.level == :err }
           raise "Got #{failures.length} failure(s) while initializing: #{failures.collect { |l| l.to_s }.join("; ")}"
         end

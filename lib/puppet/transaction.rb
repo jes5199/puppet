@@ -26,11 +26,6 @@ class Puppet::Transaction
     Puppet::Application.stop_requested?
   end
 
-  # Are there any failed resources in this transaction?
-  def any_failed?
-    report.resource_statuses.values.detect { |status| status.failed? }
-  end
-
   # Apply all changes for a resource
   def apply(resource, ancestor = nil)
     status = resource.evaluate(relationship_graph)
