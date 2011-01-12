@@ -758,6 +758,30 @@ class Type
     end
   end
 
+  def evaluate(relationship_graph)
+    start = Time.now
+    status = Puppet::Resource::Status.new(self)
+
+    self.perform_changes(relationship_graph).each do |event|
+      status << event
+    end
+
+    if status.changed? && ! self.noop?
+      Puppet::Util::Cache.persistent_state_for(self)[:synced] = Time.now
+      self.flush if self.respond_to?(:flush)
+    end
+
+    return status
+  rescue => detail
+    self.fail "Could not create resource status: #{detail}" unless status
+    puts detail.backtrace if Puppet[:trace]
+    self.err "Could not evaluate: #{detail}"
+    status.failed = true
+    return status
+  ensure
+    (status.evaluation_time = Time.now - start) if status
+  end
+
   def perform_changes(relationship_graph)
     current = self.retrieve_resource
 

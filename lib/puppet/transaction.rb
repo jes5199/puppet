@@ -7,7 +7,6 @@ require 'puppet/application'
 
 class Puppet::Transaction
   require 'puppet/transaction/event_manager'
-  require 'puppet/transaction/resource_harness'
   require 'puppet/resource/status'
 
   attr_accessor :component, :catalog, :ignoreschedules
@@ -41,8 +40,7 @@ class Puppet::Transaction
 
   # Apply all changes for a resource
   def apply(resource, ancestor = nil)
-    resource_harness = Puppet::Transaction::ResourceHarness.new
-    status = resource_harness.evaluate(relationship_graph, resource)
+    status = resource.evaluate(relationship_graph)
     add_resource_status(status)
     event_manager.queue_events(ancestor || resource, status.events)
   rescue => detail
