@@ -28,7 +28,7 @@ class Puppet::Transaction
 
   # Apply all changes for a resource
   def apply(resource, ancestor = nil)
-    status = resource.evaluate(relationship_graph)
+    status = resource.evaluate(catalog.relationship_graph)
     report.add_resource_status(status)
     event_manager.queue_events(ancestor || resource, status.events)
   rescue => detail
@@ -46,10 +46,10 @@ class Puppet::Transaction
       else
         edge = [resource, gen_child]
       end
-      relationship_graph.add_vertex(gen_child)
+      catalog.relationship_graph.add_vertex(gen_child)
 
-      unless relationship_graph.edge?(edge[1], edge[0])
-        relationship_graph.add_edge(*edge)
+      unless catalog.relationship_graph.edge?(edge[1], edge[0])
+        catalog.relationship_graph.add_edge(*edge)
       else
         resource.debug "Skipping automatic relationship to #{gen_child}"
       end
@@ -142,7 +142,7 @@ class Puppet::Transaction
     # enough to check the immediate dependencies, which is why we use
     # a tree from the reversed graph.
     found_failed = false
-    relationship_graph.dependencies(resource).each do |dep|
+    catalog.relationship_graph.dependencies(resource).each do |dep|
       next unless report.resource_status_for(dep).failed?
       resource.notice "Dependency #{dep} has failures: #{report.resource_status_for(dep).failed}"
       found_failed = true
@@ -243,11 +243,7 @@ class Puppet::Transaction
     prefetch
 
     # This will throw an error if there are cycles in the graph.
-    @sorted_resources = relationship_graph.topsort
-  end
-
-  def relationship_graph
-    catalog.relationship_graph
+    @sorted_resources = catalog.relationship_graph.topsort
   end
 
   # Is the resource currently scheduled?

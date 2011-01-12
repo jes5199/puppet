@@ -9,10 +9,6 @@ class Puppet::Transaction::EventManager
     @events = []
   end
 
-  def relationship_graph
-    transaction.relationship_graph
-  end
-
   # Respond to any queued events for this resource.
   def process_events(resource)
     restarted = false
@@ -47,7 +43,7 @@ class Puppet::Transaction::EventManager
       # Collect the targets of any subscriptions to those events.  We pass
       # the parent resource in so it will override the source in the events,
       # since eval_generated children can't have direct relationships.
-      relationship_graph.matching_edges(event, resource).each do |edge|
+      transaction.catalog.relationship_graph.matching_edges(event, resource).each do |edge|
         next unless method = edge.callback
         next unless edge.target.respond_to?(method)
 
