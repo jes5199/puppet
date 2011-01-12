@@ -153,6 +153,34 @@ class Puppet::Property < Puppet::Parameter
     event
   end
 
+  def apply_parameter(current_value, do_audit, historical_value)
+    event = self.create_change_event(current_value, do_audit, historical_value)
+
+    if do_audit && historical_value && historical_value != current_value
+      brief_audit_message = " (previously recorded value was #{self.is_to_s(historical_value)})"
+    else
+      brief_audit_message = ""
+    end
+
+    if self.noop
+      event.message = "current_value #{self.is_to_s(current_value)}, should be #{self.should_to_s(self.should)} (noop)#{brief_audit_message}"
+      event.status = "noop"
+    else
+      self.sync
+      event.message = [ self.change_to_s(current_value, self.should), brief_audit_message ].join
+      event.status = "success"
+    end
+    event
+  rescue => detail
+    puts detail.backtrace if Puppet[:trace]
+    event.status = "failure"
+
+    event.message = "change from #{self.is_to_s(current_value)} to #{self.should_to_s(self.should)} failed: #{detail}"
+    event
+  ensure
+    event.send_log
+  end
+
   attr_reader :shadow
 
   # initialize our property

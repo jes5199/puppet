@@ -23,13 +23,13 @@ class Puppet::Transaction::ResourceHarness
     events = []
     ensure_param = resource.parameter(:ensure)
     if desired_values[:ensure] && !ensure_param.insync?(current_values[:ensure])
-      events << apply_parameter(ensure_param, current_values[:ensure], audited_params.include?(:ensure), historical_values[:ensure])
+      events << ensure_param.apply_parameter(current_values[:ensure], audited_params.include?(:ensure), historical_values[:ensure])
       synced_params << :ensure
     elsif current_values[:ensure] != :absent
       work_order = resource.properties # Note: only the resource knows what order to apply changes in
       work_order.each do |param|
         if !param.insync?(current_values[param.name])
-          events << apply_parameter(param, current_values[param.name], audited_params.include?(param.name), historical_values[param.name])
+          events << param.apply_parameter(current_values[param.name], audited_params.include?(param.name), historical_values[param.name])
           synced_params << param.name
         end
       end
@@ -49,34 +49,6 @@ class Puppet::Transaction::ResourceHarness
     end
 
     events
-  end
-
-  def apply_parameter(property, current_value, do_audit, historical_value)
-    event = property.create_change_event(current_value, do_audit, historical_value)
-
-    if do_audit && historical_value && historical_value != current_value
-      brief_audit_message = " (previously recorded value was #{property.is_to_s(historical_value)})"
-    else
-      brief_audit_message = ""
-    end
-
-    if property.noop
-      event.message = "current_value #{property.is_to_s(current_value)}, should be #{property.should_to_s(property.should)} (noop)#{brief_audit_message}"
-      event.status = "noop"
-    else
-      property.sync
-      event.message = [ property.change_to_s(current_value, property.should), brief_audit_message ].join
-      event.status = "success"
-    end
-    event
-  rescue => detail
-    puts detail.backtrace if Puppet[:trace]
-    event.status = "failure"
-
-    event.message = "change from #{property.is_to_s(current_value)} to #{property.should_to_s(property.should)} failed: #{detail}"
-    event
-  ensure
-    event.send_log
   end
 
   def evaluate(relationship_graph, resource)
