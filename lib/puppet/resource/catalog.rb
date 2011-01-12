@@ -138,7 +138,7 @@ class Puppet::Resource::Catalog < Puppet::SimpleGraph
     transaction.tags = options[:tags] if options[:tags]
     transaction.ignoreschedules = true if options[:ignoreschedules]
 
-    transaction.add_times :config_retrieval => self.retrieval_duration || 0
+    transaction.report.add_times(:config_retrieval, self.retrieval_duration || 0)
 
     begin
       transaction.evaluate

@@ -26,13 +26,6 @@ class Puppet::Transaction
     Puppet::Application.stop_requested?
   end
 
-  # Add some additional times for reporting
-  def add_times(hash)
-    hash.each do |name, num|
-      report.add_times(name, num)
-    end
-  end
-
   # Are there any failed resources in this transaction?
   def any_failed?
     report.resource_statuses.values.detect { |status| status.failed? }
