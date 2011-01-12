@@ -135,6 +135,23 @@ class Puppet::Property < Puppet::Parameter
     resource.event :name => event_name, :desired_value => should, :property => self, :source_description => path
   end
 
+  def create_change_event(current_value, do_audit, historical_value)
+    event = self.event
+    event.previous_value = current_value
+    event.desired_value = self.should
+    event.historical_value = historical_value
+
+    if do_audit
+      event.audited = true
+      event.status = "audit"
+      if historical_value != current_value
+        event.message = "audit change: previously recorded value #{self.is_to_s(historical_value)} has been changed to #{self.is_to_s(current_value)}"
+      end
+    end
+
+    event
+  end
+
   attr_reader :shadow
 
   # initialize our property
