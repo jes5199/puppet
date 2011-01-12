@@ -29,7 +29,7 @@ class Puppet::Transaction
   # Apply all changes for a resource
   def apply(resource, ancestor = nil)
     status = resource.evaluate(relationship_graph)
-    add_resource_status(status)
+    report.add_resource_status(status)
     event_manager.queue_events(ancestor || resource, status.events)
   rescue => detail
     resource.err "Could not evaluate: #{detail}"
@@ -254,12 +254,8 @@ class Puppet::Transaction
     catalog.relationship_graph
   end
 
-  def add_resource_status(status)
-    report.add_resource_status status
-  end
-
   def resource_status(resource)
-    report.resource_statuses[resource.to_s] || add_resource_status(Puppet::Resource::Status.new(resource))
+    report.resource_statuses[resource.to_s] || report.add_resource_status(Puppet::Resource::Status.new(resource))
   end
 
   # Is the resource currently scheduled?
