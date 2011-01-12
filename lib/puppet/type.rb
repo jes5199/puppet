@@ -746,6 +746,18 @@ class Type
     noop?
   end
 
+  def allow_changes?(relationship_graph)
+    if self.purging? and self.deleting? and deps = relationship_graph.dependents(self) \
+            and ! deps.empty? and deps.detect { |d| ! d.deleting? }
+      deplabel = deps.collect { |r| r.ref }.join(",")
+      plurality = deps.length > 1 ? "":"s"
+      self.warning "#{deplabel} still depend#{plurality} on me -- not purging"
+      false
+    else
+      true
+    end
+  end
+
   ###############################
   # Code related to managing resource instances.
   require 'puppet/transportable'

@@ -1,18 +1,6 @@
 require 'puppet/resource/status'
 
 class Puppet::Transaction::ResourceHarness
-  def allow_changes?(relationship_graph, resource)
-    if resource.purging? and resource.deleting? and deps = relationship_graph.dependents(resource) \
-            and ! deps.empty? and deps.detect { |d| ! d.deleting? }
-      deplabel = deps.collect { |r| r.ref }.join(",")
-      plurality = deps.length > 1 ? "":"s"
-      resource.warning "#{deplabel} still depend#{plurality} on me -- not purging"
-      false
-    else
-      true
-    end
-  end
-
   # Used mostly for scheduling and auditing at this point.
   def cached(resource, name)
     Puppet::Util::Storage.cache(resource)[name]
@@ -28,7 +16,7 @@ class Puppet::Transaction::ResourceHarness
 
     cache resource, :checked, Time.now
 
-    return [] if ! allow_changes?(relationship_graph, resource)
+    return [] if ! resource.allow_changes?(relationship_graph)
 
     current_values = current.to_hash
     historical_values = Puppet::Util::Storage.cache(resource).dup
