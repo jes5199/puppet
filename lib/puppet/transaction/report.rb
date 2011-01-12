@@ -23,6 +23,10 @@ class Puppet::Transaction::Report
     self.resource_statuses.values.detect { |status| status.failed? }
   end
 
+  def all_changed_resource_titles
+    resource_statuses.values.find_all { |status| status.changed }.collect { |status| status.resource }
+  end
+
   def <<(msg)
     @logs << msg
     self

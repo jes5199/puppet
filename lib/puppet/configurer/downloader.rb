@@ -30,7 +30,8 @@ class Puppet::Configurer::Downloader
     begin
       Timeout.timeout(self.class.timeout) do
         catalog.apply do |trans|
-          trans.changed?.find_all do |resource|
+          trans.report.all_changed_resources_titles.find_all do |title|
+            resource = catalog.resource(title)
             yield resource if block_given?
             files << resource[:path]
           end
