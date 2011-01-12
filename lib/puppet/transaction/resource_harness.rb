@@ -142,28 +142,6 @@ class Puppet::Transaction::ResourceHarness
     (status.evaluation_time = Time.now - start) if status
   end
 
-  def scheduled?(status, resource)
-    return true if Puppet[:ignoreschedules]
-    return true unless schedule = schedule(resource)
-
-    # We use 'checked' here instead of 'synced' because otherwise we'll
-    # end up checking most resources most times, because they will generally
-    # have been synced a long time ago (e.g., a file only gets updated
-    # once a month on the server and its schedule is daily; the last sync time
-    # will have been a month ago, so we'd end up checking every run).
-    schedule.match?(cached(resource, :checked).to_i)
-  end
-
-  def schedule(resource)
-    unless resource.catalog
-      resource.warning "Cannot schedule without a schedule-containing catalog"
-      return nil
-    end
-
-    return nil unless name = resource[:schedule]
-    resource.catalog.resource(:schedule, name) || resource.fail("Could not find schedule #{name}")
-  end
-
   private
 
   def absent_and_not_being_created?(current, param)
