@@ -21,11 +21,6 @@ class Puppet::Transaction
   include Puppet::Util
   include Puppet::Util::Tagging
 
-  # Wraps application run state check to flag need to interrupt processing
-  def stop_processing?
-    Puppet::Application.stop_requested?
-  end
-
   # Apply all changes for a resource
   def apply(resource, ancestor = nil)
     status = resource.evaluate(catalog.relationship_graph)
@@ -107,7 +102,7 @@ class Puppet::Transaction
 
     begin
       @sorted_resources.each do |resource|
-        next if stop_processing?
+        next if Puppet::Application.stop_requested?
         if resource.is_a?(Puppet::Type::Component)
           Puppet.warning "Somehow left a component in the relationship graph"
           next
