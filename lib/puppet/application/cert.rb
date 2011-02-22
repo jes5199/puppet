@@ -66,6 +66,19 @@ class Puppet::Application::Cert < Puppet::Application
   def setup
     exit(Puppet.settings.print_configs ? 0 : 1) if Puppet.settings.print_configs?
 
+    if ! @cert_mode
+      @cert_mode = ( command_line.args.shift || :_).to_sym
+      if @cert_mode == :clean
+        @cert_mode = :destroy
+      end
+      if ! ( Puppet::SSL::CertificateAuthority::Interface::INTERFACE_METHODS ).include?( @cert_mode )
+        available = (Puppet::SSL::CertificateAuthority::Interface::INTERFACE_METHODS - [:destroy] + [:clean]).map{|x| x.to_s}.sort.join(' ')
+        puts "Usage: puppet cert command <space separated arguments>"
+        puts "Available commands are: #{available}"
+        exit(1)
+      end
+    end
+
     Puppet::Util::Log.newdestination :console
 
     if [:generate, :destroy].include? @cert_mode
