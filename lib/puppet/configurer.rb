@@ -166,7 +166,6 @@ class Puppet::Configurer
     execute_postrun_command
 
     Puppet::Util::Log.close(report)
-
     send_report(report, transaction)
   end
 
