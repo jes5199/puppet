@@ -180,6 +180,8 @@ class Puppet::Provider::ParsedFile < Puppet::Provider
   # prefetch each one, and make sure they're associated with each appropriate
   # resource instance.
   def self.prefetch(resources = nil)
+    raise Puppet::DevError, "prefetch's keys should be uniqueness_key arrays" if resources and resources.keys.find{|k| ! k.is_a?(Array)}
+
     # Reset the record list.
     @records = prefetch_all_targets(resources)
 
@@ -193,7 +195,7 @@ class Puppet::Provider::ParsedFile < Puppet::Provider
       # Skip things like comments and blank lines
       next if skip_record?(record)
 
-      if name = record[:name] and resource = resources[name]
+      if key = uniqueness_key_for_record(record) and resource = resources[key]
         resource.provider = new(record)
       elsif respond_to?(:match)
         if resource = match(record, matchers)
@@ -204,6 +206,10 @@ class Puppet::Provider::ParsedFile < Puppet::Provider
         end
       end
     end
+  end
+
+  def self.uniqueness_key_for_record( record )
+    [ record[:name] ] # FIXME
   end
 
   def self.prefetch_all_targets(resources)
@@ -355,7 +361,7 @@ class Puppet::Provider::ParsedFile < Puppet::Provider
   # Retrieve the current state from disk.
   def prefetch
     raise Puppet::DevError, "Somehow got told to prefetch with no resource set" unless @resource
-    self.class.prefetch(@resource[:name] => @resource)
+    self.class.prefetch(@resource.uniqueness_key => @resource)
   end
 
   def record_type

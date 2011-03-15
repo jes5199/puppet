@@ -203,7 +203,7 @@ class TestParsedFile < Test::Unit::TestCase
     bill = mkresource "bill", :target => :file1, :one => "b", :two => "c"
     will = mkresource "will", :target => :default, :one => "b", :two => "d"
 
-    resources = {"bill" => bill, "will" => will}
+    resources = {["bill"] => bill, ["will"] => will}
     prov_ids = {"bill" => bill.provider.object_id, "will" => will.provider.object_id}
 
     assert_nothing_raised do
@@ -276,7 +276,7 @@ class TestParsedFile < Test::Unit::TestCase
     resource = mkresource "yay", :target => :yayness, :one => "b"
 
     assert_nothing_raised do
-      prov.prefetch("yay" => resource)
+      prov.prefetch(["yay"] => resource)
     end
 
     # Now make sure we correctly got the hash
@@ -349,7 +349,7 @@ class TestParsedFile < Test::Unit::TestCase
     # Create some resources.
     one = mkresource "one", :one => "a", :two => "c", :target => :yayness
     two = mkresource "two", :one => "b", :two => "d", :target => :yayness
-    resources = {"one" => one, "two" => two}
+    resources = {["one"] => one, ["two"] => two}
 
     # Write out a file with different data.
     prov.target_object(:yayness).write "one b d\ntwo a c"
@@ -488,7 +488,7 @@ class TestParsedFile < Test::Unit::TestCase
     notdisk = mkresource "notdisk", :target => :first
 
     prov.target_object(:first).write "ondisk a c\n"
-    prov.prefetch("ondisk" => ondisk, "notdisk" => notdisk)
+    prov.prefetch(["ondisk"] => ondisk, ["notdisk"] => notdisk)
 
 
       assert_equal(

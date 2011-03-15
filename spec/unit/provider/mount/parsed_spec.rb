@@ -246,7 +246,7 @@ FSTAB
       # Simulate transaction.rb:prefetch
       @resource_hash = {}
       [@res_ghost, @res_mounted, @res_unmounted, @res_absent].each do |resource|
-        @resource_hash[resource.name] = resource
+        @resource_hash[ resource.uniqueness_key ] = resource
       end
 
       @provider.stubs(:mountcmd).returns File.read(fake_mountoutput)

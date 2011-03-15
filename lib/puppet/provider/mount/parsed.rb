@@ -57,7 +57,7 @@ Puppet::Type.type(:mount).provide(
     #   set ensure to :ghost (if the user wants to add an entry
     #   to fstab we need to know if the device was mounted before)
     mountinstances.each do |hash|
-      if mount = resources[hash[:name]]
+      if mount = resources[ uniqueness_key_for_record( hash )]
         case mount.provider.get(:ensure)
         when :absent  # Mount not in fstab
           mount.provider.set(:ensure => :ghost)

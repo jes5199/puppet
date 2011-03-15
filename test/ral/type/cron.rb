@@ -428,7 +428,6 @@ class TestCron < Test::Unit::TestCase
     users.each do |user|
 
       cron = Puppet::Type.type(:cron).new(
-
         :name => "testcron-#{user}",
         :user => user,
         :command => "/bin/echo",
@@ -449,11 +448,9 @@ class TestCron < Test::Unit::TestCase
         next if user == other
         text = provider.target_object(other).read
 
-
-          assert(
-            text !~ /testcron-#{user}/,
-
-            "#{user}'s cron job is in #{other}'s tab")
+        assert(
+          text !~ /testcron-#{user}/,
+          "#{user}'s cron job is in #{other}'s tab")
       end
     end
   end
@@ -464,25 +461,22 @@ class TestCron < Test::Unit::TestCase
     if crontab.suitable?
 
       inst = @crontype.new(
-
         :name => "something", :command => "/some/thing",
-
         :provider => :crontab)
+
       assert_equal(Etc.getpwuid(Process.uid).name, inst.should(:user), "user did not default to current user with crontab")
       assert_equal(Etc.getpwuid(Process.uid).name, inst.should(:target), "target did not default to current user with crontab")
 
       # Now make a new cron with a user, and make sure it gets copied
       # over
 
-        inst = @crontype.new(
-          :name => "yay", :command => "/some/thing",
+      inst = @crontype.new(
+        :name => "yay", :command => "/some/thing",
+        :user => "bin", :provider => :crontab)
 
-          :user => "bin", :provider => :crontab)
-
-            assert_equal(
-              "bin", inst.should(:target),
-
-              "target did not default to user with crontab")
+      assert_equal(
+        "bin", inst.should(:target),
+        "target did not default to user with crontab")
     end
   end
 
@@ -495,7 +489,7 @@ class TestCron < Test::Unit::TestCase
     cron = @crontype.new(:name => "space testing", :command => string)
 
     # Now make sure that it's correctly in sync
-    cron.provider.class.prefetch("testing" => cron)
+    cron.provider.class.prefetch(["testing"] => cron)
     properties = cron.retrieve
     assert_equal(string, properties[:command], "Cron did not pick up extra spaces in command")
     assert(cron.parameter(:command).insync?(properties[:command]), "Command changed with multiple spaces")

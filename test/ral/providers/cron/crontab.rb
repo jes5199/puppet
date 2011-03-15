@@ -247,7 +247,7 @@ class TestCronParsedProvider < Test::Unit::TestCase
 
               assert_equal(
         should, is,
-        
+
           "Did not parse #{file} correctly")
       end
 
@@ -292,7 +292,7 @@ class TestCronParsedProvider < Test::Unit::TestCase
 
           assert_equal(
         "# Puppet Name: #{name}\n30 * * * * date > /dev/null", str,
-        
+
       "Cron did not generate correctly")
   end
 
@@ -392,7 +392,7 @@ class TestCronParsedProvider < Test::Unit::TestCase
 
             assert_equal(
         str, target.read,
-        
+
         "Did not write correctly")
       assert_nothing_raised("Could not prefetch with #{str.inspect}") do
         @provider.prefetch
@@ -404,7 +404,7 @@ class TestCronParsedProvider < Test::Unit::TestCase
 
             assert_equal(
         str, target.read,
-        
+
         "Changed in read/write")
 
       @provider.clear
@@ -437,42 +437,32 @@ class TestCronParsedProvider < Test::Unit::TestCase
 
     # Now make some crons that should match
     matchers = [
-
-            @type.new(
-                
+      @type.new(
         :name => "yaycron",
         :minute => [0, 30],
         :command => "date",
-        
         :user => @me
       ),
 
-            @type.new(
-                
+      @type.new(
         :name => "youtest",
         :command => "yaytest",
-        
         :user => you
       )
     ]
 
     nonmatchers = [
-
-            @type.new(
-                
+      @type.new(
         :name => "footest",
         :minute => [0, 30],
         :hour => 1,
         :command => "fooness",
-        
         :user => @me # wrong target
       ),
 
-            @type.new(
-                
+      @type.new(
         :name => "funtest2",
         :command => "funtest",
-        
         :user => you # wrong target for this cron
       )
     ]
@@ -481,7 +471,7 @@ class TestCronParsedProvider < Test::Unit::TestCase
     @type.new(:name => "testing", :minute => 30, :command => "whatever", :user => "you")
 
     assert_nothing_raised("Could not prefetch cron") do
-      @provider.prefetch([matchers, nonmatchers].flatten.inject({}) { |crons, cron| crons[cron.name] = cron; crons })
+      @provider.prefetch([matchers, nonmatchers].flatten.inject({}) { |crons, cron| crons[ [cron.name] ] = cron; crons })
     end
 
     matchers.each do |cron|
@@ -551,7 +541,7 @@ class TestCronParsedProvider < Test::Unit::TestCase
 
               assert_equal(
         :freebsd_special, r[:record_type],
-        
+
           "Did not create lines as freebsd lines")
       end
       assert_nothing_raised("Could not flush with #{str.inspect}") do
@@ -561,7 +551,7 @@ class TestCronParsedProvider < Test::Unit::TestCase
 
             assert_equal(
         str, target.read,
-        
+
         "Changed in read/write")
 
       @provider.clear
@@ -577,7 +567,7 @@ class TestCronParsedProvider < Test::Unit::TestCase
     cron = @type.new :command => "/bin/echo yay", :name => "test", :hour => 4
 
     assert_nothing_raised("Could not prefetch cron") do
-      cron.provider.class.prefetch("test" => cron)
+      cron.provider.class.prefetch(["test"] => cron)
     end
   end
 

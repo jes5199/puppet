@@ -103,7 +103,7 @@ class TestTransactions < Test::Unit::TestCase
       trans.prefetch
     end
 
-    assert_equal({inst.title => inst}, $prefetched, "type prefetch was not called")
+    assert_equal({[inst.title] => inst}, $prefetched, "type prefetch was not called")
 
     # Now make sure it gets called from within evaluate
     $prefetched = false
@@ -111,7 +111,7 @@ class TestTransactions < Test::Unit::TestCase
       trans.evaluate
     end
 
-    assert_equal({inst.title => inst}, $prefetched, "evaluate did not call prefetch")
+    assert_equal({[inst.title] => inst}, $prefetched, "evaluate did not call prefetch")
   end
 
   # We need to generate resources before we prefetch them, else generated
@@ -319,21 +319,18 @@ class TestTransactions < Test::Unit::TestCase
     epath = tempfile
     spath = tempfile
 
-          file = Puppet::Type.type(:file).new(
-        :path => path, :ensure => :file,
-        
+    file = Puppet::Type.type(:file).new(
+      :path => path, :ensure => :file,
       :title => "file")
 
-          exec = Puppet::Type.type(:exec).new(
-        :command => "touch #{epath}",
+    exec = Puppet::Type.type(:exec).new(
+      :command => "touch #{epath}",
       :path => ENV["PATH"], :subscribe => file, :refreshonly => true,
-        
       :title => 'exec1')
 
-          exec2 = Puppet::Type.type(:exec).new(
-        :command => "touch #{spath}",
+    exec2 = Puppet::Type.type(:exec).new(
+      :command => "touch #{spath}",
       :path => ENV["PATH"], :subscribe => exec, :refreshonly => true,
-        
       :title => 'exec2')
 
     Puppet[:noop] = true
@@ -355,13 +352,13 @@ class TestTransactions < Test::Unit::TestCase
           assert(
         @logs.detect { |l|
       l.message =~ /Would have/ and l.source == exec.path },
-        
+
         "did not log first exec trigger")
 
           assert(
         @logs.detect { |l|
       l.message =~ /Would have/ and l.source == exec2.path },
-        
+
         "did not log second exec trigger")
   end
 
@@ -372,9 +369,8 @@ class TestTransactions < Test::Unit::TestCase
       path = tempfile
       paths << path
 
-            file = Puppet::Type.type(:file).new(
+      file = Puppet::Type.type(:file).new(
         :path => path, :ensure => :absent,
-        
         :backup => false, :title => "file#{i}")
       File.open(path, "w") { |f| f.puts "" }
       files << file

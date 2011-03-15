@@ -79,13 +79,13 @@ describe "mount provider (integration)" do
     catalog.apply
   end
 
-  [false, true].each do |initial_state|
+  [true, false].each do |initial_state|
     describe "When initially #{initial_state ? 'mounted' : 'unmounted'}" do
       before :each do
         @mounted = initial_state
       end
 
-      [false, true].each do |initial_fstab_entry|
+      [true, false].each do |initial_fstab_entry|
         describe "When there is #{initial_fstab_entry ? 'an' : 'no'} initial fstab entry" do
           before :each do
             create_fake_fstab(initial_fstab_entry)
@@ -104,7 +104,7 @@ describe "mount provider (integration)" do
             end
             expected_fstab_data = (ensure_setting != :absent)
             describe "When setting ensure => #{ensure_setting}" do
-              ["local", "journaled"].each do |options_setting|
+              ["journaled", "local"].each do |options_setting|
                 describe "When setting options => #{options_setting}" do
                   it "should leave the system in the #{expected_final_state ? 'mounted' : 'unmounted'} state, #{expected_fstab_data ? 'with' : 'without'} data in /etc/fstab" do
                     @desired_options = options_setting

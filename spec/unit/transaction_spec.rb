@@ -341,7 +341,7 @@ describe Puppet::Transaction do
       resource = Puppet::Type.type(:sshkey).create :title => "foo", :name => "bar", :type => :dsa, :key => "eh"
       @catalog.add_resource resource
 
-      resource.provider.class.expects(:prefetch).with("bar" => resource)
+      resource.provider.class.expects(:prefetch).with(["bar"] => resource)
 
       @transaction.prefetch
     end
