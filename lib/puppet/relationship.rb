@@ -72,7 +72,9 @@ class Puppet::Relationship
   end
 
   def inspect
-    "{ #{source} => #{target} }"
+    arrow = event ? '~>' : '=>'
+
+    "<Puppet::Relationship {#{source.inspect} #{arrow} #{target.inspect}} >"
   end
 
   def to_pson_data_hash

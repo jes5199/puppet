@@ -38,6 +38,10 @@ class Type
     properties
   end
 
+  def inspect
+    "<Puppet::Type #{ref}>"
+  end
+
   # All parameters, in the appropriate order.  The key_attributes come first, then
   # the provider, then the properties, and finally the params and metaparams
   # in the order they were specified in the files.
