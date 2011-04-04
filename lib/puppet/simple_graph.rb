@@ -331,6 +331,7 @@ class Puppet::SimpleGraph
   end
 
   def add_relationship(source, target, label = nil)
+    p [source, target, label]
     add_edge Puppet::Relationship.new(source, target, label)
   end
 
@@ -369,7 +370,7 @@ class Puppet::SimpleGraph
   end
 
   # Take container information from another graph and use it to
-  # replace any container vertices X with a pair of verticies 
+  # replace any container vertices X with a pair of verticies
   # { admissible_X and completed_X } such that that
   #
   #    0) completed_X depends on admissible_X
@@ -382,8 +383,8 @@ class Puppet::SimpleGraph
   # Note that this requires attention to the possible case of containers
   # which contain or depend on other containers, but has the advantage
   # that the number of new edges created scales linearly with the number
-  # of contained verticies regardless of how containers are related; 
-  # alternatives such as replacing container-edges with content-edges 
+  # of contained verticies regardless of how containers are related;
+  # alternatives such as replacing container-edges with content-edges
   # scale as the product of the number of external dependences, which is
   # to say geometrically in the case of nested / chained containers.
   #
@@ -400,32 +401,37 @@ class Puppet::SimpleGraph
     #
     admissible = Hash.new { |h,k| k }
     completed  = Hash.new { |h,k| k }
-    containers.each { |x|
-      admissible[x] = whit_class.new(:name => "admissible_#{x.name}", :catalog => other)
-      completed[x]  = whit_class.new(:name => "completed_#{x.name}", :catalog => other)
+    containers.each { |container|
+      admissible[container] = whit_class.new(:name => "admissible_#{container.name}", :catalog => other)
+      completed[container]  = whit_class.new(:name => "completed_#{container.name}", :catalog => other)
     }
+    default_label = { :event => :ALL_EVENTS, :callback => :refresh }
     #
     # Implement the six requierments listed above
     #
-    containers.each { |x|
-      add_edge(completed[x],admissible[x]) # (0)
-      contents = other.adjacent(x, :direction => :out)
-      contents.each { |v|
-        add_edge(admissible[v],admissible[x]) # (1)
-        add_edge(completed[x], completed[v] ) # (2)
+    containers.each { |container|
+      p :a
+      add_edge(completed[container], admissible[container], default_label) # (0)
+      contents = other.adjacent(container, :direction => :out)
+      contents.each { |content|
+        p :b
+        add_edge(admissible[content],admissible[container], default_label) # (1)
+        add_edge(completed[container], completed[content],  default_label) # (2)
       }
       # (3) & (5)
-      adjacent(x,:direction => :in,:type => :edges).each { |e|
-        add_edge(admissible[e.source],completed[x],e.label)
+      adjacent(container,:direction => :in,:type => :edges).each { |e|
+        p :c
+        add_edge(admissible[e.source],completed[container],e.label)
         remove_edge! e
       }
       # (4) & (5)
-      adjacent(x,:direction => :out,:type => :edges).each { |e|
-        add_edge(admissible[x],completed[e.target],e.label)
+      adjacent(container,:direction => :out,:type => :edges).each { |e|
+        p :d
+        add_edge(admissible[container],completed[e.target],e.label)
         remove_edge! e
       }
     }
-    containers.each { |x| remove_vertex! x } # (5)
+    containers.each { |container| remove_vertex! container } # (5)
   end
 
   # Just walk the tree and pass each edge.
@@ -468,7 +474,7 @@ class Puppet::SimpleGraph
   end
 
   def direct_dependents_of(v)
-    (@out_from[v] || {}).keys 
+    (@out_from[v] || {}).keys
   end
 
   def upstream_from_vertex(v)
@@ -482,7 +488,7 @@ class Puppet::SimpleGraph
   end
 
   def direct_dependencies_of(v)
-    (@in_to[v] || {}).keys 
+    (@in_to[v] || {}).keys
   end
 
   # Return an array of the edge-sets between a series of n+1 vertices (f=v0,v1,v2...t=vn)
@@ -496,7 +502,7 @@ class Puppet::SimpleGraph
   #     * if there is no path from f to t, the result is nil
   #
   # This implementation is not particularly efficient; it's used in testing where clarity
-  #   is more important than last-mile efficiency. 
+  #   is more important than last-mile efficiency.
   #
   def path_between(f,t)
     if f==t
