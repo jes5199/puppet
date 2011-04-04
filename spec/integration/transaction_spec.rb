@@ -97,8 +97,10 @@ describe Puppet::Transaction do
     ecomp[:subscribe] = Puppet::Resource.new(:foo, "file")
     exec[:refreshonly] = true
 
-    exec.expects(:refresh)
+    #exec.expects(:refresh)
     catalog.apply
+    rg = catalog.relationship_graph
+    puts rg.edges
   end
 
   # Make sure that multiple subscriptions get triggered.

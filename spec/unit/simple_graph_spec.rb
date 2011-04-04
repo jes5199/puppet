@@ -562,6 +562,14 @@ describe Puppet::SimpleGraph do
       @contgraph.add_vertex(@empty)
     end
 
+    def containers
+      @contgraph.vertices.select { |x| !x.is_a? String }
+    end
+
+    def contents_of(x)
+      @contgraph.direct_dependents_of(x)
+    end
+
     def dependency_graph
       @depgraph = Puppet::SimpleGraph.new
       @contgraph.vertices.each do |v|
@@ -570,7 +578,8 @@ describe Puppet::SimpleGraph do
 
       # We have to specify a relationship to our empty container, else it
       # never makes it into the dep graph in the first place.
-      {@one => @two, "f" => "c", "h" => @middle, "c" => @empty}.each do |source, target|
+      @explicit_dependencies = {@one => @two, "f" => "c", "h" => @middle, "c" => @empty}
+      @explicit_dependencies.each do |source, target|
         @depgraph.add_edge(source, target, :callback => :refresh)
       end
     end
@@ -579,69 +588,115 @@ describe Puppet::SimpleGraph do
       @depgraph.splice!(@contgraph, Container)
     end
 
+    def whit_called(name)
+      x = @depgraph.vertices.find { |v| v.is_a?(@whit) && v.name =~ /#{name}/ }
+      x.should_not be_nil
+      def x.to_s
+        "Whit[#{name}]"
+      end
+      def x.inspect
+        to_s
+      end
+      x
+    end
+
+    def admissible_sentinal_of(x)
+      @depgraph.vertex?(x) ? x : whit_called("admissible_#{x.name}")
+    end
+
+    def completed_sentinal_of(x)
+      @depgraph.vertex?(x) ? x : whit_called("completed_#{x.name}")
+    end
+
     before do
       container_graph
       dependency_graph
       splice
     end
 
-    # This is the real heart of splicing -- replacing all containers in
-    # our relationship and exploding their relationships so that each
-    # relationship to a container gets copied to all of its children.
+    # This is the real heart of splicing -- replacing all containers X in our
+    # relationship graph with a pair of whits { admissible_X and completed_X }
+    # such that that
+    #
+    #    0) completed_X depends on admissible_X
+    #    1) contents of X each depend on admissible_X
+    #    2) completed_X depends on each on the contents of X
+    #    3) everything which depended on X depends on completed_X
+    #    4) admissible_X depends on everything X depended on
+    #    5) the containers and their edges must be removed
+    #
+    # Note that this requires attention to the possible case of containers
+    # which contain or depend on other containers.
+    #
+    # Point by point:
+
+    #    0) completed_X depends on admissible_X
+    #
+    it "every container's completed sentinal should depend on its admissible sentinal" do
+      containers.each { |container| 
+        @depgraph.should be_edge(completed_sentinal_of(container),admissible_sentinal_of(container))
+      }
+    end
+
+    #    1) contents of X each depend on admissible_X
+    #
+    it "all contained objects should depend on their container's admissible sentinal" do
+      containers.each { |container| 
+        contents_of(container).each { |leaf|
+          @depgraph.should be_edge(admissible_sentinal_of(leaf),admissible_sentinal_of(container))
+        }
+      }
+    end
+
+    #    2) completed_X depends on each on the contents of X
+    #
+    it "completed sentinals should depend on their container's contents" do
+      containers.each { |container| 
+        contents_of(container).each { |leaf|
+          @depgraph.should be_edge(completed_sentinal_of(container),completed_sentinal_of(leaf))
+        }
+      }
+    end
+
+    #
+    #    3) everything which depended on X depends on completed_X
+
+    #
+    #    4) admissible_X depends on everything X depended on
+
+    #    5) the containers and their edges must be removed
+    #
     it "should remove all Container objects from the dependency graph" do
       @depgraph.vertices.find_all { |v| v.is_a?(Container) }.should be_empty
     end
 
-    # This is a bit hideous, but required to make stages work with relationships - they're
-    # the top of the graph.
     it "should remove all Stage resources from the dependency graph" do
       @depgraph.vertices.find_all { |v| v.is_a?(Puppet::Type.type(:stage)) }.should be_empty
-    end
-
-    it "should add container relationships to contained objects" do
-      @contgraph.leaves(@middle).each do |leaf|
-        @depgraph.should be_edge("h", leaf)
-      end
-    end
-
-    it "should explode container-to-container relationships, making edges between all respective contained objects" do
-      @one.each do |oobj|
-        @two.each do |tobj|
-          @depgraph.should be_edge(oobj, tobj)
-        end
-      end
-    end
-
-    it "should contain a whit-resource to mark the place held by the empty container" do
-      @depgraph.vertices.find_all { |v| v.is_a?(@whit) }.length.should == 1
-    end
-
-    it "should replace edges to empty containers with edges to their residual whit" do
-      emptys_whit = @depgraph.vertices.find_all { |v| v.is_a?(@whit) }.first
-      @depgraph.should be_edge("c", emptys_whit)
     end
 
     it "should no longer contain anything but the non-container objects" do
       @depgraph.vertices.find_all { |v| ! v.is_a?(String) and ! v.is_a?(@whit)}.should be_empty
     end
 
-    it "should copy labels" do
-      @depgraph.edges.each do |edge|
-        edge.label.should == {:callback => :refresh}
-      end
+    #######################
+
+    it "should retain labels on non-containment edges" do
+      @explicit_dependencies.each { |f,t|
+        @depgraph.edges_between(admissible_sentinal_of(f),completed_sentinal_of(t))[0].label.should == {:callback => :refresh}
+      }
     end
 
     it "should not add labels to edges that have none" do
       @depgraph.add_edge(@two, @three)
       splice
-      @depgraph.edges_between("c", "i")[0].label.should == {}
+      @depgraph.path_between("c", "i").flatten.select {|e| e.label != {} }.should be_empty
     end
 
     it "should copy labels over edges that have none" do
       @depgraph.add_edge("c", @three, {:callback => :refresh})
       splice
       # And make sure the label got copied.
-      @depgraph.edges_between("c", "i")[0].label.should == {:callback => :refresh}
+      @depgraph.path_between("c", "i").flatten.select {|e| e.label == {:callback => :refresh} }.should_not be_empty
     end
 
     it "should not replace a label with a nil label" do
@@ -649,7 +704,7 @@ describe Puppet::SimpleGraph do
       @depgraph.add_edge(@middle, @three)
       @depgraph.add_edge("c", @three, {:callback => :refresh})
       splice
-      @depgraph.edges_between("c", "i")[0].label.should == {:callback => :refresh}
+      @depgraph.path_between("c", "i").flatten.select {|e| e.label =={:callback => :refresh} }.should_not be_empty
     end
 
     it "should copy labels to all created edges" do
@@ -658,8 +713,9 @@ describe Puppet::SimpleGraph do
       splice
       @three.each do |child|
         edge = Puppet::Relationship.new("c", child)
-        @depgraph.should be_edge(edge.source, edge.target)
-        @depgraph.edges_between(edge.source, edge.target)[0].label.should == {:callback => :refresh}
+        (path = @depgraph.path_between(edge.source, edge.target)).should be
+        path.should_not be_empty
+        path.flatten.select {|e| e.label == {:callback => :refresh} }.should_not be_empty
       end
     end
   end

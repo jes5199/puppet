@@ -368,50 +368,64 @@ class Puppet::SimpleGraph
     (options[:type] == :edges) ? ns.values.flatten : ns.keys
   end
 
-  # Take container information from another graph and use it
-  # to replace any container vertices with their respective leaves.
-  # This creates direct relationships where there were previously
-  # indirect relationships through the containers.
+  # Take container information from another graph and use it to
+  # replace any container vertices X with a pair of verticies 
+  # { admissible_X and completed_X } such that that
+  #
+  #    0) completed_X depends on admissible_X
+  #    1) contents of X each depend on admissible_X
+  #    2) completed_X depends on each on the contents of X
+  #    3) everything which depended on X depens on completed_X
+  #    4) admissible_X depends on everything X depended on
+  #    5) the containers and their edges must be removed
+  #
+  # Note that this requires attention to the possible case of containers
+  # which contain or depend on other containers, but has the advantage
+  # that the number of new edges created scales linearly with the number
+  # of contained verticies regardless of how containers are related; 
+  # alternatives such as replacing container-edges with content-edges 
+  # scale as the product of the number of external dependences, which is
+  # to say geometrically in the case of nested / chained containers.
+  #
   def splice!(other, type)
-    # We have to get the container list via a topological sort on the
-    # configuration graph, because otherwise containers that contain
-    # other containers will add those containers back into the
-    # graph.  We could get a similar affect by only setting relationships
-    # to container leaves, but that would result in many more
-    # relationships.
     stage_class = Puppet::Type.type(:stage)
     whit_class  = Puppet::Type.type(:whit)
-    containers = other.topsort.find_all { |v| (v.is_a?(type) or v.is_a?(stage_class)) and vertex?(v) }
-    containers.each do |container|
-      # Get the list of children from the other graph.
-      children = other.adjacent(container, :direction => :out)
-
-      # MQR TODO: Luke suggests that it should be possible to refactor the system so that
-      #           container nodes are retained, thus obviating the need for the whit.
-      children = [whit_class.new(:name => container.name, :catalog => other)] if children.empty?
-
-      # First create new edges for each of the :in edges
-      [:in, :out].each do |dir|
-        edges = adjacent(container, :direction => dir, :type => :edges)
-        edges.each do |edge|
-          children.each do |child|
-            if dir == :in
-              s = edge.source
-              t = child
-            else
-              s = child
-              t = edge.target
-            end
-
-            add_edge(s, t, edge.label)
-          end
-
-          # Now get rid of the edge, so remove_vertex! works correctly.
-          remove_edge!(edge)
-        end
-      end
-      remove_vertex!(container)
-    end
+    containers = other.vertices.find_all { |v| (v.is_a?(type) or v.is_a?(stage_class)) and vertex?(v) }
+    #
+    # These two hashes comprise the aforementioned attention to the possible
+    #   case of containers that contain / depend on other containers; they map
+    #   containers to their sentinals but pass other verticies through.  Thus we
+    #   can "do the right thing" for references to other verticies that may or
+    #   may not be containers.
+    #
+    admissible = Hash.new { |h,k| k }
+    completed  = Hash.new { |h,k| k }
+    containers.each { |x|
+      admissible[x] = whit_class.new(:name => "admissible_#{x.name}", :catalog => other)
+      completed[x]  = whit_class.new(:name => "completed_#{x.name}", :catalog => other)
+    }
+    #
+    # Implement the six requierments listed above
+    #
+    containers.each { |x|
+      add_edge(completed[x],admissible[x]) # (0)
+      contents = other.adjacent(x, :direction => :out)
+      contents.each { |v|
+        add_edge(admissible[v],admissible[x]) # (1)
+        add_edge(completed[x], completed[v] ) # (2)
+      }
+      # (3) & (5)
+      adjacent(x,:direction => :in,:type => :edges).each { |e|
+        add_edge(admissible[e.source],completed[x],e.label)
+        remove_edge! e
+      }
+      # (4) & (5)
+      adjacent(x,:direction => :out,:type => :edges).each { |e|
+        add_edge(admissible[x],completed[e.target],e.label)
+        remove_edge! e
+      }
+    }
+    containers.each { |x| remove_vertex! x } # (5)
   end
 
   # Just walk the tree and pass each edge.
@@ -454,7 +468,7 @@ class Puppet::SimpleGraph
   end
 
   def direct_dependents_of(v)
-    @out_from[v].keys 
+    (@out_from[v] || {}).keys 
   end
 
   def upstream_from_vertex(v)
@@ -468,7 +482,33 @@ class Puppet::SimpleGraph
   end
 
   def direct_dependencies_of(v)
-    @in_to[v].keys 
+    (@in_to[v] || {}).keys 
+  end
+
+  # Return an array of the edge-sets between a series of n+1 vertices (f=v0,v1,v2...t=vn)
+  #   connecting the two given verticies.  The ith edge set is an array containing all the
+  #   edges between v(i) and v(i+1); these are (by definition) never empty.
+  #
+  #     * if f == t, the list is empty
+  #     * if they are adjacent the result is an array consisting of
+  #       a single array (the edges from f to t)
+  #     * and so on by induction on a vertex m between them
+  #     * if there is no path from f to t, the result is nil
+  #
+  # This implementation is not particularly efficient; it's used in testing where clarity
+  #   is more important than last-mile efficiency. 
+  #
+  def path_between(f,t)
+    if f==t
+      []
+    elsif direct_dependents_of(f).include?(t)
+      [edges_between(f,t)]
+    elsif dependents(f).include?(t)
+      m = (dependents(f) & direct_dependencies_of(t)).first
+      path_between(f,m) + path_between(m,t)
+    else
+      nil
+    end
   end
 
   # LAK:FIXME This is just a paste of the GRATR code with slight modifications.
