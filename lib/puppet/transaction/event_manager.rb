@@ -31,6 +31,8 @@ class Puppet::Transaction::EventManager
   # Queue events for other resources to respond to.  All of these events have
   # to be from the same resource.
   def queue_events(resource, events)
+    print "QUEUE EVENTS !!!!! "
+    p resource
     @events += events
 
     # Do some basic normalization so we're not doing so many

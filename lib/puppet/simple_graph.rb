@@ -322,6 +322,7 @@ class Puppet::SimpleGraph
   # since they have to specify what kind of edge it is.
   def add_edge(e,*a)
     return add_relationship(e,*a) unless a.empty?
+    p e
     @upstream_from.clear
     @downstream_from.clear
     add_vertex(e.source)
@@ -331,7 +332,6 @@ class Puppet::SimpleGraph
   end
 
   def add_relationship(source, target, label = nil)
-    p [source, target, label]
     add_edge Puppet::Relationship.new(source, target, label)
   end
 

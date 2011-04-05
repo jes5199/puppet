@@ -142,6 +142,19 @@ class Puppet::Transaction
 
   def eval_generate(resource)
     return [] unless resource.respond_to?(:eval_generate)
+    whit_class  = Puppet::Type.type(:whit)
+    notify_clone = whit_class.new(:name => "notify_clone_#{resource.name}", :catalog => @catalog)
+    print "resource I'm eval_generating on:"
+    p resource
+    relationship_graph.adjacent(resource, :direction => :out,:type => :edges).each { |e|
+      print "edge i wanna maybe copy: "
+      p e
+      next unless e.label[:callback] == :refresh
+      print "whit connects to: "
+      p e.target
+      print "this is a problem: "
+      relationship_graph.add_edge( notify_clone, e.target, e.label )
+    }
     begin
       made = resource.eval_generate
     rescue => detail
@@ -149,17 +162,24 @@ class Puppet::Transaction
       resource.err "Failed to generate additional resources using 'eval_generate: #{detail}"
     end
     parents = [resource]
-    [made].flatten.compact.uniq.each do |res|
+    made = [made].flatten.compact.uniq
+    made.each do |res|
       begin
         res.tag(*resource.tags)
         @catalog.add_resource(res)
         res.finish
+        relationship_graph.add_edge( res, notify_clone, { :event => :ALL_EVENTS, :callback => :refresh } )
         make_parent_child_relationship(parents.reverse.find { |r| r.name == res.name[0,r.name.length]}, res)
         parents << res
       rescue Puppet::Resource::Catalog::DuplicateResourceError
         res.info "Duplicate generated resource; skipping"
       end
     end
+    return( made + [notify_clone] )
+  rescue => e
+    p e
+    puts e.backtrace
+    raise
   end
 
   # A general method for recursively generating new resources from a
@@ -256,13 +276,13 @@ class Puppet::Transaction
 
   # We want to monitor changes in the relationship graph of our
   # catalog but this is complicated by the fact that the catalog
-  # both is_a graph and has_a graph, by the fact that changes to 
+  # both is_a graph and has_a graph, by the fact that changes to
   # the structure of the object can have adverse serialization
   # effects, by threading issues, by order-of-initialization issues,
-  # etc.  
+  # etc.
   #
   # Since the proper lifetime/scope of the monitoring is a transaction
-  # and the transaction is already commiting a mild law-of-demeter 
+  # and the transaction is already commiting a mild law-of-demeter
   # transgression, we cut the Gordian knot here by simply wrapping the
   # transaction's view of the resource graph to capture and maintain
   # the information we need.  Nothing outside the transaction needs
@@ -285,21 +305,30 @@ class Puppet::Transaction
     end
     def add_vertex(v)
       real_graph.add_vertex(v)
+      print "ADDING VERTEX TO READY "
+      puts v.inspect
+      ready[v] = true
     end
-    def add_edge(f,t)
+    def add_edge(f,t, *args)
       ready.delete(t)
-      real_graph.add_edge(f,t)
+      real_graph.add_edge(f,t, *args)
     end
     def check_if_now_ready(r)
+      p [:check_if_now_ready, r]
       ready[r] = true if direct_dependencies_of(r).all? { |r2| done[r2] }
     end
     def next_resource
       ready.keys.sort_by { |r0| unguessable_deterministic_key[r0] }.first
     end
     def traverse(&block)
-      while (r = next_resource) && !transaction.stop_processing?
+      while (r = next_resource).tap{|x| p x} && !transaction.stop_processing?
+        print "TRAVERSE:"
+        p r
         if !generated[r]
-          transaction.eval_generate(r)
+          transaction.eval_generate(r).each do |new_resource|
+            p [:new_resource, new_resource]
+            check_if_now_ready(new_resource)
+          end
           generated[r] = true
         else
           ready.delete(r)

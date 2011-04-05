@@ -14,5 +14,6 @@ Puppet::Type.newtype(:whit) do
 
   # probably want to rename Whit now that it has behavior. ~JW
   def refresh
+    p [:refresh, name]
   end
 end
