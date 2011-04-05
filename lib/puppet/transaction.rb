@@ -144,15 +144,8 @@ class Puppet::Transaction
     return [] unless resource.respond_to?(:eval_generate)
     whit_class  = Puppet::Type.type(:whit)
     notify_clone = whit_class.new(:name => "notify_clone_#{resource.name}", :catalog => @catalog)
-    print "resource I'm eval_generating on:"
-    p resource
     relationship_graph.adjacent(resource, :direction => :out,:type => :edges).each { |e|
-      print "edge i wanna maybe copy: "
-      p e
       next unless e.label[:callback] == :refresh
-      print "whit connects to: "
-      p e.target
-      print "this is a problem: "
       relationship_graph.add_edge( notify_clone, e.target, e.label )
     }
     begin
@@ -176,16 +169,18 @@ class Puppet::Transaction
       end
     end
     return( made + [notify_clone] )
-  rescue => e
-    p e
-    puts e.backtrace
-    raise
   end
 
   # A general method for recursively generating new resources from a
   # resource.
   def generate_additional_resources(resource)
     return [] unless resource.respond_to?(:generate)
+    whit_class  = Puppet::Type.type(:whit)
+    notify_clone = whit_class.new(:name => "notify_clone_#{resource.name}", :catalog => @catalog)
+    relationship_graph.adjacent(resource, :direction => :out,:type => :edges).each { |e|
+      next unless e.label[:callback] == :refresh
+      relationship_graph.add_edge( notify_clone, e.target, e.label )
+    }
     begin
       made = resource.generate
     rescue => detail
@@ -199,6 +194,7 @@ class Puppet::Transaction
         res.tag(*resource.tags)
         @catalog.add_resource(res)
         res.finish
+        relationship_graph.add_edge( res, notify_clone, { :event => :ALL_EVENTS, :callback => :refresh } )
         make_parent_child_relationship(resource, res)
         generate_additional_resources(res)
         true
